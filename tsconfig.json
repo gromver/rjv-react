@@ -1,0 +1,40 @@
+{
+  "extends": "./config/tsconfig.flexible", // also available: "./config/tsconfig.strict"
+  "compilerOptions": {
+    "target": "es5",
+    "rootDir": "src",
+    "moduleResolution": "node",
+    "module": "commonjs",
+    "jsx": "react",
+    "declaration": true,
+    "importHelpers": true,
+    "inlineSourceMap": false,
+    "listFiles": false,
+    "traceResolution": false,
+    "pretty": true,
+    "lib" : [
+      "dom",
+      "es2017",
+      "es6",
+      "es5"
+    ],
+    "types" : [
+      "node",
+      "jest",
+      "react"
+    ]
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules/**",
+    "src/**/*.stories.ts",
+    "src/**/*.stories.tsx",
+    "src/**/*.spec.ts",
+    "src/**/*.spec.tsx",
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx"
+  ],
+  "compileOnSave": false
+}
