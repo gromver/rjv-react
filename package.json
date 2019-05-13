@@ -83,8 +83,8 @@
     ]
   },
   "peerDependencies": {
-    "react": "^16.6.3",
-    "react-dom": "^16.6.3",
+    "react": "^16.0.0",
+    "react-dom": "^16.0.0",
     "rjv": "^2.0.0",
     "rxjs": "^6.4.0"
   },
@@ -121,7 +121,7 @@
     "react-docgen-typescript-loader": "^3.1.0",
     "react-dom": "^16.8.6",
     "react-test-renderer": "^16.8.6",
-    "rjv": "^2.0.0",
+    "rjv": "^2.1.1",
     "rxjs": "^6.4.0",
     "rxjs-compat": "^6.4.0",
     "shx": "^0.3.2",
