@@ -8,6 +8,13 @@ import Field from './Field';
 
 const VALIDATION_STATUSES = [undefined, 'validating', 'success', 'error'];
 
+const schema = {
+  properties: {
+    name: { type: 'string', default: '', presence: true },
+    email: { type: 'string', default: '', presence: true, format: 'email' },
+  },
+};
+
 export function getValidationStatus(state): any {
   const type = state.type;
 
@@ -16,15 +23,21 @@ export function getValidationStatus(state): any {
 
 storiesOf('Form', module)
   .add('Simple Auth', () => {
-    const model = new Model(
-      {
-        properties: {
-          name: { type: 'string', default: '', presence: true },
-          email: { type: 'string', default: '', presence: true, format: 'email' },
-        },
-      },
-      {},
-    );
+
+    return <SimpleForm />;
+  });
+
+class SimpleForm extends React.Component<any, { model: Model }> {
+  constructor (prop, ctx) {
+    super(prop, ctx);
+
+    this.state = {
+      model: new Model(schema, {}),
+    };
+  }
+
+  render() {
+    const { model } = this.state;
 
     const ref = model.ref();
 
@@ -92,6 +105,13 @@ storiesOf('Form', module)
         >
           Submit
         </button>
+        &nbsp;
+        <button
+          onClick={() => this.setState({ model: new Model(schema, {}) })}
+        >
+          Clean
+        </button>
       </Form>
     );
-  });
+  }
+}

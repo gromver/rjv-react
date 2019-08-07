@@ -50,9 +50,9 @@ class Connect extends React.PureComponent<Props> {
       this.props.debounce !== prevProps.debounce
     ) {
       this.connect(
-        prevProps.model,
-        prevProps.observe,
-        prevProps.debounce,
+        this.props.model,
+        this.props.observe,
+        this.props.debounce,
       );
     }
   }
