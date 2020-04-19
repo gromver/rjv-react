@@ -1,37 +1,94 @@
 /**
  *
- * Field
+ * Field - a HOC component over ModelRef and SchemaRef
+ * resolves a model's ref using given path to the field
+ * and determines which component should be used to subscribe to field events
  *
  */
 
-import * as React from 'react';
+import React, { useMemo } from 'react'
+import { Ref, utils, types } from 'rjv'
+import { Connect } from '../Connect'
+import { ProviderContext, ProviderContextValue } from '../Provider'
+import { ScopeContext, ScopeContextValue } from '../Scope'
+import ModelRef from './ModelRef'
+import SchemaRef from './SchemaRef'
 
-import { Ref } from 'rjv';
-import Connect from '../Connect';
-
-type Props = {
-  render: (ref: Ref) => React.ReactElement,
-  field: Ref,
-  depends?: (string | number)[][],
-};
-
-class Field extends React.PureComponent<Props> {
-  static defaultProps = {
-    depends: [],
-  };
-
-  render() {
-    const { render, depends, field } = this.props;
-
-    return (
-      <Connect
-        render={render}
-        model={field.model}
-        observe={[field.path, ...depends as []]}
-        args={[field]}
-      />
-    );
-  }
+type PropsPartial = {
+  render: (ref: Ref) => React.ReactNode
+  path: types.Path
+  schema?: types.ISchema
+  safe?: boolean
+}
+type Props = PropsPartial & {
+  providerContext?: ProviderContextValue
+  scopeContext?: ScopeContextValue
 }
 
-export default Field;
+function Field (props: Props) {
+  const { render, schema, scopeContext, safe = false } = props
+
+  const providerContext = useMemo(() => {
+    // todo check shape
+    if (!props.providerContext) {
+      throw new Error('Received invalid providerContext')
+    }
+
+    return props.providerContext
+  }, [props.providerContext])
+
+  const path = useMemo(() => {
+    if (scopeContext) {
+      return utils.resolvePath(props.path, scopeContext.scope)
+    }
+
+    return utils.resolvePath(props.path, '/')
+  }, [props.path, scopeContext])
+
+  if (safe) {
+    return (
+      <Connect
+        render={(model) => <ModelRef field={model.safeRef(path)} render={render} />}
+        observe={['/']}
+        observeMode="validationAfter"
+        debounce={0}
+      />
+    )
+  }
+
+  const ref = useMemo(() => {
+    return providerContext.model.ref(path)
+  }, [providerContext, path])
+
+  if (schema && providerContext.schemaCollector) {
+    return (
+      <SchemaRef
+        field={ref}
+        render={render}
+        schema={schema}
+        schemaCollector={providerContext.schemaCollector}
+      />
+    )
+  }
+
+  return (
+    <ModelRef
+      field={ref}
+      render={render}
+    />
+  )
+}
+
+export default (props: PropsPartial) => (
+  <ProviderContext.Consumer>
+    {(providerContext) => (
+      <ScopeContext.Consumer>
+        {(scopeContext) => <Field
+          {...props}
+          providerContext={providerContext}
+          scopeContext={scopeContext}
+        />}
+      </ScopeContext.Consumer>
+    )}
+  </ProviderContext.Consumer>
+)

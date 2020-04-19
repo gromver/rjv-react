@@ -22,7 +22,9 @@
       "node",
       "jest",
       "react"
-    ]
+    ],
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true
   },
   "include": [
     "src/**/*"

@@ -1,3 +1,1 @@
-import Connect from './Connect';
-
-export default Connect;
+export { default as Connect, ObserveMode } from './Connect'
