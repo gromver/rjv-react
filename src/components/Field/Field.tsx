@@ -49,6 +49,7 @@ function Field (props: Props) {
     return (
       <Connect
         render={(model) => <ModelRef field={model.safeRef(path)} render={render} />}
+        model={providerContext.model}
         observe={['/']}
         observeMode="validationAfter"
         debounce={0}

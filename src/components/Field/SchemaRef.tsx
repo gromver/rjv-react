@@ -65,6 +65,7 @@ function SchemaRef (props: Props) {
   return (
     <Connect
       render={render}
+      model={field.model}
       observe={[field.path]}
       args={[field]}
       observeMode="field"

@@ -19,6 +19,7 @@ function ModelRef (props: Props) {
   return field ? (
     <Connect
       render={render}
+      model={field.model}
       observe={[field.path]}
       args={[field]}
       observeMode="field"

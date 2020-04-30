@@ -63,7 +63,7 @@ function SimpleForm () {
   return (
     <Form style={{ maxWidth: '400px' }}>
       <Provider ref={formRef} data={initialData} schema={schema}>
-        <Connect
+        {/* <Connect
           render={(model: Model) => {
             const ref = model.ref()
             const errors = ref.errors.map((err, index) => (
@@ -76,7 +76,7 @@ function SimpleForm () {
               ? <Alert type="error" message={errors} />
               : (ref.isValidated ? <Alert type="success" message="Success" /> : null)
           }}
-        />
+        /> */}
 
         <Scope path="auth">
           <Field

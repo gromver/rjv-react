@@ -4,15 +4,14 @@
  *
  */
 
-import React, { PureComponent, ReactNode } from 'react'
+import { PureComponent, ReactNode } from 'react'
 import isEqual from 'lodash/isEqual'
-import { events } from 'rjv'
+import { events, Model } from 'rjv'
 import { Observable } from 'rxjs/Observable'
 import { Subscription } from 'rxjs/Subscription'
 import { merge } from 'rxjs/observable/merge'
 import { filter } from 'rxjs/operator/filter'
 import { debounceTime } from 'rxjs/operator/debounceTime'
-import { ProviderContext, ProviderContextValue } from '../Provider'
 
 export type ObserveMode =
   'any'
@@ -23,19 +22,16 @@ export type ObserveMode =
   | 'validationBefore'
   | 'validationAfter'
 
-type PropsPartial = {
+type Props = {
   render: (...args: any[]) => ReactNode,
+  model: Model,
   observe?: string[], // should be a list of the absolute paths
   observeMode?: ObserveMode,
   debounce?: number,
   args?: any[]
 }
 
-type Props = PropsPartial & {
-  providerContext?: ProviderContextValue
-}
-
-class Connect extends PureComponent<Props> {
+export default class Connect extends PureComponent<Props> {
   static TICK = 33
 
   static defaultProps = {
@@ -50,7 +46,7 @@ class Connect extends PureComponent<Props> {
     super(props)
 
     this.connect(
-      props.providerContext,
+      props.model,
       props.observe,
       props.observeMode,
       props.debounce
@@ -59,13 +55,13 @@ class Connect extends PureComponent<Props> {
 
   componentDidUpdate (prevProps: Readonly<Props>, prevState: Readonly<{}>, snapshot?: any): void {
     if (
-      this.props.providerContext !== prevProps.providerContext ||
+      this.props.model !== prevProps.model ||
       !isEqual(this.props.observe, prevProps.observe) ||
       this.props.debounce !== prevProps.debounce ||
       this.props.observeMode !== prevProps.observeMode
     ) {
       this.connect(
-        this.props.providerContext,
+        this.props.model,
         this.props.observe,
         this.props.observeMode,
         this.props.debounce
@@ -81,23 +77,22 @@ class Connect extends PureComponent<Props> {
 
   /**
    * Connect to the target
-   * @param {Ref} providerContext
-   * @param {((string | number)[])[]} observe
+   * @param {Model} model
+   * @param {string[]} observe
    * @param {ObserveMode} observeMode
    * @param {number} delay
    */
-  connect (providerContext, observe, observeMode, delay) {
+  connect (model, observe, observeMode, delay) {
     if (this.subscription) {
       this.subscription.unsubscribe()
     }
 
     let observable: Observable<events.Event>
 
-    // todo check shape
-    if (providerContext && providerContext.model) {
-      observable = providerContext.model.observable
+    if (model instanceof Model) {
+      observable = model.observable
     } else {
-      throw new Error('Received invalid providerContext')
+      throw new Error('Connect - Rjv model should be provided')
     }
 
     if (observeMode === 'field') {
@@ -153,15 +148,9 @@ class Connect extends PureComponent<Props> {
   }
 
   render () {
-    const { render, providerContext } = this.props
+    const { render, model } = this.props
     const args = this.props.args || []
 
-    return render(...args, (providerContext as ProviderContextValue).model)
+    return render(...args, model)
   }
 }
-
-export default (props: PropsPartial) => (
-  <ProviderContext.Consumer>
-    {(providerContext) => <Connect {...props} providerContext={providerContext} />}
-  </ProviderContext.Consumer>
-)
