@@ -55,7 +55,7 @@ function SchemaRef (props: Props) {
     const builtSchema = buildSchema(field.path, schema)
 
     schemaCollector.add(builtSchema)
-  }, [schemaCollector, schema, field])
+  }, [schemaCollector, schema, field.path])
 
   // on destroy the schema of the model should be invalidated
   useEffect(() => () => {
@@ -73,4 +73,10 @@ function SchemaRef (props: Props) {
   )
 }
 
-export default memo<Props>(SchemaRef, isEqual)
+export default memo<Props>(
+  SchemaRef,
+  (prev, next) =>
+    prev.schemaCollector === next.schemaCollector
+    && prev.field === next.field
+    && isEqual(prev.schema, next.schema)
+)
