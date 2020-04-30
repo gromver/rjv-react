@@ -4,7 +4,7 @@ import { Form, Input, Alert, Select } from 'antd'
 import { storiesOf } from '@storybook/react'
 
 import { Provider, ProviderRef } from '../Provider'
-import { Connect } from '../Connect'
+import { Subscribe } from '../Subscribe'
 import { Field } from '../Field'
 import { getMessage, getValidationStatus } from '../stories/utils'
 
@@ -39,7 +39,7 @@ const schema: types.ISchema = {
 const initialData = {}
 
 storiesOf('Field', module)
-  .add('ModelRef - safe mode test', () => {
+  .add('ModelRef - conditional (safe mode) form test', () => {
 
     return <SimpleForm />
   })
@@ -50,7 +50,7 @@ function SimpleForm () {
   return (
     <Form style={{ maxWidth: '400px' }}>
       <Provider ref={formRef} data={initialData} schema={schema}>
-        {/* <Connect
+        <Subscribe
           render={(model: Model) => {
             const ref = model.ref()
             const errors = ref.errors.map((err, index) => (
@@ -63,7 +63,7 @@ function SimpleForm () {
               ? <Alert type="error" message={errors} />
               : (ref.isValidated ? <Alert type="success" message="Success" /> : null)
           }}
-        /> */}
+        />
 
         <Field
           path="condition"

@@ -27,4 +27,7 @@ function ModelRef (props: Props) {
   ) : null
 }
 
-export default memo<Props>(ModelRef)
+export default memo<Props>(
+  ModelRef,
+  (prev, next) => prev.field === next.field
+)
