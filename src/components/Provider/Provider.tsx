@@ -15,8 +15,9 @@ import React, {
 } from 'react'
 import isEqual from 'lodash/isEqual'
 import isEmpty from 'lodash/isEmpty'
-import { Model, types } from 'rjv'
+import { Model, Ref, types } from 'rjv'
 import { SchemaCollector } from '../SchemaCollector'
+import { Scope } from '../Scope'
 
 export const ProviderContext = createContext<ProviderContextValue | undefined>(undefined)
 
@@ -26,15 +27,20 @@ export type ProviderContextValue = {
 }
 
 export type ProviderRef = {
-  submit: () => void
+  submit: () => Promise<{
+    isValid: boolean
+    firstError?: Ref
+    model: Model
+  }>
+  model: () => Model
 }
 
 type Props = {
-  ref?: any, // React.RefObject<RjvRef> | undefined
+  ref?: React.RefObject<ProviderRef | undefined>
   options?: types.IModelOptionsPartial,
   model?: Model,
   schema?: types.ISchema,
-  data: any,
+  data?: any,
   children: React.ReactNode
 }
 
@@ -152,19 +158,22 @@ function Provider (props: Props, ref) {
   useImperativeHandle(ref, () => {
     return {
       submit: async () => {
-        const isValid = await context.model.validate()
-        const firstError = isValid ? undefined : context.model.ref().firstError
+        const { model } = context
+        const isValid = await model.validate()
+        const firstError = isValid ? undefined : model.ref().firstError
 
-        return { isValid, firstError }
+        return { isValid, firstError, model }
       },
       model: (): Model => context.model
     }
-  }, [context])
+  }, [context.model])
 
   return <ProviderContext.Provider
     value={context}
   >
-    {children}
+    <Scope path="/">
+      {children}
+    </Scope>
   </ProviderContext.Provider>
 }
 
