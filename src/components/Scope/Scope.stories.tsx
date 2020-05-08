@@ -4,7 +4,7 @@ import { Form, Input, Alert } from 'antd'
 import { storiesOf } from '@storybook/react'
 
 import { Provider, ProviderRef } from '../Provider'
-import { Connect } from '../Connect'
+import { Subscribe } from '../Subscribe'
 import { Field } from '../Field'
 import { Scope } from '../Scope'
 
@@ -63,7 +63,7 @@ function SimpleForm () {
   return (
     <Form style={{ maxWidth: '400px' }}>
       <Provider ref={formRef} data={initialData} schema={schema}>
-        {/* <Connect
+        <Subscribe
           render={(model: Model) => {
             const ref = model.ref()
             const errors = ref.errors.map((err, index) => (
@@ -76,7 +76,7 @@ function SimpleForm () {
               ? <Alert type="error" message={errors} />
               : (ref.isValidated ? <Alert type="success" message="Success" /> : null)
           }}
-        /> */}
+        />
 
         <Scope path="auth">
           <Field

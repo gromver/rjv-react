@@ -1,25 +1,17 @@
 import React, { useRef, useState } from 'react'
-import { Model, Ref, types } from 'rjv'
+import { Model } from 'rjv'
 import { Form, Input, Alert } from 'antd'
 import { storiesOf } from '@storybook/react'
 
 import { Provider, ProviderRef } from '../Provider'
-import { Connect } from '../Connect'
+import { Subscribe } from '../Subscribe'
 import { Field } from '../Field'
 import { getMessage, getValidationStatus } from './utils'
-
-// const schema: types.ISchema = {
-//   properties: {
-//     name: { type: 'string', default: '', presence: true },
-//     email: { type: 'string', default: '', presence: true, format: 'email' },
-//     test: { default: [undefined, undefined, undefined, {}] }
-//   }
-// }
 
 const initialData = {}
 
 storiesOf('Form', module)
-  .add('Simple Auth', () => {
+  .add('Misc', () => {
 
     return <SimpleForm />
   })
@@ -31,7 +23,7 @@ function SimpleForm () {
   return (
     <Form style={{ maxWidth: '400px' }}>
       <Provider ref={formRef} data={initialData} /* schema={schema} */>
-        {/* <Connect
+        <Subscribe
           render={(model: Model) => {
             const ref = model.ref()
             const errors = ref.errors.map((err, index) => (
@@ -44,7 +36,7 @@ function SimpleForm () {
               ? <Alert type="error" message={errors} />
               : (ref.isValidated ? <Alert type="success" message="Success" /> : null)
           }}
-        /> */}
+        />
 
         <Field
           path="name"
