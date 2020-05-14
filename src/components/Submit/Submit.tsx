@@ -1,6 +1,6 @@
 /**
  *
- * SubmitBtn
+ * Submit
  * A wrapper component for buttons, exposes onSubmit, onSuccess and onError events
  *
  */
@@ -19,7 +19,7 @@ type Props = PropsPartial & {
   providerContext?: ProviderContextValue
 }
 
-function SubmitBtn (props: Props) {
+function Submit (props: Props) {
   const { onSubmit, onError, onSuccess, ...restProps } = props
 
   const providerContext = useMemo(() => {
@@ -51,7 +51,7 @@ function SubmitBtn (props: Props) {
 export default (props: PropsPartial) => (
   <ProviderContext.Consumer>
     {(providerContext) => (
-      <SubmitBtn
+      <Submit
         {...props}
         providerContext={providerContext}
       />

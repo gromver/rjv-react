@@ -2,7 +2,7 @@ import React from 'react'
 import { storiesOf } from '@storybook/react'
 import { Button, Form, Input } from 'antd'
 
-import SubmitBtn from './SubmitBtn'
+import Submit from './Submit'
 import { Provider } from '../Provider'
 import { Field } from '../Field'
 import { getMessage, getValidationStatus } from '../stories/utils'
@@ -47,42 +47,42 @@ storiesOf('SubmitBtn', module)
 
         <p>Active buttons</p>
 
-        <SubmitBtn
+        <Submit
           onSubmit={(model) => console.log('onSubmit', model)}
           onSuccess={(model) => console.log('onSuccess', model)}
           onError={(model, firstError) => console.log('onError', model, firstError)}
         >
           <button>submit</button>
-        </SubmitBtn>
+        </Submit>
 
-        <SubmitBtn
+        <Submit
           onSubmit={(model) => console.log('onSubmit', model)}
           onSuccess={(model) => console.log('onSuccess', model)}
           onError={(model, firstError) => console.log('onError', model, firstError)}
         >
           <Button>Ant submit</Button>
-        </SubmitBtn>
+        </Submit>
 
         <br />
         <br />
 
         <p>Disabled buttons</p>
 
-        <SubmitBtn
+        <Submit
           onSubmit={(model) => console.log('onSubmit', model)}
           onSuccess={(model) => console.log('onSuccess', model)}
           onError={(model, firstError) => console.log('onError', model, firstError)}
         >
           <button disabled>submit</button>
-        </SubmitBtn>
+        </Submit>
 
-        <SubmitBtn
+        <Submit
           onSubmit={(model) => console.log('onSubmit', model)}
           onSuccess={(model) => console.log('onSuccess', model)}
           onError={(model, firstError) => console.log('onError', model, firstError)}
         >
           <Button disabled>Ant submit</Button>
-        </SubmitBtn>
+        </Submit>
       </Form>
     </Provider>
   })
