@@ -1,8 +1,8 @@
 /**
  *
  * ModelProvided
- * If model provided - renders content, if not - nothing happens
- * Render function is supplied with a provided model
+ * If model is provided - renders content, if not - nothing happens
+ * Render function is supplied with the provided model
  *
  */
 

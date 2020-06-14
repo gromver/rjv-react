@@ -6,13 +6,13 @@
  *
  */
 
-import React, { useMemo } from 'react'
+import React, { useEffect, useMemo } from 'react'
 import { Ref, utils, types } from 'rjv'
 import { Connect } from '../Connect'
 import { ProviderContext, ProviderContextValue } from '../Provider'
 import { ScopeContext, ScopeContextValue } from '../Scope'
 import ModelRef from './ModelRef'
-import SchemaRef from './SchemaRef'
+import { buildSchema } from './utils'
 
 type PropsPartial = {
   render: (ref: Ref) => React.ReactNode
@@ -26,8 +26,9 @@ type Props = PropsPartial & {
 }
 
 function Field (props: Props) {
-  const { render, schema, scopeContext, safe = false } = props
+  const { render, scopeContext, safe = false } = props
 
+  // Checking and getting providerContext. If the context is invalid, throw an exception.
   const providerContext = useMemo(() => {
     // todo check shape
     if (!props.providerContext) {
@@ -37,6 +38,9 @@ function Field (props: Props) {
     return props.providerContext
   }, [props.providerContext])
 
+  const schema = useMemo(() => props.schema,[])
+
+  // calculate absolute path considering scopes
   const path = useMemo(() => {
     if (scopeContext) {
       return utils.resolvePath(props.path, scopeContext.scope)
@@ -44,6 +48,22 @@ function Field (props: Props) {
 
     return utils.resolvePath(props.path, '/')
   }, [props.path, scopeContext])
+
+  // if schema and schemaCollector were provided, apply this schema to the model
+  useEffect(() => {
+    if (schema && providerContext.schemaCollector) {
+      const builtSchema = buildSchema(path, schema)
+
+      providerContext.schemaCollector.add(builtSchema)
+    }
+  }, [providerContext.schemaCollector, path])
+
+  // on destroy the schema of the model should be invalidated
+  useEffect(() => () => {
+    if (schema && providerContext.schemaCollector) {
+      providerContext.schemaCollector.invalidate()
+    }
+  }, [])
 
   if (safe) {
     return (
@@ -60,17 +80,6 @@ function Field (props: Props) {
   const ref = useMemo(() => {
     return providerContext.model.ref(path)
   }, [providerContext, path])
-
-  if (schema && providerContext.schemaCollector) {
-    return (
-      <SchemaRef
-        field={ref}
-        render={render}
-        schema={schema}
-        schemaCollector={providerContext.schemaCollector}
-      />
-    )
-  }
 
   return (
     <ModelRef

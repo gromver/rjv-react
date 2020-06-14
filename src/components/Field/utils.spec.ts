@@ -1,4 +1,4 @@
-import { buildSchema } from './SchemaRef'
+import { buildSchema } from './utils'
 
 describe('buildSchema tests', () => {
   it('Should build proper schema #1', () => {
