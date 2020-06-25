@@ -10,8 +10,8 @@ import { events, Model } from 'rjv'
 import { Observable } from 'rxjs/Observable'
 import { Subscription } from 'rxjs/Subscription'
 import { merge } from 'rxjs/observable/merge'
-import { filter } from 'rxjs/operator/filter'
-import { debounceTime } from 'rxjs/operator/debounceTime'
+import { filter } from 'rxjs/operators/filter'
+import { debounceTime } from 'rxjs/operators/debounceTime'
 
 export type ObserveMode =
   'any'
@@ -96,50 +96,61 @@ export default class Connect extends PureComponent<Props> {
     }
 
     if (observeMode === 'field') {
-      observable = filter.call(
-        observable,
-        (event) => event instanceof events.ChangeRefStateEvent || event instanceof events.ChangeRefValueEvent
+      observable = observable.pipe(
+        filter(
+          (event) => event instanceof events.ChangeRefStateEvent || event instanceof events.ChangeRefValueEvent
+        )
       )
     } else if (observeMode === 'fieldMutation') {
-      observable = filter.call(
-        observable,
-        (event) => event instanceof events.ChangeRefValueEvent
+      observable = observable.pipe(
+        filter(
+          (event) => event instanceof events.ChangeRefValueEvent
+        )
       )
     } else if (observeMode === 'fieldState') {
-      observable = filter.call(
-        observable,
-        (event) => event instanceof events.ChangeRefStateEvent
+      observable = observable.pipe(
+        filter(
+          (event) => event instanceof events.ChangeRefStateEvent
+        )
       )
     } else if (observeMode === 'validation') {
-      observable = filter.call(
-        observable,
-        (event) => event instanceof events.BeforeValidationEvent || event instanceof events.AfterValidationEvent
+      observable = observable.pipe(
+        filter(
+          (event) => event instanceof events.BeforeValidationEvent || event instanceof events.AfterValidationEvent
+        )
       )
     } else if (observeMode === 'validationAfter') {
-      observable = filter.call(
-        observable,
-        (event) => event instanceof events.AfterValidationEvent
+      observable = observable.pipe(
+        filter(
+          (event) => event instanceof events.AfterValidationEvent
+        )
       )
     } else if (observeMode === 'validationBefore') {
-      observable = filter.call(
-        observable,
-        (event) => event instanceof events.BeforeValidationEvent
+      observable = observable.pipe(
+        filter(
+          (event) => event instanceof events.BeforeValidationEvent
+        )
       )
     }
 
     if (observe.length) {
-      observable = filter.call(
-        observable,
-        (event) => !!observe.find((attr) => attr === event.path)
+      observable = observable.pipe(
+        filter(
+          (event) => !!observe.find((attr) => attr === (event as any).path)
+        )
       )
     }
 
     if (delay) {
       observable = merge(
-        filter.call(observable, (event) => event instanceof events.ChangeRefValueEvent),
-        debounceTime.call(
-          filter.call(observable, (event) => !(event instanceof events.ChangeRefValueEvent)),
-          delay
+        observable.pipe(
+          filter((event) => event instanceof events.ChangeRefValueEvent)
+        ),
+        observable.pipe(
+          filter((event) => !(event instanceof events.ChangeRefValueEvent)),
+          debounceTime(
+            delay
+          )
         )
       )
     }
