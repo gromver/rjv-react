@@ -84,8 +84,8 @@
   },
   "peerDependencies": {
     "lodash": "^4.0.0",
-    "react": "^16.0.0",
-    "react-dom": "^16.0.0",
+    "react": "^16.8.0",
+    "react-dom": "^16.8.0",
     "rjv": "^4.1.0",
     "rxjs": "^6.4.0"
   },
