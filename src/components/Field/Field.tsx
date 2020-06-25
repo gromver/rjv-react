@@ -63,7 +63,7 @@ function Field (props: Props) {
     if (schema && providerContext.schemaCollector) {
       providerContext.schemaCollector.invalidate()
     }
-  }, [])
+  }, [providerContext.schemaCollector])
 
   if (safe) {
     return (
