@@ -56,6 +56,11 @@
       "pre-push": "npm test -- --bail --onlyChanged"
     }
   },
+  "standard-version": {
+    "skip": {
+      "changelog": true
+    }
+  },
   "keywords": [
     "rjv",
     "react",
