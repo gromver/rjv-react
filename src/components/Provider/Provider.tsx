@@ -15,6 +15,7 @@ import React, {
 } from 'react'
 import isEqual from 'lodash/isEqual'
 import isEmpty from 'lodash/isEmpty'
+import memoize from 'lodash/memoize'
 import { Model, Ref, types } from 'rjv'
 import { SchemaCollector } from '../SchemaCollector'
 import { Scope } from '../Scope'
@@ -24,6 +25,9 @@ export const ProviderContext = createContext<ProviderContextValue | undefined>(u
 export type ProviderContextValue = {
   model: Model
   schemaCollector?: SchemaCollector
+  getRef: (path: string) => Ref
+  setRef: (path: string, el: React.ReactElement) => void
+  unsetRef: (path: string) => void
 }
 
 export type ProviderRef = {
@@ -44,6 +48,20 @@ type Props = {
   children: React.ReactNode
 }
 
+const getRefStoreApi = memoize((model: Model) => {
+  const refs = {}
+
+  return {
+    getRef: (path: string): Ref => refs[path],
+    setRef: (path: string, el: React.ReactElement) => {
+      refs[path] = el
+    },
+    unsetRef: (path: string) => {
+      delete refs[path]
+    }
+  }
+})
+
 function Provider (props: Props, ref) {
   const { data, options, children } = props
 
@@ -52,28 +70,28 @@ function Provider (props: Props, ref) {
   /*
    Provide initial context
    */
-  const initialContext = useMemo(() => {
+  const initialContext: ProviderContextValue = useMemo(() => {
     if (props.model) {
       const schema = props.model.getSchema()
 
       if (isEmpty(schema)) {
         const schemaCollector = new SchemaCollector()
-        return { schemaCollector, model: props.model }
+        return { schemaCollector, model: props.model, ...getRefStoreApi(props.model) }
       }
 
-      return { model: props.model }
+      return { model: props.model, ...getRefStoreApi(props.model) }
     }
 
     if (schema) {
       const model = new Model(schema, data, options || {})
 
-      return { model }
+      return { model, ...getRefStoreApi(model) }
     }
 
     const schemaCollector = new SchemaCollector()
     const model = new Model({}, data, options || {})
 
-    return { schemaCollector, model }
+    return { schemaCollector, model, ...getRefStoreApi(model) }
   }, [])
 
   const [context, setContext] = useState(initialContext)
@@ -101,7 +119,8 @@ function Provider (props: Props, ref) {
       context.schemaCollector.onInvalidated = () => {
         setContext({
           model: context.model,
-          schemaCollector: new SchemaCollector()
+          schemaCollector: new SchemaCollector(),
+          ...getRefStoreApi(context.model)
         })
       }
 
@@ -121,12 +140,12 @@ function Provider (props: Props, ref) {
       if (schema) {
         const model = new Model(schema, data, options || {})
 
-        model.prepare().then(() => setContext({ model }))
+        model.prepare().then(() => setContext({ model, ...getRefStoreApi(model) }))
       } else {
         const schemaCollector = new SchemaCollector()
         const model = new Model({}, data, options || {})
 
-        model.prepare().then(() => setContext({ schemaCollector, model }))
+        model.prepare().then(() => setContext({ schemaCollector, model, ...getRefStoreApi(model) }))
       }
     }
   }, [data, schema])
@@ -146,12 +165,12 @@ function Provider (props: Props, ref) {
         const schemaCollector = new SchemaCollector()
         model
           .prepare()
-          .then(() => setContext({ schemaCollector, model }))
+          .then(() => setContext({ schemaCollector, model, ...getRefStoreApi(model) }))
       }
 
       model
         .prepare()
-        .then(() => setContext({ model }))
+        .then(() => setContext({ model, ...getRefStoreApi(model) }))
     }
   }, [props.model])
 
