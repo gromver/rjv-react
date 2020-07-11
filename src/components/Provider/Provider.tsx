@@ -22,13 +22,16 @@ import { Scope } from '../Scope'
 
 export const ProviderContext = createContext<ProviderContextValue | undefined>(undefined)
 
-export type ProviderContextValue = {
-  model: Model
-  schemaCollector?: SchemaCollector
+export type RefStoreApi = {
   getRef: (path: string) => Ref
   setRef: (path: string, el: React.ReactElement) => void
   unsetRef: (path: string) => void
 }
+
+export type ProviderContextValue = {
+  model: Model
+  schemaCollector?: SchemaCollector
+} & RefStoreApi
 
 export type ProviderRef = {
   submit: () => Promise<{
@@ -48,7 +51,7 @@ type Props = {
   children: React.ReactNode
 }
 
-const getRefStoreApi = memoize((model: Model) => {
+const getRefStoreApi = memoize((model: Model): RefStoreApi => {
   const refs = {}
 
   return {

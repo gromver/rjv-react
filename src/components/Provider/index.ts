@@ -1,1 +1,7 @@
-export { default as Provider, ProviderContext, ProviderContextValue, ProviderRef } from './Provider'
+export {
+  default as Provider,
+  ProviderContext,
+  ProviderContextValue,
+  ProviderRef,
+  RefStoreApi
+} from './Provider'
