@@ -15,7 +15,7 @@ function RequiredField () {
     schema={{
       type: 'string', default: '', minLength: 2, presence: true
     }}
-    render={(ref) => {
+    render={(ref, register) => {
       const message = getMessage(ref)
 
       return (
@@ -26,6 +26,7 @@ function RequiredField () {
           required={ref.isShouldNotBeBlank}
         >
           <Input
+            ref={register}
             value={ref.getValue()}
             onChange={(e) => ref.setValue(e.target.value)}
           />
@@ -45,44 +46,42 @@ storiesOf('SubmitBtn', module)
       <Form style={{ width: 400 }}>
         <RequiredField />
 
-        <p>Active buttons</p>
+        <p>focusFirstError = true (default)</p>
 
         <Submit
           onSubmit={(model) => console.log('onSubmit', model)}
-          onSuccess={(model) => console.log('onSuccess', model)}
-          onError={(model, firstError) => console.log('onError', model, firstError)}
-        >
-          <button>submit</button>
-        </Submit>
+          onSuccess={(data, model) => console.log('onSuccess', data, model)}
+          onError={(firstError, model) => console.log('onError', firstError, model)}
+          render={(handleSubmit) => <button onClick={handleSubmit}>submit</button>}
+        />
 
         <Submit
           onSubmit={(model) => console.log('onSubmit', model)}
-          onSuccess={(model) => console.log('onSuccess', model)}
-          onError={(model, firstError) => console.log('onError', model, firstError)}
-        >
-          <Button>Ant submit</Button>
-        </Submit>
+          onSuccess={(data, model) => console.log('onSuccess', data, model)}
+          onError={(firstError, model) => console.log('onError', firstError, model)}
+          render={(handleSubmit) => <Button onClick={handleSubmit}>Ant submit</Button>}
+        />
 
         <br />
         <br />
 
-        <p>Disabled buttons</p>
+        <p>focusFirstError = false</p>
 
         <Submit
           onSubmit={(model) => console.log('onSubmit', model)}
-          onSuccess={(model) => console.log('onSuccess', model)}
-          onError={(model, firstError) => console.log('onError', model, firstError)}
-        >
-          <button disabled>submit</button>
-        </Submit>
+          onSuccess={(data, model) => console.log('onSuccess', data, model)}
+          onError={(firstError, model) => console.log('onError', firstError, model)}
+          render={(handleSubmit) => <button onClick={handleSubmit}>submit</button>}
+          focusFirstError={false}
+        />
 
         <Submit
           onSubmit={(model) => console.log('onSubmit', model)}
-          onSuccess={(model) => console.log('onSuccess', model)}
-          onError={(model, firstError) => console.log('onError', model, firstError)}
-        >
-          <Button disabled>Ant submit</Button>
-        </Submit>
+          onSuccess={(data, model) => console.log('onSuccess', data, model)}
+          onError={(firstError, model) => console.log('onError', firstError, model)}
+          render={(handleSubmit) => <Button onClick={handleSubmit}>Ant submit</Button>}
+          focusFirstError={false}
+        />
       </Form>
     </Provider>
   })

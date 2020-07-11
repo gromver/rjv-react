@@ -10,18 +10,19 @@ import { Connect } from '../Connect'
 
 type Props = {
   field?: Ref
-  render: (ref: Ref) => React.ReactNode
+  render: (ref: Ref, register: () => void) => React.ReactNode
+  register: (el: React.ReactElement) => void
 }
 
 function ModelRef (props: Props) {
-  const { field, render } = props
+  const { field, render, register } = props
 
   return field ? (
     <Connect
       render={render}
       model={field.model}
       observe={[field.path]}
-      args={[field]}
+      args={[field, register]}
       observeMode="field"
     />
   ) : null

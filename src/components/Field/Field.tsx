@@ -6,7 +6,7 @@
  *
  */
 
-import React, { useEffect, useMemo } from 'react'
+import React, { useCallback, useEffect, useMemo } from 'react'
 import { Ref, utils, types } from 'rjv'
 import { Connect } from '../Connect'
 import { ProviderContext, ProviderContextValue } from '../Provider'
@@ -15,7 +15,7 @@ import ModelRef from './ModelRef'
 import { buildSchema } from './utils'
 
 type PropsPartial = {
-  render: (ref: Ref) => React.ReactNode
+  render: (ref: Ref, register: () => void) => React.ReactNode
   path: types.Path
   schema?: types.ISchema
   safe?: boolean
@@ -49,6 +49,10 @@ function Field (props: Props) {
     return utils.resolvePath(props.path, '/')
   }, [props.path, scopeContext])
 
+  const register = useCallback((el: React.ReactElement) => {
+    providerContext.setRef(path, el)
+  }, [path, providerContext.setRef])
+
   // if schema and schemaCollector were provided, apply this schema to the model
   useEffect(() => {
     if (schema && providerContext.schemaCollector) {
@@ -65,10 +69,14 @@ function Field (props: Props) {
     }
   }, [providerContext.schemaCollector])
 
+  useEffect(() => () => {
+    providerContext.unsetRef(path)
+  }, [providerContext.unsetRef])
+
   if (safe) {
     return (
       <Connect
-        render={(model) => <ModelRef field={model.safeRef(path)} render={render} />}
+        render={(model) => <ModelRef field={model.safeRef(path)} render={render} register={register} />}
         model={providerContext.model}
         observe={['/']}
         observeMode="validationAfter"
@@ -85,6 +93,7 @@ function Field (props: Props) {
     <ModelRef
       field={ref}
       render={render}
+      register={register}
     />
   )
 }

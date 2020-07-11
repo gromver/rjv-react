@@ -11,16 +11,17 @@ import { ProviderContext, ProviderContextValue } from '../Provider'
 
 type PropsPartial = {
   onSubmit?: (model: Model) => void
-  onSuccess?: (model: Model) => void
-  onError?: (model: Model, firstError: Ref) => void
-  children: React.ReactNode
+  onSuccess?: (data: any, model: Model) => void
+  onError?: (firstError: Ref, model: Model) => void
+  focusFirstError?: boolean
+  render: (handleSubmit: () => void) => React.ReactElement | null
 }
 type Props = PropsPartial & {
   providerContext?: ProviderContextValue
 }
 
 function Submit (props: Props) {
-  const { onSubmit, onError, onSuccess, ...restProps } = props
+  const { onSubmit, onError, onSuccess, render, focusFirstError = true } = props
 
   const providerContext = useMemo(() => {
     // todo check shape
@@ -32,20 +33,30 @@ function Submit (props: Props) {
   }, [props.providerContext])
 
   const handleSubmit = useCallback(async () => {
-    const { model } = providerContext
+    const { model, getRef } = providerContext
 
     onSubmit && onSubmit(model)
 
     const isValid = await model.validate()
 
     if (isValid) {
-      onSuccess && onSuccess(model)
+      onSuccess && onSuccess(model.data, model)
     } else {
-      onError && onError(model, model.ref().firstError as Ref)
+      const errorRef = model.ref().firstError as Ref
+
+      if (focusFirstError) {
+        const errorComponent = getRef(errorRef.path)
+
+        if ((errorComponent as any).focus && typeof (errorComponent as any).focus === 'function') {
+          (errorComponent as any).focus()
+        }
+      }
+
+      onError && onError(errorRef, model)
     }
   }, [providerContext])
 
-  return <span {...restProps} onClick={handleSubmit} />
+  return render(handleSubmit)
 }
 
 export default (props: PropsPartial) => (

@@ -6,6 +6,7 @@ import { storiesOf } from '@storybook/react'
 import { Provider, ProviderRef } from '../Provider'
 import { Subscribe } from '../Subscribe'
 import { Field } from '../Field'
+import { Submit } from '../Submit'
 import { getMessage, getValidationStatus } from '../stories/utils'
 
 const schema: types.ISchema = {
@@ -183,7 +184,7 @@ function DynamicSchemaForm () {
             // custom validator to check "safe" option
             // validate: () => new Promise((res) => setTimeout(() => res({}), 500)
           }}
-          render={(ref) => {
+          render={(ref, register) => {
             const message = getMessage(ref)
 
             return (
@@ -194,6 +195,7 @@ function DynamicSchemaForm () {
                 required={ref.isShouldNotBeBlank}
               >
                 <Select
+                  ref={register}
                   value={ref.getValue()}
                   onChange={(value) => {
                     ref.setValue(value)
@@ -215,7 +217,7 @@ function DynamicSchemaForm () {
             conditionRef.value === 'foo' && <Field
               path="foo"
               schema={{ type: 'string', default: '', presence: true }}
-              render={(ref) => {
+              render={(ref, register) => {
                 const message = getMessage(ref)
 
                 return (
@@ -226,6 +228,7 @@ function DynamicSchemaForm () {
                     required={ref.isShouldNotBeBlank}
                   >
                     <Input
+                      ref={register}
                       value={ref.getValue()}
                       onChange={(e) => ref.setValue(e.target.value)}
                     />
@@ -242,7 +245,7 @@ function DynamicSchemaForm () {
             conditionRef.value === 'bar' && <Field
               path="bar"
               schema={{ type: 'string', default: '', presence: true }}
-              render={(ref) => {
+              render={(ref, register) => {
                 const message = getMessage(ref)
 
                 return (
@@ -253,6 +256,7 @@ function DynamicSchemaForm () {
                     required={ref.isShouldNotBeBlank}
                   >
                     <Input
+                      ref={register}
                       value={ref.getValue()}
                       onChange={(e) => ref.setValue(e.target.value)}
                     />
@@ -263,13 +267,16 @@ function DynamicSchemaForm () {
           )}
         />
 
-        <button
-          onClick={() => {
-            formRef.current && formRef.current.submit()
-          }}
-        >
-          Submit
-        </button>
+        <Submit
+          render={(handleSubmit) => (
+            <button
+              onClick={handleSubmit}
+            >
+              Submit
+            </button>
+          )}
+        />
+
       </Provider>
     </Form>
   )
