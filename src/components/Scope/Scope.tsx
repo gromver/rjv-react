@@ -4,19 +4,10 @@
  *
  */
 
-import React, {
-  createContext,
-  useMemo,
-  memo
-} from 'react'
+import React, { useMemo, memo } from 'react'
 import { utils, types } from 'rjv'
-import { ProviderContext, ProviderContextValue } from '../Provider'
-
-export const ScopeContext = createContext<ScopeContextValue | undefined>(undefined)
-
-export type ScopeContextValue = {
-  scope: types.Path
-}
+import { ScopeContext, ScopeContextValue } from './ScopeContext'
+import ProviderContext, { ProviderContextValue } from '../Provider/ProviderContext'
 
 type PropsPartial = {
   path: types.Path

@@ -1,1 +1,3 @@
-export { default as Scope, ScopeContext, ScopeContextValue } from './Scope'
+export { default as Scope } from './Scope'
+
+export { ScopeContext, ScopeContextValue } from './ScopeContext'

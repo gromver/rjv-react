@@ -5,7 +5,6 @@
  */
 
 import React, {
-  createContext,
   forwardRef,
   useEffect,
   useImperativeHandle,
@@ -17,21 +16,9 @@ import isEqual from 'lodash/isEqual'
 import isEmpty from 'lodash/isEmpty'
 import memoize from 'lodash/memoize'
 import { Model, Ref, types } from 'rjv'
+import { ProviderContext, ProviderContextValue, RefStoreApi } from './ProviderContext'
 import { SchemaCollector } from '../SchemaCollector'
 import { Scope } from '../Scope'
-
-export const ProviderContext = createContext<ProviderContextValue | undefined>(undefined)
-
-export type RefStoreApi = {
-  getRef: (path: string) => Ref
-  setRef: (path: string, el: React.ReactElement) => void
-  unsetRef: (path: string) => void
-}
-
-export type ProviderContextValue = {
-  model: Model
-  schemaCollector?: SchemaCollector
-} & RefStoreApi
 
 export type ProviderRef = {
   submit: () => Promise<{
