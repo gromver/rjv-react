@@ -92,7 +92,7 @@
     "lodash": "^4.0.0",
     "react": "^16.8.0",
     "react-dom": "^16.8.0",
-    "rjv": "^4.1.1",
+    "rjv": "^4.2.0",
     "rxjs": "^6.4.0"
   },
   "devDependencies": {
@@ -125,7 +125,7 @@
     "react-docgen-typescript-loader": "^3.1.0",
     "react-dom": "^16.13.1",
     "react-test-renderer": "^16.8.6",
-    "rjv": "^4.1.1",
+    "rjv": "^4.2.0",
     "rxjs": "^6.4.0",
     "rxjs-compat": "^6.4.0",
     "shx": "^0.3.2",

@@ -90,7 +90,7 @@ export default class Connect extends PureComponent<Props> {
     let observable: Observable<events.Event>
 
     if (model instanceof Model) {
-      observable = model.observable
+      observable = model.observable as any
     } else {
       throw new Error('Connect - Rjv model should be provided')
     }
@@ -98,7 +98,7 @@ export default class Connect extends PureComponent<Props> {
     if (observeMode === 'field') {
       observable = observable.pipe(
         filter(
-          (event) => event instanceof events.ChangeRefStateEvent || event instanceof events.ChangeRefValueEvent
+          (event) => event instanceof events.ChangeRefValidationStateEvent || event instanceof events.ChangeRefUIStateEvent || event instanceof events.ChangeRefValueEvent
         )
       )
     } else if (observeMode === 'fieldMutation') {
@@ -110,7 +110,7 @@ export default class Connect extends PureComponent<Props> {
     } else if (observeMode === 'fieldState') {
       observable = observable.pipe(
         filter(
-          (event) => event instanceof events.ChangeRefStateEvent
+          (event) => event instanceof events.ChangeRefValidationStateEvent || event instanceof events.ChangeRefUIStateEvent
         )
       )
     } else if (observeMode === 'validation') {

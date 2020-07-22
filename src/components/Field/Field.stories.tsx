@@ -40,6 +40,35 @@ const schema: types.ISchema = {
 const initialData = {}
 
 storiesOf('Field', module)
+  .add('Simple Field', () => {
+
+    return <Form style={{ maxWidth: '400px' }}>
+      <Provider data={''} schema={{ presence: true }}>
+        <Field
+          path="/"
+          render={(ref) => {
+            const message = getMessage(ref)
+
+            return (
+              <Form.Item
+                label="Value"
+                validateStatus={getValidationStatus(ref)}
+                help={message}
+                required={ref.isShouldNotBeBlank}
+              >
+                <Input
+                  value={ref.getValue()}
+                  onFocus={() => ref.markAsTouched()}
+                  onChange={(e) => ref.markAsDirty().markAsChanged().setValue(e.target.value)}
+                  onBlur={() => ref.validate()}
+                />
+              </Form.Item>
+            )
+          }}
+        />
+      </Provider>
+    </Form>
+  })
   .add('Static schema - conditional form test', () => {
 
     return <StaticSchemaForm />
