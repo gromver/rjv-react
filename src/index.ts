@@ -1,4 +1,5 @@
 export * from './components/ModelProvider'
+export * from './components/OptionsProvider'
 export * from './components/Scope'
 export * from './components/Subscribe'
 export * from './components/Field'
