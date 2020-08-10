@@ -10,17 +10,20 @@ import React, {
   useImperativeHandle,
   useMemo,
   useState,
+  useContext,
   memo
 } from 'react'
 import isEqual from 'lodash/isEqual'
 import isEmpty from 'lodash/isEmpty'
+import merge from 'lodash/merge'
 import memoize from 'lodash/memoize'
 import { Model, Ref, types } from 'rjv'
-import { ProviderContext, ProviderContextValue, RefStoreApi } from './ProviderContext'
+import ModelProviderContext, { ModelProviderContextValue, RefStoreApi } from './ModelProviderContext'
 import { SchemaCollector } from '../SchemaCollector'
+import { OptionsProviderContext } from '../OptionsProvider'
 import { Scope } from '../Scope'
 
-export type ProviderRef = {
+export type ModelProviderRef = {
   submit: () => Promise<{
     isValid: boolean
     firstError?: Ref
@@ -30,7 +33,7 @@ export type ProviderRef = {
 }
 
 type Props = {
-  ref?: React.RefObject<ProviderRef | undefined>
+  ref?: React.RefObject<ModelProviderRef | undefined>
   options?: types.IModelOptionsPartial,
   model?: Model,
   schema?: types.ISchema,
@@ -52,15 +55,22 @@ const getRefStoreApi = memoize((model: Model): RefStoreApi => {
   }
 })
 
-function Provider (props: Props, ref) {
+function ModelProvider (props: Props, ref) {
   const { data, options, children } = props
 
   const schema = useMemo(() => props.schema, [])
 
+  const defaultOptions = useContext(OptionsProviderContext)
+
+  const modelOptions = useMemo(() => {
+    return merge({}, defaultOptions, options)
+  }, [defaultOptions, options])
+  console.log('modelOptions', modelOptions)
+
   /*
    Provide initial context
    */
-  const initialContext: ProviderContextValue = useMemo(() => {
+  const initialContext: ModelProviderContextValue = useMemo(() => {
     if (props.model) {
       const schema = props.model.getSchema()
 
@@ -73,13 +83,13 @@ function Provider (props: Props, ref) {
     }
 
     if (schema) {
-      const model = new Model(schema, data, options || {})
+      const model = new Model(schema, data, modelOptions)
 
       return { model, ...getRefStoreApi(model) }
     }
 
     const schemaCollector = new SchemaCollector()
-    const model = new Model({}, data, options || {})
+    const model = new Model({}, data, modelOptions)
 
     return { schemaCollector, model, ...getRefStoreApi(model) }
   }, [])
@@ -128,12 +138,12 @@ function Provider (props: Props, ref) {
     // also we dont need to recreate context after component mounting
     if (!props.model && !isEqual(context.model.ref().initialValue, data)) {
       if (schema) {
-        const model = new Model(schema, data, options || {})
+        const model = new Model(schema, data, modelOptions)
 
         model.prepare().then(() => setContext({ model, ...getRefStoreApi(model) }))
       } else {
         const schemaCollector = new SchemaCollector()
-        const model = new Model({}, data, options || {})
+        const model = new Model({}, data, modelOptions)
 
         model.prepare().then(() => setContext({ schemaCollector, model, ...getRefStoreApi(model) }))
       }
@@ -177,13 +187,13 @@ function Provider (props: Props, ref) {
     }
   }, [context.model])
 
-  return <ProviderContext.Provider
+  return <ModelProviderContext.Provider
     value={context}
   >
     <Scope path="/">
       {children}
     </Scope>
-  </ProviderContext.Provider>
+  </ModelProviderContext.Provider>
 }
 
-export default memo<Props>(forwardRef<ProviderRef, Props>(Provider), isEqual)
+export default memo<Props>(forwardRef<ModelProviderRef, Props>(ModelProvider), isEqual)

@@ -8,20 +8,20 @@
 
 import React, { useContext } from 'react'
 import { Model } from 'rjv'
-import { ProviderContext } from '../Provider'
+import { ModelProviderContext } from '../ModelProvider'
 
 type Props = {
   render: (model: Model) => React.ReactNode
 }
 
-export default function ModelProvided (props: Props) {
+export default function IfModelProvided (props: Props) {
   const { render } = props
 
-  const providerContext = useContext(ProviderContext)
+  const modelProviderContext = useContext(ModelProviderContext)
 
-  return providerContext
+  return modelProviderContext
     ? <>
-      {render(providerContext.model)}
+      {render(modelProviderContext.model)}
     </>
     : null
 }

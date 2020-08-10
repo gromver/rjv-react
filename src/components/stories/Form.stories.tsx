@@ -3,7 +3,7 @@ import { Model } from 'rjv'
 import { Form, Input, Alert } from 'antd'
 import { storiesOf } from '@storybook/react'
 
-import { Provider, ProviderRef } from '../Provider'
+import { ModelProvider, ModelProviderRef } from '../ModelProvider'
 import { Subscribe } from '../Subscribe'
 import { Field } from '../Field'
 import { getMessage, getValidationStatus } from './utils'
@@ -18,11 +18,11 @@ storiesOf('Form', module)
 
 function SimpleForm () {
   const [counter, setCounter] = useState(false)
-  const formRef = useRef<ProviderRef>()
+  const formRef = useRef<ModelProviderRef>()
 
   return (
     <Form style={{ maxWidth: '400px' }}>
-      <Provider ref={formRef} data={initialData} /* schema={schema} */>
+      <ModelProvider ref={formRef} data={initialData} /* schema={schema} */>
         <Subscribe
           render={(model: Model) => {
             const ref = model.ref()
@@ -141,7 +141,7 @@ function SimpleForm () {
         </button>
         <button onClick={() => setCounter(true)}>Show control</button>
         <button onClick={() => setCounter(false)}>Hide control</button>
-      </Provider>
+      </ModelProvider>
     </Form>
   )
 }

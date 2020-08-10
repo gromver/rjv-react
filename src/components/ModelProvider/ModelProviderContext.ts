@@ -8,11 +8,9 @@ export type RefStoreApi = {
   unsetRef: (path: string) => void
 }
 
-export type ProviderContextValue = {
+export type ModelProviderContextValue = {
   model: Model
   schemaCollector?: SchemaCollector
 } & RefStoreApi
 
-export const ProviderContext = createContext<ProviderContextValue | undefined>(undefined)
-
-export default ProviderContext
+export default createContext<ModelProviderContextValue | undefined>(undefined)

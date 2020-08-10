@@ -5,6 +5,4 @@ export type ScopeContextValue = {
   scope: types.Path
 }
 
-export const ScopeContext = createContext<ScopeContextValue | undefined>(undefined)
-
-export default ScopeContext
+export default createContext<ScopeContextValue | undefined>(undefined)

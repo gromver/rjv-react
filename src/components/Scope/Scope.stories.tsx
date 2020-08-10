@@ -3,7 +3,7 @@ import { Model, Ref } from 'rjv'
 import { Form, Input, Alert } from 'antd'
 import { storiesOf } from '@storybook/react'
 
-import { Provider, ProviderRef } from '../Provider'
+import { ModelProvider, ModelProviderRef } from '../ModelProvider'
 import { Subscribe } from '../Subscribe'
 import { Field } from '../Field'
 import { Scope } from '../Scope'
@@ -58,11 +58,11 @@ storiesOf('Scope', module)
   })
 
 function SimpleForm () {
-  const formRef = useRef<ProviderRef>()
+  const formRef = useRef<ModelProviderRef>()
 
   return (
     <Form style={{ maxWidth: '400px' }}>
-      <Provider ref={formRef} data={initialData} schema={schema}>
+      <ModelProvider ref={formRef} data={initialData} schema={schema}>
         <Subscribe
           render={(model: Model) => {
             const ref = model.ref()
@@ -81,9 +81,6 @@ function SimpleForm () {
         <Scope path="auth">
           <Field
             path="name"
-            schema={{
-              type: 'string', default: '', minLength: 5, presence: true
-            }}
             render={(ref) => {
               const message = getMessage(ref)
 
@@ -132,7 +129,7 @@ function SimpleForm () {
         >
           Submit
         </button>
-      </Provider>
+      </ModelProvider>
     </Form>
   )
 }

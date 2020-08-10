@@ -37,7 +37,7 @@ export default class Connect extends PureComponent<Props> {
   static defaultProps = {
     debounce: Connect.TICK,
     observe: [],
-    observeMode: 'all'
+    observeMode: 'any'
   }
 
   private subscription: Subscription
@@ -136,7 +136,13 @@ export default class Connect extends PureComponent<Props> {
     if (observe.length) {
       observable = observable.pipe(
         filter(
-          (event) => !!observe.find((attr) => attr === (event as any).path)
+          (event) => {
+            if (event instanceof events.BeforeValidationEvent || event instanceof events.AfterValidationEvent) {
+              return !!observe.find((path) => event.scopes.indexOf(path) !== -1)
+            }
+
+            return !!observe.find((path) => path === (event as any).path)
+          }
         )
       )
     }

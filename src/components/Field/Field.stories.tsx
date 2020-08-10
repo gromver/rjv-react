@@ -3,7 +3,7 @@ import { Model, types } from 'rjv'
 import { Form, Input, Alert, Select } from 'antd'
 import { storiesOf } from '@storybook/react'
 
-import { Provider, ProviderRef } from '../Provider'
+import { ModelProvider, ModelProviderRef } from '../ModelProvider'
 import { Subscribe } from '../Subscribe'
 import { Field } from '../Field'
 import { Submit } from '../Submit'
@@ -14,7 +14,8 @@ const schema: types.ISchema = {
     condition: {
       type: 'string',
       default: 'empty',
-      presence: true
+      presence: true,
+      dependencies: ['../foo', '../bar']
     }
   },
   applySchemas: [
@@ -43,7 +44,7 @@ storiesOf('Field', module)
   .add('Simple Field', () => {
 
     return <Form style={{ maxWidth: '400px' }}>
-      <Provider data={''} schema={{ presence: true }}>
+      <ModelProvider data={''} schema={{ presence: true }}>
         <Field
           path="/"
           render={(ref) => {
@@ -66,7 +67,7 @@ storiesOf('Field', module)
             )
           }}
         />
-      </Provider>
+      </ModelProvider>
     </Form>
   })
   .add('Static schema - conditional form test', () => {
@@ -79,11 +80,11 @@ storiesOf('Field', module)
   })
 
 function StaticSchemaForm () {
-  const formRef = useRef<ProviderRef>()
+  const formRef = useRef<ModelProviderRef>()
 
   return (
     <Form style={{ maxWidth: '400px' }}>
-      <Provider ref={formRef} data={initialData} schema={schema}>
+      <ModelProvider ref={formRef} data={initialData} schema={schema}>
         <Subscribe
           render={(model: Model) => {
             const ref = model.ref()
@@ -115,7 +116,7 @@ function StaticSchemaForm () {
                   value={ref.getValue()}
                   onChange={(value) => {
                     ref.setValue(value)
-                    ref.prepare()
+                    ref.validate()
                   }}
                 >
                   <Select.Option value="empty">empty</Select.Option>
@@ -178,17 +179,17 @@ function StaticSchemaForm () {
         >
           Submit
         </button>
-      </Provider>
+      </ModelProvider>
     </Form>
   )
 }
 
 function DynamicSchemaForm () {
-  const formRef = useRef<ProviderRef>()
+  const formRef = useRef<ModelProviderRef>()
 
   return (
     <Form style={{ maxWidth: '400px' }}>
-      <Provider ref={formRef} data={initialData}>
+      <ModelProvider ref={formRef} data={initialData}>
         <Subscribe
           render={(model: Model) => {
             const ref = model.ref()
@@ -306,7 +307,7 @@ function DynamicSchemaForm () {
           )}
         />
 
-      </Provider>
+      </ModelProvider>
     </Form>
   )
 }

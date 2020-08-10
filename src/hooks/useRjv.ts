@@ -1,6 +1,6 @@
 import { useContext } from 'react'
 import { Model } from 'rjv'
-import { ProviderContext, RefStoreApi } from '../components/Provider'
+import { ModelProviderContext, RefStoreApi } from '../components/ModelProvider'
 import { ScopeContext } from '../components/Scope'
 
 type RjvApi = {
@@ -9,15 +9,15 @@ type RjvApi = {
 } & RefStoreApi
 
 export default function useRjv (): RjvApi | undefined {
-  const providerContext = useContext(ProviderContext)
+  const modelProviderContext = useContext(ModelProviderContext)
   const scopeContext = useContext(ScopeContext)
 
-  if (providerContext && scopeContext) {
+  if (modelProviderContext && scopeContext) {
     return {
-      model: providerContext.model,
-      getRef: providerContext.getRef,
-      setRef: providerContext.setRef,
-      unsetRef: providerContext.unsetRef,
+      model: modelProviderContext.model,
+      getRef: modelProviderContext.getRef,
+      setRef: modelProviderContext.setRef,
+      unsetRef: modelProviderContext.unsetRef,
       scope: scopeContext.scope
     }
   }

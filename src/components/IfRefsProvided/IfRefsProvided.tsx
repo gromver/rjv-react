@@ -10,7 +10,7 @@
 import React, { useMemo } from 'react'
 import { utils, types, Ref } from 'rjv'
 import { Connect } from '../Connect'
-import { ProviderContext, ProviderContextValue } from '../Provider'
+import { ModelProviderContext, ModelProviderContextValue } from '../ModelProvider'
 import { ScopeContext, ScopeContextValue } from '../Scope'
 
 type PropsPartial = {
@@ -18,11 +18,11 @@ type PropsPartial = {
   paths?: types.Path[]
 }
 type Props = PropsPartial & {
-  providerContext?: ProviderContextValue
+  providerContext?: ModelProviderContextValue
   scopeContext?: ScopeContextValue
 }
 
-function Subscribe (props: Props) {
+function IfRefsProvided (props: Props) {
   const { render, scopeContext } = props
 
   const providerContext = useMemo(() => {
@@ -59,15 +59,15 @@ function Subscribe (props: Props) {
 }
 
 export default (props: PropsPartial) => (
-  <ProviderContext.Consumer>
+  <ModelProviderContext.Consumer>
     {(providerContext) => (
       <ScopeContext.Consumer>
-        {(scopeContext) => <Subscribe
+        {(scopeContext) => <IfRefsProvided
           {...props}
           providerContext={providerContext}
           scopeContext={scopeContext}
         />}
       </ScopeContext.Consumer>
     )}
-  </ProviderContext.Consumer>
+  </ModelProviderContext.Consumer>
 )

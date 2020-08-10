@@ -6,8 +6,8 @@
 
 import React, { useMemo, memo } from 'react'
 import { utils, types } from 'rjv'
-import { ScopeContext, ScopeContextValue } from './ScopeContext'
-import ProviderContext, { ProviderContextValue } from '../Provider/ProviderContext'
+import ScopeContext, { ScopeContextValue } from './ScopeContext'
+import { ModelProviderContext, ModelProviderContextValue } from '../ModelProvider'
 
 type PropsPartial = {
   path: types.Path
@@ -15,7 +15,7 @@ type PropsPartial = {
 }
 
 type Props = PropsPartial & {
-  providerContext?: ProviderContextValue
+  providerContext?: ModelProviderContextValue
   scopeContext?: ScopeContextValue
 }
 
@@ -51,11 +51,11 @@ const Scope = memo<Props>((props: Props, ref) => {
 })
 
 export default (props: PropsPartial) => (
-  <ProviderContext.Consumer>
+  <ModelProviderContext.Consumer>
     {(providerContext) => (
       <ScopeContext.Consumer>
         {(scopeContext) => <Scope {...props} providerContext={providerContext} scopeContext={scopeContext} />}
       </ScopeContext.Consumer>
     )}
-  </ProviderContext.Consumer>
+  </ModelProviderContext.Consumer>
 )

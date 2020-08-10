@@ -7,7 +7,7 @@
 import React, { useMemo } from 'react'
 import { utils, types } from 'rjv'
 import { Connect, ObserveMode } from '../Connect'
-import { ProviderContext, ProviderContextValue } from '../Provider'
+import { ModelProviderContext, ModelProviderContextValue } from '../ModelProvider'
 import { ScopeContext, ScopeContextValue } from '../Scope'
 
 type PropsPartial = {
@@ -17,7 +17,7 @@ type PropsPartial = {
   debounce?: number
 }
 type Props = PropsPartial & {
-  providerContext?: ProviderContextValue
+  providerContext?: ModelProviderContextValue
   scopeContext?: ScopeContextValue
 }
 
@@ -60,7 +60,7 @@ function Subscribe (props: Props) {
 }
 
 export default (props: PropsPartial) => (
-  <ProviderContext.Consumer>
+  <ModelProviderContext.Consumer>
     {(providerContext) => (
       <ScopeContext.Consumer>
         {(scopeContext) => <Subscribe
@@ -70,5 +70,5 @@ export default (props: PropsPartial) => (
         />}
       </ScopeContext.Consumer>
     )}
-  </ProviderContext.Consumer>
+  </ModelProviderContext.Consumer>
 )

@@ -3,10 +3,10 @@ import { types } from 'rjv'
 import { Form, Select } from 'antd'
 import { storiesOf } from '@storybook/react'
 
-import { Provider } from '../Provider'
+import { ModelProvider } from '../ModelProvider'
 import { Field } from '../Field'
 import { getMessage, getValidationStatus } from '../stories/utils'
-import { RefsProvided } from './index'
+import { IfRefsProvided } from './index'
 
 const schema: types.ISchema = {
   properties: {
@@ -73,7 +73,7 @@ storiesOf('RefsProvided', module)
 function SimpleForm () {
   return (
     <Form style={{ maxWidth: '400px' }}>
-      <Provider data={initialData} schema={schema}>
+      <ModelProvider data={initialData} schema={schema}>
         <Field
           path="condition1"
           render={(ref) => {
@@ -131,30 +131,30 @@ function SimpleForm () {
         />
 
         <Form.Item>
-          <RefsProvided paths={['foo1']} render={(ref) => ref.value} />
+          <IfRefsProvided paths={['foo1']} render={(ref) => ref.value} />
         </Form.Item>
         <Form.Item>
-          <RefsProvided paths={['bar1']} render={(ref) => ref.value} />
+          <IfRefsProvided paths={['bar1']} render={(ref) => ref.value} />
         </Form.Item>
         <Form.Item>
-          <RefsProvided paths={['foo2']} render={(ref) => ref.value} />
+          <IfRefsProvided paths={['foo2']} render={(ref) => ref.value} />
         </Form.Item>
         <Form.Item>
-          <RefsProvided paths={['bar2']} render={(ref) => ref.value} />
+          <IfRefsProvided paths={['bar2']} render={(ref) => ref.value} />
         </Form.Item>
         <Form.Item>
-          <RefsProvided
+          <IfRefsProvided
             paths={['foo1', 'foo2']}
             render={(ref1, ref2) => `${ref1.value} + ${ref2.value}`}
           />
         </Form.Item>
         <Form.Item>
-          <RefsProvided
+          <IfRefsProvided
             paths={['bar1', 'bar2']}
             render={(ref1, ref2) => `${ref1.value} + ${ref2.value}`}
           />
         </Form.Item>
-      </Provider>
+      </ModelProvider>
     </Form>
   )
 }

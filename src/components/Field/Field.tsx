@@ -9,7 +9,7 @@
 import React, { useCallback, useEffect, useMemo } from 'react'
 import { Ref, utils, types } from 'rjv'
 import { Connect } from '../Connect'
-import { ProviderContext, ProviderContextValue } from '../Provider'
+import { ModelProviderContext, ModelProviderContextValue } from '../ModelProvider'
 import { ScopeContext, ScopeContextValue } from '../Scope'
 import ModelRef from './ModelRef'
 import { buildSchema } from './utils'
@@ -21,7 +21,7 @@ type PropsPartial = {
   safe?: boolean
 }
 type Props = PropsPartial & {
-  providerContext?: ProviderContextValue
+  providerContext?: ModelProviderContextValue
   scopeContext?: ScopeContextValue
 }
 
@@ -78,7 +78,7 @@ function Field (props: Props) {
       <Connect
         render={(model) => <ModelRef field={model.safeRef(path)} render={render} register={register} />}
         model={providerContext.model}
-        observe={['/']}
+        observe={path === '/' ? ['/'] : ['/', path]}
         observeMode="validationAfter"
         debounce={0}
       />
@@ -99,7 +99,7 @@ function Field (props: Props) {
 }
 
 export default (props: PropsPartial) => (
-  <ProviderContext.Consumer>
+  <ModelProviderContext.Consumer>
     {(providerContext) => (
       <ScopeContext.Consumer>
         {(scopeContext) => <Field
@@ -109,5 +109,5 @@ export default (props: PropsPartial) => (
         />}
       </ScopeContext.Consumer>
     )}
-  </ProviderContext.Consumer>
+  </ModelProviderContext.Consumer>
 )

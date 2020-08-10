@@ -3,7 +3,7 @@ import { storiesOf } from '@storybook/react'
 import { Button, Form, Input } from 'antd'
 
 import Submit from './Submit'
-import { Provider } from '../Provider'
+import { ModelProvider } from '../ModelProvider'
 import { Field } from '../Field'
 import { getMessage, getValidationStatus } from '../stories/utils'
 
@@ -38,7 +38,7 @@ function RequiredField () {
 
 storiesOf('SubmitBtn', module)
   .add('Test buttons', () => {
-    return <Provider data={initialData}>
+    return <ModelProvider data={initialData}>
       <p>You should open console to see events</p>
 
       <br />
@@ -83,5 +83,5 @@ storiesOf('SubmitBtn', module)
           focusFirstError={false}
         />
       </Form>
-    </Provider>
+    </ModelProvider>
   })

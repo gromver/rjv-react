@@ -3,7 +3,7 @@ import { storiesOf } from '@storybook/react'
 // import { Button, Form, Input } from 'antd'
 //
 // import Submit from './Submit'
-import { Provider } from '../components/Provider'
+import { ModelProvider } from '../components/ModelProvider'
 import useRjv from './useRjv'
 // import { Field } from '../Field'
 // import { getMessage, getValidationStatus } from '../stories/utils'
@@ -20,11 +20,11 @@ function HookTest () {
 
 storiesOf('useRjv', module)
   .add('Model provided', () => {
-    return <Provider data={initialData}>
+    return <ModelProvider data={initialData}>
       <p>You should open console to see result</p>
 
       <HookTest />
-    </Provider>
+    </ModelProvider>
   })
   .add('Model not provided', () => {
     return <div>

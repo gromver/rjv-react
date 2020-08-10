@@ -7,7 +7,7 @@
 
 import React, { useCallback, useMemo } from 'react'
 import { Model, Ref } from 'rjv'
-import { ProviderContext, ProviderContextValue } from '../Provider'
+import { ModelProviderContext, ModelProviderContextValue } from '../ModelProvider'
 
 type PropsPartial = {
   onSubmit?: (model: Model) => void
@@ -17,7 +17,7 @@ type PropsPartial = {
   render: (handleSubmit: () => void) => React.ReactElement | null
 }
 type Props = PropsPartial & {
-  providerContext?: ProviderContextValue
+  providerContext?: ModelProviderContextValue
 }
 
 function Submit (props: Props) {
@@ -60,12 +60,12 @@ function Submit (props: Props) {
 }
 
 export default (props: PropsPartial) => (
-  <ProviderContext.Consumer>
+  <ModelProviderContext.Consumer>
     {(providerContext) => (
       <Submit
         {...props}
         providerContext={providerContext}
       />
     )}
-  </ProviderContext.Consumer>
+  </ModelProviderContext.Consumer>
 )
