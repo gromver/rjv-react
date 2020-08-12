@@ -65,7 +65,6 @@ function ModelProvider (props: Props, ref) {
   const modelOptions = useMemo(() => {
     return merge({}, defaultOptions, options)
   }, [defaultOptions, options])
-  console.log('modelOptions', modelOptions)
 
   /*
    Provide initial context
