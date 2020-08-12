@@ -26,7 +26,7 @@ type Props = PropsPartial & {
 }
 
 function Field (props: Props) {
-  const { render, scopeContext, safe = false } = props
+  const { render, scopeContext, safe = true } = props
 
   // Checking and getting providerContext. If the context is invalid, throw an exception.
   const providerContext = useMemo(() => {

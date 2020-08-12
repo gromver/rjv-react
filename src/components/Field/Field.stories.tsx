@@ -70,6 +70,80 @@ storiesOf('Field', module)
       </ModelProvider>
     </Form>
   })
+  .add('Safe Field - Schema driven', () => {
+    return <Form style={{ maxWidth: '400px' }}>
+      <ModelProvider
+        data={{}}
+        schema={
+          {
+            properties: {
+              foo: {
+                default: '',
+                presence: true,
+                validate: () => new Promise((res) => setTimeout(() => res({}), 500))
+              }
+            }
+          }
+        }
+      >
+        <Field
+          path="foo"
+          render={(ref) => {
+            const message = getMessage(ref)
+
+            return (
+              <Form.Item
+                label="Value"
+                validateStatus={getValidationStatus(ref)}
+                help={message || 'Should appear after 500ms'}
+                required={ref.isShouldNotBeBlank}
+              >
+                <Input
+                  value={ref.getValue()}
+                  onFocus={() => ref.markAsTouched()}
+                  onChange={(e) => ref.markAsDirty().markAsChanged().setValue(e.target.value)}
+                  onBlur={() => ref.validate()}
+                />
+              </Form.Item>
+            )
+          }}
+        />
+      </ModelProvider>
+    </Form>
+  })
+  .add('Safe Field - UI driven', () => {
+    return <Form style={{ maxWidth: '400px' }}>
+      <ModelProvider data={{}}>
+        <Field
+          path="foo"
+          schema={{
+            default: '',
+            presence: true,
+            validate: () => new Promise((res) => setTimeout(() => res({}), 500))
+          }}
+          render={(ref) => {
+            const message = getMessage(ref)
+
+            return (
+              <Form.Item
+                label="Value"
+                validateStatus={getValidationStatus(ref)}
+                help={message || 'Should appear after 500ms'}
+                required={ref.isShouldNotBeBlank}
+              >
+                <Input
+                  value={ref.getValue()}
+                  onFocus={() => ref.markAsTouched()}
+                  onChange={(e) => ref.markAsDirty().markAsChanged().setValue(e.target.value)}
+                  onBlur={() => ref.validate()}
+                />
+              </Form.Item>
+            )
+          }}
+        />
+      </ModelProvider>
+    </Form>
+  })
   .add('Static schema - conditional form test', () => {
 
     return <StaticSchemaForm />
@@ -211,8 +285,6 @@ function DynamicSchemaForm () {
             type: 'string',
             default: 'empty',
             presence: true
-            // custom validator to check "safe" option
-            // validate: () => new Promise((res) => setTimeout(() => res({}), 500)
           }}
           render={(ref, register) => {
             const message = getMessage(ref)
