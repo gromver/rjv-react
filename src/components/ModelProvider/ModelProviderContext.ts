@@ -1,9 +1,9 @@
 import React, { createContext } from 'react'
-import { Model, Ref } from 'rjv'
+import { Model } from 'rjv'
 import { SchemaCollector } from '../SchemaCollector'
 
 export type RefStoreApi = {
-  getRef: (path: string) => Ref
+  getRef: (path: string) => React.ReactElement | undefined
   setRef: (path: string, el: React.ReactElement) => void
   unsetRef: (path: string) => void
 }

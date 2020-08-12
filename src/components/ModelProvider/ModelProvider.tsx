@@ -26,7 +26,8 @@ import { Scope } from '../Scope'
 export type ModelProviderRef = {
   submit: () => Promise<{
     isValid: boolean
-    firstError?: Ref
+    firstErrorRef?: Ref
+    firstErrorComponent?: React.ReactElement
     model: Model
   }>
   model: () => Model
@@ -45,7 +46,7 @@ const getRefStoreApi = memoize((model: Model): RefStoreApi => {
   const refs = {}
 
   return {
-    getRef: (path: string): Ref => refs[path],
+    getRef: (path: string): React.ReactElement | undefined => refs[path],
     setRef: (path: string, el: React.ReactElement) => {
       refs[path] = el
     },
@@ -176,11 +177,12 @@ function ModelProvider (props: Props, ref) {
   useImperativeHandle(ref, () => {
     return {
       submit: async () => {
-        const { model } = context
+        const { model, getRef } = context
         const isValid = await model.validate()
-        const firstError = isValid ? undefined : model.ref().firstError
+        const firstErrorRef = isValid ? undefined : model.ref().firstError
+        const firstErrorComponent = firstErrorRef ? getRef(firstErrorRef.path) : undefined
 
-        return { isValid, firstError, model }
+        return { isValid, firstErrorRef, firstErrorComponent, model }
       },
       model: (): Model => context.model
     }
