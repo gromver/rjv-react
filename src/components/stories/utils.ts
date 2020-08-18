@@ -6,7 +6,7 @@ export function getValidationStatus (ref: Ref) {
   }
 
   if (ref.isValid) {
-    return 'success'
+    return ref.message ? 'warning' : 'success'
   }
 
   if (ref.isInvalid) {
@@ -17,12 +17,5 @@ export function getValidationStatus (ref: Ref) {
 }
 
 export function getMessage (ref) {
-  const { state } = ref
-  let message = ''
-
-  if (ref.isValidated) {
-    message = state.message && state.message.description
-  }
-
-  return message
+  return ref.isValidated ? ref.messageDescription : undefined
 }
