@@ -23,13 +23,19 @@ import { SchemaCollector } from '../SchemaCollector'
 import { OptionsProviderContext } from '../OptionsProvider'
 import { Scope } from '../Scope'
 
+interface Focusable extends React.ReactElement {
+  focus: () => void
+}
+
+export type SubmitFormFn = () => Promise<{
+  isValid: boolean
+  firstErrorRef?: Ref
+  firstErrorComponent?: Focusable
+  model: Model
+}>
+
 export type ModelProviderRef = {
-  submit: () => Promise<{
-    isValid: boolean
-    firstErrorRef?: Ref
-    firstErrorComponent?: React.ReactElement
-    model: Model
-  }>
+  submit: SubmitFormFn
   model: () => Model
 }
 

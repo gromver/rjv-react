@@ -1,6 +1,7 @@
 export {
   default as ModelProvider,
-  ModelProviderRef
+  ModelProviderRef,
+  SubmitFormFn
 } from './ModelProvider'
 
 export {
