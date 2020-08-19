@@ -4,7 +4,7 @@ import './styles.css'
 import 'antd/dist/antd.css'
 
 const reqs = [
-  require.context('../src/components', true, /\.stories\.ts?x$/),
+  require.context('../src', true, /\.stories\.ts?x$/),
 ]
 
 const loadStories = () => reqs.forEach(req => req.keys().forEach(filename => req(filename)))

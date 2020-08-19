@@ -1,9 +1,10 @@
 {
-  "extends": "tslint-config-airbnb",
+  "extends": "tslint-config-standard",
   "rules": {
     "import-name": false,
     "no-param-reassign": false,
     "arrow-parens": true,
-    "ter-arrow-parens": false
+    "ter-arrow-parens": false,
+    "quotemark": [true, "single", "jsx-double"]
   }
 }

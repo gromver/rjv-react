@@ -1,3 +1,1 @@
-import Field from './Field';
-
-export default Field;
+export { default as Field } from './Field'
