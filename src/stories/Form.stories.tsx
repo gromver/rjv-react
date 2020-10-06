@@ -3,9 +3,9 @@ import { Model } from 'rjv'
 import { Form, Input, Alert } from 'antd'
 import { storiesOf } from '@storybook/react'
 
-import { ModelProvider, ModelProviderRef } from '../ModelProvider'
-import { Subscribe } from '../Subscribe'
-import { Field } from '../Field'
+import { ModelProvider, ModelProviderRef } from '../components/ModelProvider'
+import { Subscribe } from '../components/Subscribe'
+import { Field } from '../components/Field'
 import { getMessage, getValidationStatus } from './utils'
 
 const initialData = {}

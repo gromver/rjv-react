@@ -7,7 +7,7 @@ import { ModelProvider, ModelProviderRef } from '../ModelProvider'
 import { Subscribe } from '../Subscribe'
 import { Field } from '../Field'
 import { Submit } from '../Submit'
-import { getMessage, getValidationStatus } from '../stories/utils'
+import { getMessage, getValidationStatus } from '../../stories/utils'
 
 const schema: types.ISchema = {
   properties: {

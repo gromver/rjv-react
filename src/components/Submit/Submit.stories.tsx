@@ -5,7 +5,7 @@ import { Button, Form, Input } from 'antd'
 import Submit from './Submit'
 import { ModelProvider } from '../ModelProvider'
 import { Field } from '../Field'
-import { getMessage, getValidationStatus } from '../stories/utils'
+import { getMessage, getValidationStatus } from '../../stories/utils'
 
 const initialData = {}
 
