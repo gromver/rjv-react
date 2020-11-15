@@ -1,37 +1,26 @@
-import { useCallback, useContext } from 'react'
-import { Model } from 'rjv'
-import { ModelProviderContext, RefStoreApi, SubmitFormFn } from '../components/ModelProvider'
+import { useContext, useMemo } from 'react'
+import { ProviderContext, ProviderRef } from '../components/Provider'
 import { ScopeContext } from '../components/Scope'
 
 type RjvApi = {
-  submit: SubmitFormFn
-  model: Model
   scope: string
-} & RefStoreApi
+} & ProviderRef
 
 export default function useRjv (): RjvApi | undefined {
-  const modelProviderContext = useContext(ModelProviderContext)
+  const providerContext = useContext(ProviderContext)
   const scopeContext = useContext(ScopeContext)
 
-  const submit = useCallback(async () => {
-    if (modelProviderContext) {
-      const { model, getRef } = modelProviderContext
-      const isValid = await model.validate()
-      const firstErrorRef = isValid ? undefined : model.ref().firstError
-      const firstErrorComponent = firstErrorRef ? getRef(firstErrorRef.path) : undefined
-
-      return { isValid, firstErrorRef, firstErrorComponent, model }
+  const api: RjvApi | undefined = useMemo(() => {
+    if (providerContext && scopeContext) {
+      return {
+        scope: scopeContext.scope,
+        submit: providerContext.submit,
+        getData: providerContext.getData
+      }
     }
-  }, [modelProviderContext])
 
-  if (modelProviderContext && scopeContext) {
-    return {
-      submit: submit as SubmitFormFn,
-      model: modelProviderContext.model,
-      getRef: modelProviderContext.getRef,
-      setRef: modelProviderContext.setRef,
-      unsetRef: modelProviderContext.unsetRef,
-      scope: scopeContext.scope
-    }
-  }
+    return undefined
+  }, [providerContext, scopeContext])
+
+  return api
 }

@@ -7,7 +7,7 @@
 import React, { useMemo, memo } from 'react'
 import { utils, types } from 'rjv'
 import ScopeContext, { ScopeContextValue } from './ScopeContext'
-import ModelProviderContext, { ModelProviderContextValue } from '../ModelProvider/ModelProviderContext'
+import { ProviderContext, ProviderContextValue } from '../Provider'
 
 type PropsPartial = {
   path: types.Path
@@ -15,7 +15,7 @@ type PropsPartial = {
 }
 
 type Props = PropsPartial & {
-  providerContext?: ModelProviderContextValue
+  providerContext?: ProviderContextValue
   scopeContext?: ScopeContextValue
 }
 
@@ -23,7 +23,6 @@ const Scope = memo<Props>((props: Props) => {
   const { path, children, scopeContext } = props
 
   const providerContext = useMemo(() => {
-    // todo check shape
     if (!props.providerContext) {
       throw new Error('Received invalid providerContext')
     }
@@ -51,11 +50,11 @@ const Scope = memo<Props>((props: Props) => {
 })
 
 export default (props: PropsPartial) => (
-  <ModelProviderContext.Consumer>
+  <ProviderContext.Consumer>
     {(providerContext) => (
       <ScopeContext.Consumer>
         {(scopeContext) => <Scope {...props} providerContext={providerContext} scopeContext={scopeContext} />}
       </ScopeContext.Consumer>
     )}
-  </ModelProviderContext.Consumer>
+  </ProviderContext.Consumer>
 )

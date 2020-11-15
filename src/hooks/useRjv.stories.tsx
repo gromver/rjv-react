@@ -1,9 +1,9 @@
 import React, { useCallback } from 'react'
 import { storiesOf } from '@storybook/react'
 import { Form, Input } from 'antd'
-import { ModelProvider } from '../components/ModelProvider'
+import { Provider } from '../components/Provider'
 import { Field } from '../components/Field'
-import { getMessage, getValidationStatus } from '../stories/utils'
+import { getValidationStatus } from '../stories/helpers'
 import useRjv from './useRjv'
 
 const initialData = {}
@@ -23,15 +23,14 @@ function SubmitBtn (props) {
     if (rjv) {
       const {submit} = rjv
 
-      const {isValid, firstErrorComponent, model} = await submit()
+      const {valid, data, firstErrorField} = await submit()
 
-      if (isValid) {
-        console.log(model.data)
+      if (valid) {
+        console.log(data)
       } else {
-        console.log(firstErrorComponent)
-        if (firstErrorComponent && firstErrorComponent.focus) {
-          // focus first error control
-          firstErrorComponent.focus()
+        console.log(firstErrorField)
+        if (firstErrorField) {
+          firstErrorField.focus()
         }
       }
     }
@@ -43,14 +42,14 @@ function SubmitBtn (props) {
 }
 
 storiesOf('useRjv', module)
-  .add('Model provided', () => {
-    return <ModelProvider data={initialData}>
+  .add('Provider exists', () => {
+    return <Provider data={initialData}>
       <p>You should open console to see result</p>
 
       <HookTest />
-    </ModelProvider>
+    </Provider>
   })
-  .add('Model not provided', () => {
+  .add('Provider doesn\'t exist', () => {
     return <div>
       <p>You should open console to see result</p>
 
@@ -58,26 +57,24 @@ storiesOf('useRjv', module)
     </div>
   })
   .add('Submit function', () => {
-    return <ModelProvider data={initialData}>
+    return <Provider data={initialData}>
       <Field
         path="name"
         schema={{
           type: 'string', default: '', minLength: 5, presence: true
         }}
-        render={(ref, register) => {
-          const message = getMessage(ref)
-
+        render={(field, inputRef) => {
           return (
             <Form.Item
               label="Name"
-              validateStatus={getValidationStatus(ref)}
-              help={message}
-              required={ref.isShouldNotBeBlank}
+              validateStatus={getValidationStatus(field)}
+              help={field.messageDescription}
+              required={field.isRequired}
             >
               <Input
-                ref={register}
-                value={ref.getValue()}
-                onChange={(e) => ref.setValue(e.target.value)}
+                ref={inputRef}
+                value={field.value}
+                onChange={(e) => field.value = e.target.value}
               />
             </Form.Item>
           )
@@ -85,5 +82,5 @@ storiesOf('useRjv', module)
       />
 
       <SubmitBtn>Submit</SubmitBtn>
-    </ModelProvider>
+    </Provider>
   })

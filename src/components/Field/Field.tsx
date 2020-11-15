@@ -6,108 +6,243 @@
  *
  */
 
-import React, { useCallback, useEffect, useMemo } from 'react'
-import { Ref, utils, types } from 'rjv'
-import { Connect } from '../Connect'
-import { ModelProviderContext, ModelProviderContextValue } from '../ModelProvider'
+import React, {
+  createRef,
+  RefObject
+} from 'react'
+import { utils, Ref, types, Validator, ValidationMessage } from 'rjv'
+import { ProviderContext, ProviderContextValue } from '../Provider'
 import { ScopeContext, ScopeContextValue } from '../Scope'
-import ModelRef from './ModelRef'
-import { buildSchema } from './utils'
+import { EventEmitterContext, EventEmitterContextValue, events } from '../EventEmitter'
+import { EventEmitter2, Listener } from 'eventemitter2'
+import { descriptionResolver } from '../../utils'
 
-type PropsPartial = {
-  render: (ref: Ref, register: () => void) => React.ReactNode
+export class FieldApi {
+  constructor (private component: FieldComponent) {}
+
+  set value (value: any) {
+    this.component.setState({
+      isTouched: true,
+      isDirty: true,
+      isPristine: false
+    })
+
+    this.component.ref.value = value
+    this.component.emitter.emit(this.component.ref.path, new events.ValueChangedEvent())
+  }
+
+  get value (): any {
+    return this.component.ref.value
+  }
+
+  get state (): State {
+    return this.component.state
+  }
+
+  async validate (): Promise<types.IValidationResult> {
+    this.component.setState({ isValidating: true })
+
+    const res = await this.component.validator.validateData(this.component.ref.value)
+
+    this.component.setState({
+      isValid: res.valid,
+      isTouched: true,
+      isValidated: true,
+      isValidating: false,
+      message: res.results['/']
+        ? res.results['/'].messages[0]
+        : new ValidationMessage(false, 'react', 'The field has no validation rules, check the schema')
+    }, () => {
+      this.component.emitter.emit(this.component.ref.path, new events.ValidatedEvent())
+    })
+
+    return res
+  }
+
+  focus () {
+    this.component.inputRef.current
+    && this.component.inputRef.current.focus
+    && this.component.inputRef.current.focus()
+  }
+
+  markAsTouched (): this {
+    this.component.setState({
+      isTouched: true,
+      isPristine: false
+    })
+
+    return this
+  }
+
+  markAsPristine (): this {
+    this.component.setState({
+      isTouched: false,
+      isValidated: false,
+      isDirty: false,
+      isPristine: true
+    })
+
+    return this
+  }
+
+  markAsDirty (): this {
+    this.component.setState({
+      isTouched: true,
+      isDirty: true,
+      isPristine: false
+    })
+
+    return this
+  }
+
+  markAsInvalidated (): this {
+    this.component.setState({
+      isValidated: false
+    }, () => {
+      this.component.emitter.emit(this.component.ref.path, new events.InvalidatedEvent())
+    })
+
+    return this
+  }
+
+  get isRequired (): boolean {
+    return !!this.component.schema.presence
+  }
+
+  get messageDescription (): string | undefined {
+    const message = this.component.state.isValidated ? this.component.state.message : undefined
+
+    return message && descriptionResolver(message)
+  }
+}
+
+type State = {
+  isValid: boolean,
+  isValidating: boolean,
+  isValidated: boolean,
+  // uiState: 'pristine' | 'touched' | 'dirty',
+  isPristine: boolean,
+  isTouched: boolean,
+  isDirty: boolean,
+  message?: any
+}
+
+const DEFAULT_STATE: State = {
+  isValid: false,
+  isValidating: false,
+  isValidated: false,
+  isPristine: true,
+  isTouched: false,
+  isDirty: false
+}
+
+type ComponentProps = {
+  fieldRef?: (field: FieldApi) => void
+  render: (field: FieldApi, inputRef: RefObject<any>) => React.ReactNode
   path: types.Path
-  schema?: types.ISchema
-  safe?: boolean
-}
-type Props = PropsPartial & {
-  providerContext?: ModelProviderContextValue
-  scopeContext?: ScopeContextValue
+  schema: types.ISchema
 }
 
-function Field (props: Props) {
-  const { render, scopeContext, safe = true } = props
+type ComponentPropsWithContexts = ComponentProps & {
+  providerContext: ProviderContextValue
+  scopeContext: ScopeContextValue
+  emitterContext: EventEmitterContextValue
+}
 
-  // Checking and getting providerContext. If the context is invalid, throw an exception.
-  const providerContext = useMemo(() => {
-    // todo check shape
-    if (!props.providerContext) {
+class FieldComponent extends React.Component<ComponentPropsWithContexts, State> {
+  path: types.Path
+  schema: types.ISchema
+  ref: Ref
+  validator: Validator
+  api: FieldApi
+  emitter: EventEmitter2
+  inputRef: RefObject<any>
+  listener: Listener
+
+  constructor (props: ComponentPropsWithContexts) {
+    super(props)
+
+    const { path, schema, providerContext, scopeContext, emitterContext, fieldRef } = props
+
+    if (!providerContext) {
       throw new Error('Received invalid providerContext')
     }
 
-    return props.providerContext
-  }, [props.providerContext])
+    if (!emitterContext) {
+      throw new Error('Received invalid emitterContext')
+    }
 
-  const schema = useMemo(() => props.schema,[])
+    if (!schema) {
+      throw new Error('Schema is not provided')
+    }
 
-  // calculate absolute path considering scopes
-  const path = useMemo(() => {
     if (scopeContext) {
-      return utils.resolvePath(props.path, scopeContext.scope)
+      this.path = utils.resolvePath(path, scopeContext.scope)
+    } else {
+      this.path = utils.resolvePath(path, '/')
     }
 
-    return utils.resolvePath(props.path, '/')
-  }, [props.path, scopeContext])
+    this.schema = schema
+    this.emitter = emitterContext.emitter
 
-  const register = useCallback((el: React.ReactElement) => {
-    providerContext.setRef(path, el)
-  }, [path, providerContext.setRef])
+    this.ref = new Ref(providerContext.dataStorage, this.path)
+    this.validator = new Validator(this.schema, providerContext.validationOptions)
 
-  // if schema and schemaCollector were provided, apply this schema to the model
-  useEffect(() => {
-    if (schema && providerContext.schemaCollector) {
-      const builtSchema = buildSchema(path, schema)
+    this.api = new FieldApi(this)
+    this.inputRef = createRef()
 
-      providerContext.schemaCollector.add(builtSchema)
+    if (fieldRef) {
+      fieldRef(this.api)
     }
-  }, [providerContext.schemaCollector, path])
 
-  // on destroy the schema of the model should be invalidated
-  useEffect(() => () => {
-    if (schema && providerContext.schemaCollector) {
-      providerContext.schemaCollector.invalidate()
+    this.state = {
+      ...DEFAULT_STATE
     }
-  }, [providerContext.schemaCollector])
-
-  useEffect(() => () => {
-    providerContext.unsetRef(path)
-  }, [providerContext.unsetRef])
-
-  if (safe) {
-    return (
-      <Connect
-        render={(model) => <ModelRef field={model.safeRef(path)} render={render} register={register} />}
-        model={providerContext.model}
-        observe={path === '/' ? ['/'] : ['/', path]}
-        observeMode="validationAfter"
-        debounce={0}
-      />
-    )
   }
 
-  const ref = useMemo(() => {
-    return providerContext.model.ref(path)
-  }, [providerContext, path])
+  componentDidMount () {
+    this.props.emitterContext.emitter.emit(this.path, new events.RegisterFieldEvent(this.api))
 
-  return (
-    <ModelRef
-      field={ref}
-      render={render}
-      register={register}
-    />
-  )
+    this.listener = this.emitter.on(this.path, (event: events.BaseEvent) => {
+      // todo add events
+      switch (event.type) {
+        case events.ValueChangedEvent.TYPE:
+          this.forceUpdate()
+          break
+      }
+    }, { objectify: true }) as Listener
+  }
+
+  componentWillUnmount () {
+    this.props.emitterContext.emitter.emit(this.path, new events.UnregisterFieldEvent(this.api))
+
+    this.listener.off()
+  }
+
+  handleRegisterControl (el: any) {
+    this.inputRef = el
+  }
+
+  render () {
+    return this.props.render(this.api, this.inputRef)
+  }
 }
 
-export default (props: PropsPartial) => (
-  <ModelProviderContext.Consumer>
+export default (props: ComponentProps) => (
+  <ProviderContext.Consumer>
     {(providerContext) => (
       <ScopeContext.Consumer>
-        {(scopeContext) => <Field
-          {...props}
-          providerContext={providerContext}
-          scopeContext={scopeContext}
-        />}
+        {(scopeContext) => (
+          <EventEmitterContext.Consumer>
+            {(emitterContext) => <FieldComponent
+              {...props}
+              providerContext={providerContext as any}
+              scopeContext={scopeContext as any}
+              emitterContext={emitterContext as any}
+            />}
+          </EventEmitterContext.Consumer>
+        )}
       </ScopeContext.Consumer>
     )}
-  </ModelProviderContext.Consumer>
+  </ProviderContext.Consumer>
 )
