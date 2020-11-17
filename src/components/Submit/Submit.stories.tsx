@@ -34,7 +34,7 @@ function RequiredField () {
   />
 }
 
-storiesOf('SubmitBtn', module)
+storiesOf('Submit', module)
   .add('Test buttons', () => {
     return <Provider data={initialData}>
       <p>You should open console to see events</p>

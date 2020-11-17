@@ -125,7 +125,7 @@
     "react-docgen-typescript-loader": "^3.1.0",
     "react-dom": "^16.13.1",
     "react-test-renderer": "^16.8.6",
-    "rjv": "^5.0.0-alpha.1",
+    "rjv": "^5.0.0-alpha.3",
     "shx": "^0.3.2",
     "standard-version": "^8.0.2",
     "ts-jest": "^26.4.4",

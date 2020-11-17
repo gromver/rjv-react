@@ -16,6 +16,13 @@ import { ScopeContext, ScopeContextValue } from '../Scope'
 import { EventEmitterContext, EventEmitterContextValue, events } from '../EventEmitter'
 import { EventEmitter2, Listener } from 'eventemitter2'
 import { descriptionResolver } from '../../utils'
+import TrackingRef from '../Provider/TrackingRef'
+
+function extractMessageFromResult (res: types.IValidationResult, ref: types.IRef): ValidationMessage {
+  return res.results[ref.path]
+    ? res.results[ref.path].messages[0]
+    : new ValidationMessage(false, 'react', 'The field has no validation rules, check the schema')
+}
 
 export class FieldApi {
   constructor (private component: FieldComponent) {}
@@ -42,18 +49,17 @@ export class FieldApi {
   async validate (): Promise<types.IValidationResult> {
     this.component.setState({ isValidating: true })
 
-    const res = await this.component.validator.validateData(this.component.ref.value)
+    const ref = this.component.ref
+    const res = await this.component.validator.validateRef(ref)
 
     this.component.setState({
       isValid: res.valid,
       isTouched: true,
       isValidated: true,
       isValidating: false,
-      message: res.results['/']
-        ? res.results['/'].messages[0]
-        : new ValidationMessage(false, 'react', 'The field has no validation rules, check the schema')
+      message: extractMessageFromResult(res, ref)
     }, () => {
-      this.component.emitter.emit(this.component.ref.path, new events.ValidatedEvent())
+      this.component.emitter.emit(ref.path, new events.ValidatedEvent())
     })
 
     return res
@@ -106,7 +112,7 @@ export class FieldApi {
   }
 
   get isRequired (): boolean {
-    return !!this.component.schema.presence
+    return this.component.state.isRequired
   }
 
   get messageDescription (): string | undefined {
@@ -120,10 +126,10 @@ type State = {
   isValid: boolean,
   isValidating: boolean,
   isValidated: boolean,
-  // uiState: 'pristine' | 'touched' | 'dirty',
   isPristine: boolean,
   isTouched: boolean,
   isDirty: boolean,
+  isRequired: boolean,
   message?: any
 }
 
@@ -133,7 +139,8 @@ const DEFAULT_STATE: State = {
   isValidated: false,
   isPristine: true,
   isTouched: false,
-  isDirty: false
+  isDirty: false,
+  isRequired: false
 }
 
 type ComponentProps = {
@@ -157,12 +164,14 @@ class FieldComponent extends React.Component<ComponentPropsWithContexts, State> 
   api: FieldApi
   emitter: EventEmitter2
   inputRef: RefObject<any>
-  listener: Listener
+  listeners: Listener[]
 
   constructor (props: ComponentPropsWithContexts) {
     super(props)
 
-    const { path, schema, providerContext, scopeContext, emitterContext, fieldRef } = props
+    const {
+      path, schema, providerContext, scopeContext, emitterContext, fieldRef
+    } = props
 
     if (!providerContext) {
       throw new Error('Received invalid providerContext')
@@ -184,39 +193,74 @@ class FieldComponent extends React.Component<ComponentPropsWithContexts, State> 
 
     this.schema = schema
     this.emitter = emitterContext.emitter
-
     this.ref = new Ref(providerContext.dataStorage, this.path)
     this.validator = new Validator(this.schema, providerContext.validationOptions)
-
     this.api = new FieldApi(this)
     this.inputRef = createRef()
+    this.listeners = []
 
     if (fieldRef) {
       fieldRef(this.api)
     }
 
     this.state = {
-      ...DEFAULT_STATE
+      ...DEFAULT_STATE,
+      isRequired: !!schema.presence
     }
   }
 
   componentDidMount () {
     this.props.emitterContext.emitter.emit(this.path, new events.RegisterFieldEvent(this.api))
 
-    this.listener = this.emitter.on(this.path, (event: events.BaseEvent) => {
-      // todo add events
+    this.listeners.push(this.emitter.on(this.path, (event: events.BaseEvent) => {
       switch (event.type) {
         case events.ValueChangedEvent.TYPE:
           this.forceUpdate()
           break
       }
-    }, { objectify: true }) as Listener
+    }, { objectify: true }) as Listener)
+
+    // const curValue = this.ref.value
+    this.validator.validateRef(this.ref).then(() => /* curValue !== this.ref.value && */ this.forceUpdate())
+
+    const resolveSchema = this.schema.resolveSchema
+    if (resolveSchema) {
+      const trackingRef = new TrackingRef(this.props.providerContext.dataStorage, this.ref.path)
+      Promise.resolve(resolveSchema(trackingRef)).then(() => {
+        trackingRef.propsToTrack.forEach((path) => {
+          this.listeners.push(this.emitter.on(path, async (event: events.BaseEvent) => {
+            if (event instanceof events.ValueChangedEvent) {
+              const resolvedSchema = await resolveSchema(this.ref)
+              const isRequired = !!resolvedSchema.presence
+              if (this.state.isValidated) {
+                this.setState({ isValidating: true })
+
+                const res = await this.validator.validateRef(this.ref)
+
+                this.setState({
+                  isRequired,
+                  isValid: res.valid,
+                  isValidating: false,
+                  message: extractMessageFromResult(res, this.ref)
+                }, () => {
+                  this.emitter.emit(this.ref.path, new events.ValidatedEvent())
+                })
+              } else if (isRequired !== this.state.isRequired) {
+                this.setState({ isRequired })
+              }
+            }
+          }, { objectify: true }) as Listener)
+        })
+      }).catch((e) => {
+        throw e
+      })
+    }
   }
 
   componentWillUnmount () {
     this.props.emitterContext.emitter.emit(this.path, new events.UnregisterFieldEvent(this.api))
 
-    this.listener.off()
+    this.listeners.forEach((listener) => listener.off())
   }
 
   handleRegisterControl (el: any) {

@@ -52,7 +52,7 @@ export default function Visible ({ path, schema, children, useVisibilityStyle }:
 
   const validator = useMemo(() => new Validator(schema), [])
 
-  const watchProps = useMemo(() => getPropsToObserveFromSchema(schema, ref.path, ''), [])
+  const watchProps = useMemo(() => getPropsToObserveFromSchema(schema, ref.path), [])
 
   useEffect(() => {
     if (emitterContext?.emitter) {

@@ -10,14 +10,14 @@ import { getValidationStatus } from '../../stories/helpers'
 storiesOf('Visible', module)
   .add('Simple', () => {
     return <Form style={{ maxWidth: '800px' }}>
-      <Provider data={{ selector: 'yes' }}>
+      <Provider data={{}}>
         <Row gutter={16}>
           <Col sm={12}>
             <h4>Validate whole data</h4>
 
             <Field
               path={'selector'}
-              schema={{ presence: true }}
+              schema={{ default: 'yes', presence: true }}
               render={(field, inputRef) => {
                 return (
                   <Form.Item
@@ -56,7 +56,7 @@ storiesOf('Visible', module)
 
             <Field
               path={'selector'}
-              schema={{ presence: true }}
+              schema={{ default: 'yes', presence: true }}
               render={(field, inputRef) => {
                 return (
                   <Form.Item

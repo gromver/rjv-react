@@ -50,7 +50,7 @@ function addPropToPath (path: types.Path, propName: string | number): string {
   return path === '/' ? `/${propName}` : `${path}/${propName}`
 }
 
-export function getPropsToObserveFromSchema (schema: types.ISchema, from: types.Path, to: types.Path): string[] {
+export function getPropsToObserveFromSchema (schema: types.ISchema, from: types.Path, to: types.Path = ''): string[] {
   const res: types.Path[] = []
 
   function extract (_schema: types.ISchema, curPath: types.Path) {

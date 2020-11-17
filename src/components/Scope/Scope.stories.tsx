@@ -19,7 +19,6 @@ storiesOf('Scope', module)
   })
 
 function SimpleForm () {
-  // const formRef = useRef<ModelProviderRef>()
   const providerRef = createRef<ProviderRef>()
   const handleSubmit = useCallback(async () => {
     if (providerRef.current) {
