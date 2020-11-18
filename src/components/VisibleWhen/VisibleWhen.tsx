@@ -1,23 +1,25 @@
 /**
  *
- * Visible - a component showing content if data is correct
+ * VisibleWhen - shows children content when the data is correct
  *
  */
 
 import React, {
   CSSProperties, ReactNode, useContext, useEffect, useMemo, useState
 } from 'react'
-import { Ref, types, utils, Validator } from 'rjv'
+import { types, utils, Validator } from 'rjv'
 import { ScopeContext } from '../Scope'
 import { ProviderContext } from '../Provider'
 import { EventEmitterContext } from '../EventEmitter'
 import { Listener } from 'eventemitter2'
 import { ValueChangedEvent } from '../EventEmitter/events'
 import { getPropsToObserveFromSchema } from '../../utils'
+import ReadonlyRef from '../../utils/ReadonlyRef'
 
 const HIDDEN_EL_STYLES: CSSProperties = {
   visibility: 'hidden',
   position: 'absolute',
+  overflow: 'hidden',
   width: 0,
   height: 0,
   left: -10000,
@@ -25,15 +27,21 @@ const HIDDEN_EL_STYLES: CSSProperties = {
 }
 
 type Props = {
-  path?: types.Path             // path to data, by default root '/'
+  path?: types.Path             // absolute or relative path to data, by default root '/'
   schema: types.ISchema         // schema used to check data
   children: ReactNode           // content to be shown
   // using scc visibility style and do not unmount children components
   // it is more efficient but keeps their validation state
   useVisibilityStyle?: boolean
+  visibleStyles?: CSSProperties
+  hiddenStyles?: CSSProperties
 }
 
-export default function Visible ({ path, schema, children, useVisibilityStyle }: Props) {
+export default function VisibleWhen (
+  {
+    path, schema, children, useVisibilityStyle, visibleStyles = {}, hiddenStyles = HIDDEN_EL_STYLES
+  }: Props
+) {
   const [visible, setVisible] = useState(false)
   const providerContext = useContext(ProviderContext)
   const emitterContext = useContext(EventEmitterContext)
@@ -44,7 +52,7 @@ export default function Visible ({ path, schema, children, useVisibilityStyle }:
     const normalizedPath = utils.resolvePath(path || '', scopeContext?.scope || '/')
 
     if (providerContext) {
-      return new Ref(providerContext.dataStorage, normalizedPath)
+      return new ReadonlyRef(providerContext.dataStorage, normalizedPath)
     }
 
     throw new Error('providerContext doesn\'t exists')
@@ -93,7 +101,7 @@ export default function Visible ({ path, schema, children, useVisibilityStyle }:
   }
 
   return <div
-    style={visible ? undefined : HIDDEN_EL_STYLES}
+    style={visible ? visibleStyles : hiddenStyles}
   >
     {children}
   </div>

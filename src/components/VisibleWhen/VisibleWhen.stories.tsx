@@ -3,7 +3,7 @@ import { Form, Input, Select, Row, Col } from 'antd'
 import { storiesOf } from '@storybook/react'
 
 import { Provider } from '../Provider'
-import { Visible } from './index'
+import { VisibleWhen } from './index'
 import { Field } from '../Field'
 import { getValidationStatus } from '../../stories/helpers'
 
@@ -41,7 +41,7 @@ storiesOf('Visible', module)
                 )
               }}
             />
-            <Visible
+            <VisibleWhen
               schema={{
                 properties: {
                   selector: { const: 'yes' }
@@ -49,7 +49,7 @@ storiesOf('Visible', module)
               }}
             >
               Visible!
-            </Visible>
+            </VisibleWhen>
           </Col>
           <Col sm={12}>
             <h4>Validate certain prop</h4>
@@ -80,12 +80,12 @@ storiesOf('Visible', module)
                 )
               }}
             />
-            <Visible
+            <VisibleWhen
               path="selector"
               schema={{ const: 'yes' }}
             >
               Visible!
-            </Visible>
+            </VisibleWhen>
           </Col>
         </Row>
       </Provider>
@@ -120,7 +120,7 @@ storiesOf('Visible', module)
             )
           }}
         />
-        <Visible
+        <VisibleWhen
           path="selector"
           schema={{ const: 'yes' }}
         >
@@ -147,7 +147,7 @@ storiesOf('Visible', module)
               )
             }}
           />
-        </Visible>
+        </VisibleWhen>
         <p>Footer</p>
       </Provider>
     </Form>
@@ -181,7 +181,7 @@ storiesOf('Visible', module)
             )
           }}
         />
-        <Visible
+        <VisibleWhen
           path="selector"
           schema={{ const: 'yes' }}
           useVisibilityStyle
@@ -209,7 +209,7 @@ storiesOf('Visible', module)
               )
             }}
           />
-        </Visible>
+        </VisibleWhen>
         <p>Footer</p>
       </Provider>
     </Form>
