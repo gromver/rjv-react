@@ -16,7 +16,7 @@ import { ScopeContext, ScopeContextValue } from '../Scope'
 import { EventEmitterContext, EventEmitterContextValue, events } from '../EventEmitter'
 import { EventEmitter2, Listener } from 'eventemitter2'
 import { descriptionResolver } from '../../utils'
-import TrackingRef from '../Provider/TrackingRef'
+import TrackingRef from '../../utils/TrackingRef'
 
 function extractMessageFromResult (res: types.IValidationResult, ref: types.IRef): ValidationMessage {
   return res.results[ref.path]
