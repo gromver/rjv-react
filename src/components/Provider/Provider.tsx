@@ -31,6 +31,7 @@ const DEFAULT_VALIDATION_OPTIONS: Partial<types.IValidatorOptions> = {
 export type ProviderRef = {
   submit: SubmitFormFn
   getData: () => any
+  getErrors: () => { [path: string]: string }
 }
 
 type Props = {
@@ -91,7 +92,18 @@ function Provider (props: Props, elRef: React.Ref<ProviderRef>) {
         data: dataStorage.get([])
       }
     },
-    getData: () => dataStorage.get([])
+    getData: () => dataStorage.get([]),
+    getErrors: () => {
+      const res = {}
+
+      fields.forEach((field) => {
+        if (field.state.isValidated && !field.state.isValid) {
+          res[field.ref.path] = field.messageDescription
+        }
+      })
+
+      return res
+    }
   }), [dataStorage, initialDataStorage, fields, _validationOptions])
 
   useEffect(() => {
@@ -103,7 +115,8 @@ function Provider (props: Props, elRef: React.Ref<ProviderRef>) {
   useImperativeHandle(elRef, () => {
     return {
       submit: context.submit,
-      getData: context.getData
+      getData: context.getData,
+      getErrors: context.getErrors
     }
   }, [context])
 

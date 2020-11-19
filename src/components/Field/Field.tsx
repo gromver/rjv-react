@@ -1,8 +1,6 @@
 /**
  *
- * Field - a HOC component over ModelRef and SchemaRef
- * resolves a model's ref using given path to the field
- * and determines which component should be used to subscribe to field events
+ * Field - a component renders field and provides an api to interact with data and state
  *
  */
 
@@ -10,13 +8,13 @@ import React, {
   createRef,
   RefObject
 } from 'react'
-import { utils, Ref, types, Validator, ValidationMessage } from 'rjv'
+import { utils, types, Validator, ValidationMessage } from 'rjv'
 import { ProviderContext, ProviderContextValue } from '../Provider'
 import { ScopeContext, ScopeContextValue } from '../Scope'
 import { EventEmitterContext, EventEmitterContextValue, events } from '../EventEmitter'
 import { EventEmitter2, Listener } from 'eventemitter2'
 import { descriptionResolver } from '../../utils'
-import TrackingRef from '../../utils/TrackingRef'
+import { TrackingRef, EmittingRef } from '../../refs'
 
 function extractMessageFromResult (res: types.IValidationResult, ref: types.IRef): ValidationMessage {
   return res.results[ref.path]
@@ -35,7 +33,6 @@ export class FieldApi {
     })
 
     this.component.ref.value = value
-    this.component.emitter.emit(this.component.ref.path, new events.ValueChangedEvent())
   }
 
   get value (): any {
@@ -44,6 +41,10 @@ export class FieldApi {
 
   get state (): State {
     return this.component.state
+  }
+
+  get ref (): types.IRef {
+    return this.component.ref
   }
 
   async validate (): Promise<types.IValidationResult> {
@@ -159,7 +160,7 @@ type ComponentPropsWithContexts = ComponentProps & {
 class FieldComponent extends React.Component<ComponentPropsWithContexts, State> {
   path: types.Path
   schema: types.ISchema
-  ref: Ref
+  ref: EmittingRef
   validator: Validator
   api: FieldApi
   emitter: EventEmitter2
@@ -193,11 +194,21 @@ class FieldComponent extends React.Component<ComponentPropsWithContexts, State> 
 
     this.schema = schema
     this.emitter = emitterContext.emitter
-    this.ref = new Ref(providerContext.dataStorage, this.path)
+    this.ref = new EmittingRef(providerContext.dataStorage, this.path, this.emitter)
     this.validator = new Validator(this.schema, providerContext.validationOptions)
     this.api = new FieldApi(this)
     this.inputRef = createRef()
     this.listeners = []
+
+    this.emitter.emit(this.path, new events.RegisterFieldEvent(this.api))
+
+    this.listeners.push(this.emitter.on(this.path, (event: events.BaseEvent) => {
+      switch (event.type) {
+        case events.ValueChangedEvent.TYPE:
+          this.setState({})
+          break
+      }
+    }, { objectify: true }) as Listener)
 
     if (fieldRef) {
       fieldRef(this.api)
@@ -210,18 +221,7 @@ class FieldComponent extends React.Component<ComponentPropsWithContexts, State> 
   }
 
   componentDidMount () {
-    this.props.emitterContext.emitter.emit(this.path, new events.RegisterFieldEvent(this.api))
-
-    this.listeners.push(this.emitter.on(this.path, (event: events.BaseEvent) => {
-      switch (event.type) {
-        case events.ValueChangedEvent.TYPE:
-          this.forceUpdate()
-          break
-      }
-    }, { objectify: true }) as Listener)
-
-    // const curValue = this.ref.value
-    this.validator.validateRef(this.ref).then(() => /* curValue !== this.ref.value && */ this.forceUpdate())
+    this.validator.validateRef(this.ref).catch((e) => { throw e })
 
     const resolveSchema = this.schema.resolveSchema
     if (resolveSchema) {
@@ -258,7 +258,7 @@ class FieldComponent extends React.Component<ComponentPropsWithContexts, State> 
   }
 
   componentWillUnmount () {
-    this.props.emitterContext.emitter.emit(this.path, new events.UnregisterFieldEvent(this.api))
+    this.emitter.emit(this.path, new events.UnregisterFieldEvent(this.api))
 
     this.listeners.forEach((listener) => listener.off())
   }

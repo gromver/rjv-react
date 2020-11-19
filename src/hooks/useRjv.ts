@@ -15,7 +15,8 @@ export default function useRjv (): RjvApi | undefined {
       return {
         scope: scopeContext.scope,
         submit: providerContext.submit,
-        getData: providerContext.getData
+        getData: providerContext.getData,
+        getErrors: providerContext.getErrors
       }
     }
 

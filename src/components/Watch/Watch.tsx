@@ -7,6 +7,7 @@
 import {
   ReactElement, useContext, useEffect, useMemo, useState
 } from 'react'
+import _debounce from 'lodash/debounce'
 import { Ref, types, utils } from 'rjv'
 import { ScopeContext } from '../Scope'
 import { ProviderContext } from '../Provider'
@@ -14,12 +15,16 @@ import { EventEmitterContext } from '../EventEmitter'
 import { Listener } from 'eventemitter2'
 import { BaseEvent, ValueChangedEvent } from '../EventEmitter/events'
 
+const DEFAULT_EVENT_TYPES = [ValueChangedEvent.TYPE]
+
 type Props = {
   on: types.Path[]
-  render: (ref: Ref) => ReactElement
+  eventTypes?: string[]
+  debounce?: number
+  render: (ref: Ref) => ReactElement | null
 }
 
-export default function Watch ({ render, on }: Props) {
+export default function Watch ({ render, on, eventTypes = DEFAULT_EVENT_TYPES, debounce = 0 }: Props) {
   const [, update] = useState<BaseEvent>()
   const providerContext = useContext(ProviderContext)
   const emitterContext = useContext(EventEmitterContext)
@@ -37,15 +42,25 @@ export default function Watch ({ render, on }: Props) {
     return on.map((path) => utils.resolvePath(path, scopeContext?.scope || '/'))
   }, [])
 
+  const watchEvents: string[] = useMemo(() => {
+    return eventTypes
+  }, [])
+
+  const handleUpdate = useMemo(() => {
+    return debounce > 0 ? _debounce(update, debounce) : update
+  }, [])
+
   useEffect(() => {
     if (emitterContext?.emitter) {
       const listeners: Listener[] = []
 
       watchProps.forEach((path) => {
         const listener = emitterContext.emitter
-          .on(path, (event) => {
-            if (event instanceof ValueChangedEvent) {
-              update(event)
+          .on(path, (event: BaseEvent) => {
+            if (watchEvents.length) {
+              watchEvents.includes(event.type) && handleUpdate(event)
+            } else {
+              handleUpdate(event)
             }
           }, { objectify: true }) as Listener
         listeners.push(listener)

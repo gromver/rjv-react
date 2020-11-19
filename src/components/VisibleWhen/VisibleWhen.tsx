@@ -14,7 +14,7 @@ import { EventEmitterContext } from '../EventEmitter'
 import { Listener } from 'eventemitter2'
 import { ValueChangedEvent } from '../EventEmitter/events'
 import { getPropsToObserveFromSchema } from '../../utils'
-import ReadonlyRef from '../../utils/ReadonlyRef'
+import ReadonlyRef from '../../refs/ReadonlyRef'
 
 const HIDDEN_EL_STYLES: CSSProperties = {
   visibility: 'hidden',

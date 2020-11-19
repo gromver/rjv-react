@@ -74,3 +74,25 @@ describe('buildSchema tests', () => {
     })
   })
 })
+
+class A {
+  getValue (): string {
+    return 'A'
+  }
+
+  get value (): string {
+    return this.getValue()
+  }
+}
+class B extends A {
+  getValue (): string {
+    return 'B'
+  }
+}
+
+describe('getter test', () => {
+  it ('should work?', () => {
+    expect((new A()).value).toBe('A')
+    expect((new B()).value).toBe('B')
+  })
+})

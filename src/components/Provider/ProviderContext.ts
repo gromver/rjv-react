@@ -8,6 +8,7 @@ export type ProviderContextValue = {
   validationOptions: Partial<types.IValidatorOptions>
   submit: SubmitFormFn
   getData: () => any
+  getErrors: () => { [path: string]: string }
 }
 
 export default createContext<ProviderContextValue | undefined>(undefined)
