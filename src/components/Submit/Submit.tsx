@@ -1,12 +1,11 @@
 /**
  *
- * Submit
- * A wrapper component for buttons, exposes onSubmit, onSuccess and onError events
+ * Submit - a wrapper component for buttons, exposes onSubmit, onSuccess and onError events
  *
  */
 
 import React, { useCallback, useContext } from 'react'
-import { ProviderContext } from '../Provider'
+import { FormProviderContext } from '../FormProvider'
 import { FieldApi } from '../Field'
 
 type Props = {
@@ -20,7 +19,7 @@ type Props = {
 export default function Submit (props: Props) {
   const { onSubmit, onError, onSuccess, render, focusFirstError = true } = props
 
-  const providerContext = useContext(ProviderContext)
+  const providerContext = useContext(FormProviderContext)
 
   const handleSubmit = useCallback(async () => {
     if (providerContext) {

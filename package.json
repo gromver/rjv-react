@@ -94,7 +94,7 @@
   "peerDependencies": {
     "react": "^16.8.0",
     "react-dom": "^16.8.0",
-    "rjv": "^5.0.0"
+    "rjv": "^5.0.0-alpha.4"
   },
   "devDependencies": {
     "@babel/core": "^7.4.3",

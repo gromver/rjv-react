@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react'
 import { storiesOf } from '@storybook/react'
 import { Form, Input } from 'antd'
-import { Provider } from '../components/Provider'
+import { FormProvider } from '../components/FormProvider'
 import { Field } from '../components/Field'
 import { getValidationStatus } from '../stories/helpers'
 import useRjv from './useRjv'
@@ -43,11 +43,11 @@ function SubmitBtn (props) {
 
 storiesOf('useRjv', module)
   .add('Provider exists', () => {
-    return <Provider data={initialData}>
+    return <FormProvider data={initialData}>
       <p>You should open console to see result</p>
 
       <HookTest />
-    </Provider>
+    </FormProvider>
   })
   .add('Provider doesn\'t exist', () => {
     return <div>
@@ -57,7 +57,7 @@ storiesOf('useRjv', module)
     </div>
   })
   .add('Submit function', () => {
-    return <Provider data={initialData}>
+    return <FormProvider data={initialData}>
       <Field
         path="name"
         schema={{
@@ -82,5 +82,5 @@ storiesOf('useRjv', module)
       />
 
       <SubmitBtn>Submit</SubmitBtn>
-    </Provider>
+    </FormProvider>
   })

@@ -1,5 +1,9 @@
 import { FieldApi } from '../components/Field'
 
+/**
+ * Extracts validation status for the Antd's Form.Item component
+ * @param field
+ */
 export function getValidationStatus (field: FieldApi) {
   if (field.state.isValidating) {
     return 'validating'

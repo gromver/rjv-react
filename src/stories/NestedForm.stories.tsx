@@ -4,8 +4,8 @@ import { Form, Input, Alert, Button, Card } from 'antd'
 import { storiesOf } from '@storybook/react'
 import { getValidationStatus } from './helpers'
 import {
-  Provider,
-  ProviderRef,
+  FormProvider,
+  FormProviderRef,
   Watch,
   Field,
   Scope,
@@ -75,10 +75,10 @@ function renderNode (nodeRef: types.IRef) {
 }
 
 function CreateNodeForm ({ nodeRef }: { nodeRef: types.IRef }) {
-  const createNodeFormRef = createRef<ProviderRef>()
+  const createNodeFormRef = createRef<FormProviderRef>()
   const [createNodeFormKey, setCreateNodeFormKey] = useState(1)
 
-  return <Provider key={`formKey-${createNodeFormKey}`} ref={createNodeFormRef} data={{}}>
+  return <FormProvider key={`formKey-${createNodeFormKey}`} ref={createNodeFormRef} data={{}}>
     <Form layout="inline">
       <Field
         path="name"
@@ -125,11 +125,11 @@ function CreateNodeForm ({ nodeRef }: { nodeRef: types.IRef }) {
         Add
       </Button>
     </Form>
-  </Provider>
+  </FormProvider>
 }
 
 function NestedSchemaForm () {
-  const providerRef = useRef<ProviderRef>(null)
+  const providerRef = useRef<FormProviderRef>(null)
   const handleSubmit = useCallback(async () => {
     if (providerRef.current) {
       const res = await providerRef.current.submit()
@@ -141,7 +141,7 @@ function NestedSchemaForm () {
   }, [providerRef.current])
 
   return (
-    <Provider ref={providerRef} data={initialData}>
+    <FormProvider ref={providerRef} data={initialData}>
       <Watch
         props={[events.ValidatedEvent.TYPE]}
         debounce={50}
@@ -172,6 +172,6 @@ function NestedSchemaForm () {
       <button onClick={handleSubmit}>
         Submit
       </button>
-    </Provider>
+    </FormProvider>
   )
 }

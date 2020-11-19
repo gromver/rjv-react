@@ -1,13 +1,13 @@
 import { useContext, useMemo } from 'react'
-import { ProviderContext, ProviderRef } from '../components/Provider'
+import { FormProviderContext, FormProviderRef } from '../components/FormProvider'
 import { ScopeContext } from '../components/Scope'
 
 type RjvApi = {
   scope: string
-} & ProviderRef
+} & FormProviderRef
 
 export default function useRjv (): RjvApi | undefined {
-  const providerContext = useContext(ProviderContext)
+  const providerContext = useContext(FormProviderContext)
   const scopeContext = useContext(ScopeContext)
 
   const api: RjvApi | undefined = useMemo(() => {

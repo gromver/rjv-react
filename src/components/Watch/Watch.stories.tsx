@@ -2,7 +2,7 @@ import React, { createRef, useCallback } from 'react'
 import { Form, Input, Button, Row, Col } from 'antd'
 import { storiesOf } from '@storybook/react'
 
-import { Provider, ProviderRef } from '../Provider'
+import { FormProvider, FormProviderRef } from '../FormProvider'
 import { Watch } from './index'
 import { Field } from '../Field'
 import { getValidationStatus } from '../../stories/helpers'
@@ -38,7 +38,7 @@ function InputField ({ path }: Props) {
 
 storiesOf('Watch', module)
   .add('Watch', () => {
-    const providerRef = createRef<ProviderRef>()
+    const providerRef = createRef<FormProviderRef>()
     const handleSubmit = useCallback(async () => {
       if (providerRef.current) {
         const res = await providerRef.current.submit()
@@ -49,7 +49,7 @@ storiesOf('Watch', module)
       }
     }, [providerRef.current])
     return <Form style={{ maxWidth: '1000px' }}>
-      <Provider ref={providerRef} data={{}}>
+      <FormProvider ref={providerRef} data={{}}>
         <Row gutter={16}>
           <Col sm={12}>
             <InputField path={'/a'} />
@@ -87,6 +87,6 @@ storiesOf('Watch', module)
             </Scope>
           </Col>
         </Row>
-      </Provider>
+      </FormProvider>
     </Form>
   })

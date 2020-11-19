@@ -1,39 +1,39 @@
 /**
  *
- * VisibleWhen - shows children content when the data is correct
+ * ErrorProvider - collects errors of the inner fields and provides a subscribe fn to the
+ * validation state changes
  *
  */
 
 import React, { ReactNode, useContext, useMemo } from 'react'
+import { Listener } from 'eventemitter2'
 import ErrorProviderContext, {
   ErrorProviderContextValue,
   Subscribe,
   SubscribeHandler,
   Unsubscribe
 } from './ErrorProviderContext'
-import { EventEmitter, EventEmitterContext } from '../EventEmitter'
-import { Listener } from 'eventemitter2'
-import * as events from '../EventEmitter/events'
+import { EmitterProvider, EmitterProviderContext, events } from '../EmitterProvider'
 import { createEmitter } from '../../utils'
 import { FieldApi } from '../Field'
-import { RegisterFieldEvent, UnregisterFieldEvent } from '../EventEmitter/events'
+import { ValidationErrors } from '../FormProvider'
 
 type Props = {
   children: ReactNode
 }
 
 export default function ErrorProvider ({ children }: Props) {
-  const emitterContext = useContext(EventEmitterContext)
+  const emitterContext = useContext(EmitterProviderContext)
 
   const { emitter, context, fields } = useMemo(() => {
     const emitter = createEmitter()
 
     const getErrors = () => {
-      const res = {}
+      const res: ValidationErrors = []
 
       fields.forEach((field) => {
         if (field.state.isValidated && !field.state.isValid) {
-          res[field.ref.path] = field.messageDescription
+          res.push([field.ref.path, field.messageDescription as any])
         }
       })
 
@@ -52,10 +52,10 @@ export default function ErrorProvider ({ children }: Props) {
 
     if (emitterContext) {
       emitter.onAny((path, event: events.BaseEvent) => {
-        if (event instanceof RegisterFieldEvent) {
+        if (event instanceof events.RegisterFieldEvent) {
           fields.push(event.field)
         }
-        if (event instanceof UnregisterFieldEvent) {
+        if (event instanceof events.UnregisterFieldEvent) {
           const i = fields.indexOf(event.field)
           if (i !== -1) {
             fields.splice(i, 1)
@@ -79,8 +79,8 @@ export default function ErrorProvider ({ children }: Props) {
   }, [])
 
   return <ErrorProviderContext.Provider value={context}>
-    <EventEmitter emitter={emitter}>
+    <EmitterProvider emitter={emitter}>
       {children}
-    </EventEmitter>
+    </EmitterProvider>
   </ErrorProviderContext.Provider>
 }

@@ -2,7 +2,7 @@ import React, { createRef, useCallback } from 'react'
 import { Form, Input } from 'antd'
 import { storiesOf } from '@storybook/react'
 
-import { Provider, ProviderRef } from '../Provider'
+import { FormProvider, FormProviderRef } from '../FormProvider'
 import Scope from './Scope'
 import { Field } from '../Field'
 import { getValidationStatus } from '../../stories/helpers'
@@ -18,7 +18,7 @@ storiesOf('Scope', module)
   })
 
 function SimpleForm () {
-  const providerRef = createRef<ProviderRef>()
+  const providerRef = createRef<FormProviderRef>()
   const handleSubmit = useCallback(async () => {
     if (providerRef.current) {
       const res = await providerRef.current.submit()
@@ -31,7 +31,7 @@ function SimpleForm () {
 
   return (
     <Form style={{ maxWidth: '400px' }}>
-      <Provider ref={providerRef} data={initialData}>
+      <FormProvider ref={providerRef} data={initialData}>
         <Scope path="auth">
           <Field
             path="name"
@@ -77,7 +77,7 @@ function SimpleForm () {
         <button onClick={handleSubmit}>
           Submit
         </button>
-      </Provider>
+      </FormProvider>
     </Form>
   )
 }

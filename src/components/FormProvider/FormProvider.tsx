@@ -1,6 +1,6 @@
 /**
  *
- * Provider
+ * FormProvider - a form context provider
  *
  */
 
@@ -15,12 +15,11 @@ import _isEqual from 'lodash/isEqual'
 import _merge from 'lodash/merge'
 import _cloneDeep from 'lodash/cloneDeep'
 import { types, Storage } from 'rjv'
-import ProviderContext, { ProviderContextValue } from './ProviderContext'
-import { EventEmitter } from '../EventEmitter'
+import ProviderContext, { FormProviderContextValue } from './FormProviderContext'
+import { EmitterProvider, events } from '../EmitterProvider'
 import { createEmitter } from '../../utils'
-import { BaseEvent, RegisterFieldEvent, UnregisterFieldEvent } from '../EventEmitter/events'
 import { FieldApi } from '../Field'
-import { SubmitFormFn } from './types'
+import { SubmitFormFn, ValidationErrors } from './types'
 import { Scope } from '../Scope'
 
 const DEFAULT_VALIDATION_OPTIONS: Partial<types.IValidatorOptions> = {
@@ -28,10 +27,10 @@ const DEFAULT_VALIDATION_OPTIONS: Partial<types.IValidatorOptions> = {
   removeAdditional: false
 }
 
-export type ProviderRef = {
+export type FormProviderRef = {
   submit: SubmitFormFn
   getData: () => any
-  getErrors: () => { [path: string]: string }
+  getErrors: () => ValidationErrors
 }
 
 type Props = {
@@ -40,17 +39,17 @@ type Props = {
   children: React.ReactNode
 }
 
-function Provider (props: Props, elRef: React.Ref<ProviderRef>) {
+function FormProvider (props: Props, elRef: React.Ref<FormProviderRef>) {
   const { data, validationOptions, children } = props
 
   const { dataStorage, initialDataStorage, fields, emitter } = useMemo(() => {
     const emitter = createEmitter()
 
-    emitter.onAny((path: string, event: BaseEvent) => {
-      if (event instanceof RegisterFieldEvent) {
+    emitter.onAny((path: string, event: events.BaseEvent) => {
+      if (event instanceof events.RegisterFieldEvent) {
         fields.push(event.field)
       }
-      if (event instanceof UnregisterFieldEvent) {
+      if (event instanceof events.UnregisterFieldEvent) {
         const i = fields.indexOf(event.field)
         if (i !== -1) {
           fields.splice(i, 1)
@@ -71,7 +70,7 @@ function Provider (props: Props, elRef: React.Ref<ProviderRef>) {
     []
   )
 
-  const context = useMemo<ProviderContextValue>(() => ({
+  const context = useMemo<FormProviderContextValue>(() => ({
     dataStorage,
     initialDataStorage,
     validationOptions: _validationOptions,
@@ -94,11 +93,11 @@ function Provider (props: Props, elRef: React.Ref<ProviderRef>) {
     },
     getData: () => dataStorage.get([]),
     getErrors: () => {
-      const res = {}
+      const res: ValidationErrors = []
 
       fields.forEach((field) => {
         if (field.state.isValidated && !field.state.isValid) {
-          res[field.ref.path] = field.messageDescription
+          res.push([field.ref.path, field.messageDescription as any])
         }
       })
 
@@ -124,13 +123,13 @@ function Provider (props: Props, elRef: React.Ref<ProviderRef>) {
     value={context}
   >
     <Scope path="/">
-      <EventEmitter emitter={emitter}>
+      <EmitterProvider emitter={emitter}>
         {children}
-      </EventEmitter>
+      </EmitterProvider>
     </Scope>
   </ProviderContext.Provider>
 }
 
-const forwardedRef = forwardRef<ProviderRef, Props>(Provider)
+const forwardedRef = forwardRef<FormProviderRef, Props>(FormProvider)
 
 export default memo<typeof forwardedRef>(forwardedRef, _isEqual)

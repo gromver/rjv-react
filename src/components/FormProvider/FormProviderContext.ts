@@ -1,14 +1,14 @@
 import { createContext } from 'react'
 import { types } from 'rjv'
-import { SubmitFormFn } from './types'
+import { SubmitFormFn, ValidationErrors } from './types'
 
-export type ProviderContextValue = {
+export type FormProviderContextValue = {
   dataStorage: types.IStorage
   initialDataStorage: types.IStorage
   validationOptions: Partial<types.IValidatorOptions>
   submit: SubmitFormFn
   getData: () => any
-  getErrors: () => { [path: string]: string }
+  getErrors: () => ValidationErrors
 }
 
-export default createContext<ProviderContextValue | undefined>(undefined)
+export default createContext<FormProviderContextValue | undefined>(undefined)

@@ -1,6 +1,6 @@
 /**
  *
- * EventBus - an event bus provider
+ * EmitterProvider - an event emitter provider
  *
  */
 
@@ -10,10 +10,10 @@ import React, {
   useMemo
 } from 'react'
 import { EventEmitter2 } from 'eventemitter2'
-import EventEmitterContext, { EventEmitterContextValue } from './EventEmitterContext'
+import EventEmitterContext, { EmitterProviderContextValue } from './EmitterProviderContext'
 import { createEmitter } from '../../utils'
 
-export type EventEmitterRef = {
+export type EmitterProviderRef = {
   emitter: EventEmitter2
 }
 
@@ -22,10 +22,10 @@ type Props = {
   emitter?: EventEmitter2
 }
 
-function EventEmitter (props: Props, ref) {
+function EmitterProvider (props: Props, ref) {
   const { children, emitter } = props
 
-  const context = useMemo<EventEmitterContextValue>(() => ({
+  const context = useMemo<EmitterProviderContextValue>(() => ({
     emitter: emitter || createEmitter()
   }), [])
 
@@ -42,4 +42,4 @@ function EventEmitter (props: Props, ref) {
   )
 }
 
-export default forwardRef<EventEmitterRef, Props>(EventEmitter)
+export default forwardRef<EmitterProviderRef, Props>(EmitterProvider)

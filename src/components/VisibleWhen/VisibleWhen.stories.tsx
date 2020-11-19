@@ -2,7 +2,7 @@ import React from 'react'
 import { Form, Input, Select, Row, Col } from 'antd'
 import { storiesOf } from '@storybook/react'
 
-import { Provider } from '../Provider'
+import { FormProvider } from '../FormProvider'
 import { VisibleWhen } from './index'
 import { Field } from '../Field'
 import { getValidationStatus } from '../../stories/helpers'
@@ -10,7 +10,7 @@ import { getValidationStatus } from '../../stories/helpers'
 storiesOf('Visible', module)
   .add('Simple', () => {
     return <Form style={{ maxWidth: '800px' }}>
-      <Provider data={{}}>
+      <FormProvider data={{}}>
         <Row gutter={16}>
           <Col sm={12}>
             <h4>Validate whole data</h4>
@@ -88,12 +88,12 @@ storiesOf('Visible', module)
             </VisibleWhen>
           </Col>
         </Row>
-      </Provider>
+      </FormProvider>
     </Form>
   })
   .add('Advanced - useVisibilityStyle=false', () => {
     return <Form style={{ maxWidth: '400px' }}>
-      <Provider data={{ selector: 'yes' }}>
+      <FormProvider data={{ selector: 'yes' }}>
         <Field
           path={'selector'}
           schema={{ presence: true }}
@@ -149,12 +149,12 @@ storiesOf('Visible', module)
           />
         </VisibleWhen>
         <p>Footer</p>
-      </Provider>
+      </FormProvider>
     </Form>
   })
   .add('Advanced - useVisibilityStyle=true', () => {
     return <Form style={{ maxWidth: '400px' }}>
-      <Provider data={{ selector: 'yes' }}>
+      <FormProvider data={{ selector: 'yes' }}>
         <Field
           path={'selector'}
           schema={{ presence: true }}
@@ -211,6 +211,6 @@ storiesOf('Visible', module)
           />
         </VisibleWhen>
         <p>Footer</p>
-      </Provider>
+      </FormProvider>
     </Form>
   })

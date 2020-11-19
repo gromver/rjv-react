@@ -4,6 +4,9 @@ type TrackingRefsMap = {
   [propPath: string]: boolean
 }
 
+/**
+ * TrackingRef - a ref that tracks "ref(path)" cals and stores the path of the newly created ref
+ */
 export default class TrackingRef extends Ref {
   /**
    * Create Ref

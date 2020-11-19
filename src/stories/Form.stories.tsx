@@ -3,7 +3,7 @@ import { Form, Input, Alert } from 'antd'
 import { storiesOf } from '@storybook/react'
 
 import { getValidationStatus } from './helpers'
-import { Provider, Field, ProviderRef, Watch, events } from '../index'
+import { FormProvider, FormProviderRef, Field, Watch, events } from '../index'
 
 const initialData = {}
 
@@ -15,11 +15,11 @@ storiesOf('Form', module)
 
 function SimpleForm () {
   const [counter, setCounter] = useState(false)
-  const providerRef = useRef<ProviderRef>(null)
+  const providerRef = useRef<FormProviderRef>(null)
 
   return (
     <Form style={{ maxWidth: '400px' }}>
-      <Provider ref={providerRef} data={initialData}>
+      <FormProvider ref={providerRef} data={initialData}>
         <Watch
           props={['**']}
           events={[events.ValidatedEvent.TYPE]}
@@ -29,12 +29,10 @@ function SimpleForm () {
             if (providerRef.current) {
               const errors = providerRef.current.getErrors()
 
-              const entries = Object.entries(errors)
-
-              if (entries.length) {
+              if (errors.length) {
                 return <Alert
                   type="error"
-                  message={entries.map(([path, message]) => (
+                  message={errors.map(([path, message]) => (
                     <p key={`err-${path}`}>
                       {path}: {message}
                     </p>
@@ -146,7 +144,7 @@ function SimpleForm () {
         </button>
         <button onClick={() => setCounter(true)}>Show control</button>
         <button onClick={() => setCounter(false)}>Hide control</button>
-      </Provider>
+      </FormProvider>
     </Form>
   )
 }

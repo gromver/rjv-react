@@ -1,7 +1,10 @@
 import { utils, types, Ref } from 'rjv'
 import { EventEmitter2 } from 'eventemitter2'
-import { ValueChangedEvent } from '../components/EventEmitter/events'
+import { ValueChangedEvent } from '../components/EmitterProvider/events'
 
+/**
+ * EmittingRef - a ref that emits ValueChangedEvent on the value changes
+ */
 export default class EmittingRef extends Ref {
   /**
    * Create Ref

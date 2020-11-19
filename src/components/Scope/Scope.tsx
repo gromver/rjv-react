@@ -1,13 +1,13 @@
 /**
  *
- * Scope
+ * Scope - changes root path context
  *
  */
 
 import React, { useMemo, memo } from 'react'
 import { utils, types } from 'rjv'
 import ScopeContext, { ScopeContextValue } from './ScopeContext'
-import { ProviderContext, ProviderContextValue } from '../Provider'
+import { FormProviderContext, FormProviderContextValue } from '../FormProvider'
 
 type PropsPartial = {
   path: types.Path
@@ -15,7 +15,7 @@ type PropsPartial = {
 }
 
 type Props = PropsPartial & {
-  providerContext?: ProviderContextValue
+  providerContext?: FormProviderContextValue
   scopeContext?: ScopeContextValue
 }
 
@@ -50,11 +50,11 @@ const Scope = memo<Props>((props: Props) => {
 })
 
 export default (props: PropsPartial) => (
-  <ProviderContext.Consumer>
+  <FormProviderContext.Consumer>
     {(providerContext) => (
       <ScopeContext.Consumer>
         {(scopeContext) => <Scope {...props} providerContext={providerContext} scopeContext={scopeContext} />}
       </ScopeContext.Consumer>
     )}
-  </ProviderContext.Consumer>
+  </FormProviderContext.Consumer>
 )

@@ -2,13 +2,13 @@ import React, { createRef, useCallback } from 'react'
 import { Form, Input, Button, Select } from 'antd'
 import { storiesOf } from '@storybook/react'
 
-import { Provider, ProviderRef } from '../Provider'
+import { FormProvider, FormProviderRef } from '../FormProvider'
 import { Field } from './index'
 import { getValidationStatus } from '../../stories/helpers'
 
 storiesOf('Field', module)
   .add('Simple Field', () => {
-    const providerRef = createRef<ProviderRef>()
+    const providerRef = createRef<FormProviderRef>()
     const handleSubmit = useCallback(async () => {
       if (providerRef.current) {
         const res = await providerRef.current.submit()
@@ -19,7 +19,7 @@ storiesOf('Field', module)
       }
     }, [providerRef.current])
     return <Form style={{ maxWidth: '400px' }}>
-      <Provider ref={providerRef} data={undefined}>
+      <FormProvider ref={providerRef} data={undefined}>
         <Field
           path="/"
           schema={{ default: 'wrong email', format: 'email' }}
@@ -44,11 +44,11 @@ storiesOf('Field', module)
           }}
         />
         <Button onClick={handleSubmit}>Submit</Button>
-      </Provider>
+      </FormProvider>
     </Form>
   })
   .add('Same fields', () => {
-    const providerRef = createRef<ProviderRef>()
+    const providerRef = createRef<FormProviderRef>()
     const handleSubmit = useCallback(async () => {
       if (providerRef.current) {
         const res = await providerRef.current.submit()
@@ -59,7 +59,7 @@ storiesOf('Field', module)
       }
     }, [providerRef.current])
     return <Form layout="horizontal" style={{ maxWidth: '400px' }}>
-      <Provider ref={providerRef} data={''}>
+      <FormProvider ref={providerRef} data={''}>
         <Field
           path="/"
           schema={{ default: '', presence: true }}
@@ -105,11 +105,11 @@ storiesOf('Field', module)
           }}
         />
         <Button onClick={handleSubmit}>Submit</Button>
-      </Provider>
+      </FormProvider>
     </Form>
   })
   .add('Pending Field', () => {
-    const providerRef = createRef<ProviderRef>()
+    const providerRef = createRef<FormProviderRef>()
     const handleSubmit = useCallback(async () => {
       if (providerRef.current) {
         const res = await providerRef.current.submit()
@@ -120,7 +120,7 @@ storiesOf('Field', module)
       }
     }, [providerRef.current])
     return <Form layout="horizontal" style={{ maxWidth: '400px' }}>
-      <Provider ref={providerRef} data={''}>
+      <FormProvider ref={providerRef} data={''}>
         <Field
           path="/"
           schema={{
@@ -153,11 +153,11 @@ storiesOf('Field', module)
           }}
         />
         <Button onClick={handleSubmit}>Submit</Button>
-      </Provider>
+      </FormProvider>
     </Form>
   })
   .add('ResolveSchema', () => {
-    const providerRef = createRef<ProviderRef>()
+    const providerRef = createRef<FormProviderRef>()
     const handleSubmit = useCallback(async () => {
       if (providerRef.current) {
         const res = await providerRef.current.submit()
@@ -168,7 +168,7 @@ storiesOf('Field', module)
       }
     }, [providerRef.current])
     return <Form layout="horizontal" style={{ maxWidth: '400px' }}>
-      <Provider ref={providerRef} data={{}}>
+      <FormProvider ref={providerRef} data={{}}>
         <Field
           path="required"
           schema={{ default: 'no', type: 'string' }}
@@ -230,6 +230,6 @@ storiesOf('Field', module)
           }}
         />
         <Button onClick={handleSubmit}>Submit</Button>
-      </Provider>
+      </FormProvider>
     </Form>
   })

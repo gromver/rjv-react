@@ -8,11 +8,10 @@ import React, {
   CSSProperties, ReactNode, useContext, useEffect, useMemo, useState
 } from 'react'
 import { types, utils, Validator } from 'rjv'
-import { ScopeContext } from '../Scope'
-import { ProviderContext } from '../Provider'
-import { EventEmitterContext } from '../EventEmitter'
 import { Listener } from 'eventemitter2'
-import { ValueChangedEvent } from '../EventEmitter/events'
+import { ScopeContext } from '../Scope'
+import { FormProviderContext } from '../FormProvider'
+import { EmitterProviderContext, events } from '../EmitterProvider'
 import { getPropsToObserveFromSchema } from '../../utils'
 import ReadonlyRef from '../../refs/ReadonlyRef'
 
@@ -37,14 +36,24 @@ type Props = {
   hiddenStyles?: CSSProperties
 }
 
+/**
+ * VisibleWhen
+ * @param path
+ * @param schema
+ * @param children
+ * @param useVisibilityStyle
+ * @param visibleStyles
+ * @param hiddenStyles
+ * @constructor
+ */
 export default function VisibleWhen (
   {
     path, schema, children, useVisibilityStyle, visibleStyles = {}, hiddenStyles = HIDDEN_EL_STYLES
   }: Props
 ) {
   const [visible, setVisible] = useState(false)
-  const providerContext = useContext(ProviderContext)
-  const emitterContext = useContext(EventEmitterContext)
+  const providerContext = useContext(FormProviderContext)
+  const emitterContext = useContext(EmitterProviderContext)
   const scopeContext = useContext(ScopeContext)
 
   const useMount = useMemo(() => !useVisibilityStyle, [])
@@ -69,7 +78,7 @@ export default function VisibleWhen (
       watchProps.forEach((path) => {
         const listener = emitterContext.emitter
           .on(path, async (event) => {
-            if (event instanceof ValueChangedEvent) {
+            if (event instanceof events.ValueChangedEvent) {
               const res = await validator.validateRef(ref)
 
               if (res.valid) {

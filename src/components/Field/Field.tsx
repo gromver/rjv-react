@@ -9,9 +9,9 @@ import React, {
   RefObject
 } from 'react'
 import { utils, types, Validator, ValidationMessage } from 'rjv'
-import { ProviderContext, ProviderContextValue } from '../Provider'
+import { FormProviderContext, FormProviderContextValue } from '../FormProvider'
 import { ScopeContext, ScopeContextValue } from '../Scope'
-import { EventEmitterContext, EventEmitterContextValue, events } from '../EventEmitter'
+import { EmitterProviderContext, EmitterProviderContextValue, events } from '../EmitterProvider'
 import { EventEmitter2, Listener } from 'eventemitter2'
 import { descriptionResolver } from '../../utils'
 import { TrackingRef, EmittingRef } from '../../refs'
@@ -152,9 +152,9 @@ type ComponentProps = {
 }
 
 type ComponentPropsWithContexts = ComponentProps & {
-  providerContext: ProviderContextValue
+  providerContext: FormProviderContextValue
   scopeContext: ScopeContextValue
-  emitterContext: EventEmitterContextValue
+  emitterContext: EmitterProviderContextValue
 }
 
 class FieldComponent extends React.Component<ComponentPropsWithContexts, State> {
@@ -273,20 +273,20 @@ class FieldComponent extends React.Component<ComponentPropsWithContexts, State> 
 }
 
 export default (props: ComponentProps) => (
-  <ProviderContext.Consumer>
+  <FormProviderContext.Consumer>
     {(providerContext) => (
       <ScopeContext.Consumer>
         {(scopeContext) => (
-          <EventEmitterContext.Consumer>
+          <EmitterProviderContext.Consumer>
             {(emitterContext) => <FieldComponent
               {...props}
               providerContext={providerContext as any}
               scopeContext={scopeContext as any}
               emitterContext={emitterContext as any}
             />}
-          </EventEmitterContext.Consumer>
+          </EmitterProviderContext.Consumer>
         )}
       </ScopeContext.Consumer>
     )}
-  </ProviderContext.Consumer>
+  </FormProviderContext.Consumer>
 )
