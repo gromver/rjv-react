@@ -27,7 +27,7 @@ function InputField ({ path }: Props) {
             ref={inputRef}
             value={field.value}
             onFocus={() => field.markAsTouched()}
-            onChange={(e) => field.value = e.target.value}
+            onChange={(e) => field.markAsInvalidated().value = e.target.value}
             onBlur={() => field.validate()}
           />
         </Form.Item>
@@ -47,12 +47,10 @@ function ShowErrors () {
     }
   }, [errorProviderContext])
 
-  const entries = Object.entries(errors)
-
-  if (entries.length) {
+  if (errors.length) {
     return <Alert
       type="error"
-      message={entries.map(([path, message]) => (
+      message={errors.map(([path, message]) => (
         <p key={`err-${path}`}>
           {path}: {message}
         </p>

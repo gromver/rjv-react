@@ -22,6 +22,8 @@ type Props = {
   children: ReactNode
 }
 
+const VALIDATION_STATE_CHANGED_EVENTS = [events.ValidatedEvent.TYPE, events.InvalidatedEvent.TYPE]
+
 export default function ErrorProvider ({ children }: Props) {
   const emitterContext = useContext(EmitterProviderContext)
 
@@ -41,8 +43,8 @@ export default function ErrorProvider ({ children }: Props) {
     }
 
     const subscribe: Subscribe = (handler: SubscribeHandler): Unsubscribe => {
-      const listener: Listener = emitter.on('**', (event) => {
-        if (event instanceof events.ValidatedEvent) {
+      const listener: Listener = emitter.on('**', (event: events.BaseEvent) => {
+        if (VALIDATION_STATE_CHANGED_EVENTS.includes(event.type)) {
           handler(getErrors())
         }
       }, { objectify: true }) as Listener
