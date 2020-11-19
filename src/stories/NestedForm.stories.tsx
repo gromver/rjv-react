@@ -1,4 +1,4 @@
-import React, { useRef, createRef, useState, useMemo, useContext, useCallback } from 'react'
+import React, { useRef, createRef, useState, useCallback } from 'react'
 import { types } from 'rjv'
 import { Form, Input, Alert, Button, Card } from 'antd'
 import { storiesOf } from '@storybook/react'
@@ -9,10 +9,8 @@ import {
   Watch,
   Field,
   Scope,
-  events,
-  ProviderContext, EventEmitterContext
+  events
 } from '../index'
-import { EmittingRef } from '../refs'
 
 let nodeId = 1
 const initialData = { __id: nodeId }
@@ -130,19 +128,6 @@ function CreateNodeForm ({ nodeRef }: { nodeRef: types.IRef }) {
   </Provider>
 }
 
-function WithRef ({ render }: any) {
-  const providerContext = useContext(ProviderContext)
-  const emitterContext = useContext(EventEmitterContext)
-  const ref = useMemo(
-    () => {
-      return providerContext && emitterContext && new EmittingRef(providerContext.dataStorage, '/', emitterContext.emitter)
-    },
-    [providerContext]
-  )
-
-  return ref ? render(ref) : null
-}
-
 function NestedSchemaForm () {
   const providerRef = useRef<ProviderRef>(null)
   const handleSubmit = useCallback(async () => {
@@ -158,7 +143,7 @@ function NestedSchemaForm () {
   return (
     <Provider ref={providerRef} data={initialData}>
       <Watch
-        on={[events.ValidatedEvent.TYPE]}
+        props={[events.ValidatedEvent.TYPE]}
         debounce={50}
         render={() => {
           if (providerRef.current) {
@@ -182,7 +167,7 @@ function NestedSchemaForm () {
         }}
       />
 
-      <WithRef render={(ref) => renderNode(ref)} />
+      <Watch props={[]} render={renderNode} />
 
       <button onClick={handleSubmit}>
         Submit

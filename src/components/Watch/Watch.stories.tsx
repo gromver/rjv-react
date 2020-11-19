@@ -62,7 +62,7 @@ storiesOf('Watch', module)
           <Col sm={12}>
             <h4>Watch: '/a', '/b', '/obj/*'</h4>
             <Watch
-              on={['/a', '/b', '/obj/*']}
+              props={['/a', '/b', '/obj/*']}
               render={(ref) => <div>
                 {JSON.stringify(ref.value)}
               </div>}
@@ -70,7 +70,7 @@ storiesOf('Watch', module)
             <br />
             <h4>Watch: '/obj/**'</h4>
             <Watch
-              on={['/obj/**']}
+              props={['/obj/**']}
               render={(ref) => <div>
                 {JSON.stringify(ref.ref('obj').value)}
               </div>}
@@ -79,7 +79,7 @@ storiesOf('Watch', module)
             <Scope path="obj">
               <h4>Watch from scope /obj: '**', '../a'</h4>
               <Watch
-                on={['**', '../a']}
+                props={['**', '../a']}
                 render={(ref) => <div>
                   {JSON.stringify(ref.value)}
                 </div>}

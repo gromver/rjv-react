@@ -21,8 +21,8 @@ function SimpleForm () {
     <Form style={{ maxWidth: '400px' }}>
       <Provider ref={providerRef} data={initialData}>
         <Watch
-          on={['**']}
-          eventTypes={[events.ValidatedEvent.TYPE]}
+          props={['**']}
+          events={[events.ValidatedEvent.TYPE]}
           debounce={50}
           render={() => {
             console.log('rerender only on ValidatedEvent')
