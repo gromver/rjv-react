@@ -1,9 +1,8 @@
 import React, { createRef, useCallback } from 'react'
-import { Form, Input, Alert } from 'antd'
+import { Form, Input } from 'antd'
 import { storiesOf } from '@storybook/react'
 
 import { Provider, ProviderRef } from '../Provider'
-// import { Subscribe } from '../../../backup/Subscribe'
 import Scope from './Scope'
 import { Field } from '../Field'
 import { getValidationStatus } from '../../stories/helpers'
