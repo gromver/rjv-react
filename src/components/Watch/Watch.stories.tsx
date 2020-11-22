@@ -1,4 +1,4 @@
-import React, { createRef, useCallback } from 'react'
+import React, { useCallback, useRef } from 'react'
 import { Form, Input, Button, Row, Col } from 'antd'
 import { storiesOf } from '@storybook/react'
 
@@ -38,7 +38,7 @@ function InputField ({ path }: Props) {
 
 storiesOf('Watch', module)
   .add('Watch', () => {
-    const providerRef = createRef<FormProviderRef>()
+    const providerRef = useRef<FormProviderRef>(null)
     const handleSubmit = useCallback(async () => {
       if (providerRef.current) {
         const res = await providerRef.current.submit()

@@ -1,4 +1,4 @@
-import React, { createRef, useCallback } from 'react'
+import React, { useCallback, useRef } from 'react'
 import { Form, Input } from 'antd'
 import { storiesOf } from '@storybook/react'
 
@@ -18,7 +18,7 @@ storiesOf('Scope', module)
   })
 
 function SimpleForm () {
-  const providerRef = createRef<FormProviderRef>()
+  const providerRef = useRef<FormProviderRef>(null)
   const handleSubmit = useCallback(async () => {
     if (providerRef.current) {
       const res = await providerRef.current.submit()

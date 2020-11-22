@@ -9,7 +9,7 @@ import React, {
   useEffect,
   useImperativeHandle,
   useMemo,
-  memo
+  memo, useState
 } from 'react'
 import _isEqual from 'lodash/isEqual'
 import _merge from 'lodash/merge'
@@ -33,6 +33,12 @@ export type FormProviderRef = {
   getErrors: () => ValidationErrors
 }
 
+type DataState = {
+  initialData: any,
+  dataStorage: types.IStorage,
+  initialDataStorage: types.IStorage
+}
+
 type Props = {
   validationOptions?: Partial<types.IValidatorOptions>,
   data?: any,
@@ -41,9 +47,15 @@ type Props = {
 
 function FormProvider (props: Props, elRef: React.Ref<FormProviderRef>) {
   const { data, validationOptions, children } = props
+  const [dataState, setDataState] = useState<DataState>(() => ({
+    initialData: _cloneDeep(data),
+    dataStorage: new Storage(_cloneDeep(data)),
+    initialDataStorage: new Storage(_cloneDeep(data))
+  }))
 
-  const { dataStorage, initialDataStorage, fields, emitter } = useMemo(() => {
+  const { fields, emitter } = useMemo(() => {
     const emitter = createEmitter()
+    const fields: FieldApi[] = []
 
     emitter.onAny((path: string, event: events.BaseEvent) => {
       if (event instanceof events.RegisterFieldEvent) {
@@ -59,11 +71,19 @@ function FormProvider (props: Props, elRef: React.Ref<FormProviderRef>) {
 
     return {
       emitter,
-      dataStorage: new Storage(_cloneDeep(data)),
-      initialDataStorage: new Storage(_cloneDeep(data)),
-      fields: [] as FieldApi[]
+      fields
     }
   }, [])
+
+  useEffect(() => {
+    if (!_isEqual(dataState.initialData, data)) {
+      setDataState({
+        initialData: _cloneDeep(data),
+        dataStorage: new Storage(_cloneDeep(data)),
+        initialDataStorage: new Storage(_cloneDeep(data))
+      })
+    }
+  }, [data])
 
   const _validationOptions = useMemo(
     () => _merge({}, DEFAULT_VALIDATION_OPTIONS, validationOptions),
@@ -71,8 +91,8 @@ function FormProvider (props: Props, elRef: React.Ref<FormProviderRef>) {
   )
 
   const context = useMemo<FormProviderContextValue>(() => ({
-    dataStorage,
-    initialDataStorage,
+    dataStorage: dataState.dataStorage,
+    initialDataStorage: dataState.initialDataStorage,
     validationOptions: _validationOptions,
     submit: async () => {
       const results = await Promise.all(fields.map((item) => item.validate()))
@@ -88,10 +108,10 @@ function FormProvider (props: Props, elRef: React.Ref<FormProviderRef>) {
 
       return {
         valid: true,
-        data: dataStorage.get([])
+        data: dataState.dataStorage.get([])
       }
     },
-    getData: () => dataStorage.get([]),
+    getData: () => dataState.dataStorage.get([]),
     getErrors: () => {
       const res: ValidationErrors = []
 
@@ -103,7 +123,7 @@ function FormProvider (props: Props, elRef: React.Ref<FormProviderRef>) {
 
       return res
     }
-  }), [dataStorage, initialDataStorage, fields, _validationOptions])
+  }), [dataState, fields, _validationOptions])
 
   useEffect(() => {
     return () => {

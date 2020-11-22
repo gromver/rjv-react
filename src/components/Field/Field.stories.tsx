@@ -1,4 +1,4 @@
-import React, { createRef, useCallback } from 'react'
+import React, { useCallback, useRef } from 'react'
 import { Form, Input, Button, Select } from 'antd'
 import { storiesOf } from '@storybook/react'
 
@@ -8,7 +8,7 @@ import { getValidationStatus } from '../../stories/helpers'
 
 storiesOf('Field', module)
   .add('Simple Field', () => {
-    const providerRef = createRef<FormProviderRef>()
+    const providerRef = useRef<FormProviderRef>(null)
     const handleSubmit = useCallback(async () => {
       if (providerRef.current) {
         const res = await providerRef.current.submit()
@@ -48,7 +48,7 @@ storiesOf('Field', module)
     </Form>
   })
   .add('Same fields', () => {
-    const providerRef = createRef<FormProviderRef>()
+    const providerRef = useRef<FormProviderRef>(null)
     const handleSubmit = useCallback(async () => {
       if (providerRef.current) {
         const res = await providerRef.current.submit()
@@ -109,7 +109,7 @@ storiesOf('Field', module)
     </Form>
   })
   .add('Pending Field', () => {
-    const providerRef = createRef<FormProviderRef>()
+    const providerRef = useRef<FormProviderRef>(null)
     const handleSubmit = useCallback(async () => {
       if (providerRef.current) {
         const res = await providerRef.current.submit()
@@ -157,7 +157,7 @@ storiesOf('Field', module)
     </Form>
   })
   .add('ResolveSchema - isRequired', () => {
-    const providerRef = createRef<FormProviderRef>()
+    const providerRef = useRef<FormProviderRef>(null)
     const handleSubmit = useCallback(async () => {
       if (providerRef.current) {
         const res = await providerRef.current.submit()
@@ -235,7 +235,7 @@ storiesOf('Field', module)
     </Form>
   })
   .add('ResolveSchema - isReadonly', () => {
-    const providerRef = createRef<FormProviderRef>()
+    const providerRef = useRef<FormProviderRef>(null)
     const handleSubmit = useCallback(async () => {
       if (providerRef.current) {
         const res = await providerRef.current.submit()

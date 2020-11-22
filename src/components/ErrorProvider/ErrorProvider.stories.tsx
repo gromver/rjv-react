@@ -1,11 +1,11 @@
-import React, { createRef, useCallback, useContext, useEffect, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { Form, Input, Card, Button, Alert } from 'antd'
 import { storiesOf } from '@storybook/react'
 
 import { FormProvider, FormProviderRef, ValidationErrors } from '../FormProvider'
 import { ErrorProvider } from './index'
 import { Field } from '../Field'
-import { getValidationStatus } from '../../stories/helpers'
+import { getValidationStatus, ShowErrors } from '../../stories/helpers'
 import ErrorProviderContext from './ErrorProviderContext'
 
 type Props = { path: string }
@@ -36,34 +36,9 @@ function InputField ({ path }: Props) {
   />
 }
 
-function ShowErrors () {
-  const [errors, setErrors] = useState<ValidationErrors>([])
-  const errorProviderContext = useContext(ErrorProviderContext)
-
-  useEffect(() => {
-    if (errorProviderContext) {
-      return errorProviderContext
-        .subscribe((errors) => setErrors(errors))
-    }
-  }, [errorProviderContext])
-
-  if (errors.length) {
-    return <Alert
-      type="error"
-      message={errors.map(([path, message]) => (
-        <p key={`err-${path}`}>
-          {path}: {message}
-        </p>
-      ))}
-    />
-  }
-
-  return null
-}
-
 storiesOf('ErrorProvider', module)
   .add('Example', () => {
-    const providerRef = createRef<FormProviderRef>()
+    const providerRef = useRef<FormProviderRef>(null)
     const handleSubmit = useCallback(async () => {
       if (providerRef.current) {
         const res = await providerRef.current.submit()

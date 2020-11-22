@@ -231,6 +231,41 @@ class FieldComponent extends React.Component<ComponentPropsWithContexts, State> 
     this.validator.validateRef(this.ref)
       .catch((e) => { throw e })
 
+    this._processResolveSchema()
+  }
+
+  componentDidUpdate (prevProps: Readonly<ComponentPropsWithContexts>, prevState: Readonly<State>, snapshot?: any) {
+    if (prevProps.providerContext !== this.props.providerContext) {
+      this.ref = new EmittingRef(this.props.providerContext.dataStorage, this.path, this.emitter)
+
+      this.setState({
+        ...DEFAULT_STATE,
+        isRequired: !!this.schema.presence,
+        isReadonly: !!this.schema.readonly
+      }, () => this.emitter.emit(this.path, new events.InvalidatedEvent()))
+
+      this.validator.validateRef(this.ref)
+        .catch((e) => { throw e })
+
+      this._processResolveSchema()
+    }
+  }
+
+  componentWillUnmount () {
+    this.emitter.emit(this.path, new events.UnregisterFieldEvent(this.api))
+
+    this.listeners.forEach((listener) => listener.off())
+  }
+
+  handleRegisterControl (el: any) {
+    this.inputRef = el
+  }
+
+  render () {
+    return this.props.render(this.api, this.inputRef)
+  }
+
+  protected _processResolveSchema () {
     const resolveSchema = this.schema.resolveSchema
 
     if (resolveSchema) {
@@ -279,20 +314,6 @@ class FieldComponent extends React.Component<ComponentPropsWithContexts, State> 
           throw e
         })
     }
-  }
-
-  componentWillUnmount () {
-    this.emitter.emit(this.path, new events.UnregisterFieldEvent(this.api))
-
-    this.listeners.forEach((listener) => listener.off())
-  }
-
-  handleRegisterControl (el: any) {
-    this.inputRef = el
-  }
-
-  render () {
-    return this.props.render(this.api, this.inputRef)
   }
 
   protected _extractMetadata (schema: types.ISchema): [isRequired: boolean, isReadonly: boolean] {
