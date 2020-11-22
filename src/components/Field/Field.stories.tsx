@@ -156,7 +156,7 @@ storiesOf('Field', module)
       </FormProvider>
     </Form>
   })
-  .add('ResolveSchema', () => {
+  .add('ResolveSchema - isRequired', () => {
     const providerRef = createRef<FormProviderRef>()
     const handleSubmit = useCallback(async () => {
       if (providerRef.current) {
@@ -224,6 +224,84 @@ storiesOf('Field', module)
                   onFocus={() => field.markAsTouched()}
                   onChange={(e) => field.value = e.target.value}
                   onBlur={() => field.validate()}
+                  readOnly={field.isReadonly}
+                />
+              </Form.Item>
+            )
+          }}
+        />
+        <Button onClick={handleSubmit}>Submit</Button>
+      </FormProvider>
+    </Form>
+  })
+  .add('ResolveSchema - isReadonly', () => {
+    const providerRef = createRef<FormProviderRef>()
+    const handleSubmit = useCallback(async () => {
+      if (providerRef.current) {
+        const res = await providerRef.current.submit()
+        console.log('RESULT', res)
+        if (!res.valid) {
+          res.firstErrorField && res.firstErrorField.focus()
+        }
+      }
+    }, [providerRef.current])
+    return <Form layout="horizontal" style={{ maxWidth: '400px' }}>
+      <FormProvider ref={providerRef} data={{}}>
+        <Field
+          path="required"
+          schema={{ default: 'no', type: 'string' }}
+          render={(field, inputRef) => {
+            return (
+              <Form.Item
+                label="Field readonly?"
+                validateStatus={getValidationStatus(field)}
+                help={field.messageDescription}
+                required={field.isRequired}
+              >
+                <Select
+                  ref={inputRef}
+                  value={field.value}
+                  onFocus={() => field.markAsTouched()}
+                  onChange={(value) => field.value = value}
+                  onBlur={() => field.validate()}
+                >
+                  <Select.Option value="noo">Noo</Select.Option>
+                  <Select.Option value="no">No</Select.Option>
+                  <Select.Option value="yes">Yes</Select.Option>
+                </Select>
+              </Form.Item>
+            )
+          }}
+        />
+        <Field
+          path="field"
+          schema={{
+            default: 'abc',
+            type: 'string',
+            resolveSchema: (ref) => {
+              if (ref.ref('../required').value === 'yes') {
+                return { readonly: true }
+              }
+
+              return {}
+            },
+            presence: true
+          }}
+          render={(field, inputRef) => {
+            return (
+              <Form.Item
+                label="Field"
+                validateStatus={getValidationStatus(field)}
+                help={field.messageDescription}
+                required={field.isRequired}
+              >
+                <Input
+                  ref={inputRef}
+                  value={field.value}
+                  onFocus={() => field.markAsTouched()}
+                  onChange={(e) => field.value = e.target.value}
+                  onBlur={() => !field.isReadonly && field.validate()}
+                  readOnly={field.isReadonly}
                 />
               </Form.Item>
             )

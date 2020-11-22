@@ -116,6 +116,10 @@ export class FieldApi {
     return this.component.state.isRequired
   }
 
+  get isReadonly (): boolean {
+    return this.component.state.isReadonly
+  }
+
   get messageDescription (): string | undefined {
     const message = this.component.state.isValidated ? this.component.state.message : undefined
 
@@ -131,6 +135,7 @@ type State = {
   isTouched: boolean,
   isDirty: boolean,
   isRequired: boolean,
+  isReadonly: boolean,
   message?: any
 }
 
@@ -141,7 +146,8 @@ const DEFAULT_STATE: State = {
   isPristine: true,
   isTouched: false,
   isDirty: false,
-  isRequired: false
+  isRequired: false,
+  isReadonly: false
 }
 
 type ComponentProps = {
@@ -216,22 +222,28 @@ class FieldComponent extends React.Component<ComponentPropsWithContexts, State> 
 
     this.state = {
       ...DEFAULT_STATE,
-      isRequired: !!schema.presence
+      isRequired: !!schema.presence,
+      isReadonly: !!schema.readonly
     }
   }
 
   componentDidMount () {
-    this.validator.validateRef(this.ref).catch((e) => { throw e })
+    this.validator.validateRef(this.ref)
+      .catch((e) => { throw e })
 
     const resolveSchema = this.schema.resolveSchema
+
     if (resolveSchema) {
       const trackingRef = new TrackingRef(this.props.providerContext.dataStorage, this.ref.path)
-      Promise.resolve(resolveSchema(trackingRef)).then(() => {
-        trackingRef.propsToTrack.forEach((path) => {
-          this.listeners.push(this.emitter.on(path, async (event: events.BaseEvent) => {
+
+      Promise.resolve(resolveSchema(trackingRef))
+        .then((initiallyResolvedSchema) => {
+          // resolves schema and applies state changes
+          const handler = async (event: events.BaseEvent) => {
             if (event instanceof events.ValueChangedEvent) {
               const resolvedSchema = await resolveSchema(this.ref)
-              const isRequired = !!resolvedSchema.presence
+              const [isRequired, isReadonly] = this._extractMetadata(resolvedSchema)
+
               if (this.state.isValidated) {
                 this.setState({ isValidating: true })
 
@@ -239,21 +251,33 @@ class FieldComponent extends React.Component<ComponentPropsWithContexts, State> 
 
                 this.setState({
                   isRequired,
+                  isReadonly,
                   isValid: res.valid,
                   isValidating: false,
                   message: extractMessageFromResult(res, this.ref)
                 }, () => {
                   this.emitter.emit(this.ref.path, new events.ValidatedEvent())
                 })
-              } else if (isRequired !== this.state.isRequired) {
-                this.setState({ isRequired })
+              } else if (isRequired !== this.state.isRequired || isReadonly !== this.state.isReadonly) {
+                this.setState({ isRequired, isReadonly })
               }
             }
-          }, { objectify: true }) as Listener)
+          }
+
+          // subscribe to the props that affects resolvedSchema keyword
+          trackingRef.propsToTrack.forEach((path) => {
+            this.listeners.push(this.emitter.on(path, handler, { objectify: true }) as Listener)
+          })
+
+          // apply an initial state of the resolved schema
+          const [isRequired, isReadonly] = this._extractMetadata(initiallyResolvedSchema)
+
+          if (isRequired !== this.state.isRequired || isReadonly !== this.state.isReadonly) {
+            this.setState({ isRequired, isReadonly })
+          }
+        }).catch((e) => {
+          throw e
         })
-      }).catch((e) => {
-        throw e
-      })
     }
   }
 
@@ -269,6 +293,15 @@ class FieldComponent extends React.Component<ComponentPropsWithContexts, State> 
 
   render () {
     return this.props.render(this.api, this.inputRef)
+  }
+
+  protected _extractMetadata (schema: types.ISchema): [isRequired: boolean, isReadonly: boolean] {
+    const isRequired = typeof schema.presence === 'boolean'
+      ? schema.presence : !!this.schema.presence
+    const isReadonly = typeof schema.readonly === 'boolean'
+      ? schema.readonly : !!this.schema.readonly
+
+    return [isRequired, isReadonly]
   }
 }
 
