@@ -1,5 +1,5 @@
 import { EventEmitter2, ConstructorOptions } from 'eventemitter2'
-import { utils, types, ValidationMessage } from 'rjv'
+import { utils, types } from 'rjv'
 import _extend from 'lodash/extend'
 import _assign from 'lodash/assign'
 import _isObject from 'lodash/isObject'
@@ -33,14 +33,6 @@ export const createEmitter = (options: Partial<ConstructorOptions> = {}) => new 
     DEFAULT_EMITTER_OPTIONS,
     options
   ))
-
-export function descriptionResolver (message: ValidationMessage): string | any {
-  if (typeof message.description === 'string') {
-    return utils.injectVarsToString(message.description, message.bindings)
-  }
-
-  return message.description
-}
 
 const META_KEYWORDS = [
   'default', 'filter', 'error', 'warning', 'errors', 'warnings', 'removeAdditional'

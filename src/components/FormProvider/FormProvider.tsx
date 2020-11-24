@@ -9,23 +9,17 @@ import React, {
   useEffect,
   useImperativeHandle,
   useMemo,
-  memo, useState
+  memo,
+  useState
 } from 'react'
-import _isEqual from 'lodash/isEqual'
-import _merge from 'lodash/merge'
 import _cloneDeep from 'lodash/cloneDeep'
 import { types, Storage } from 'rjv'
-import ProviderContext, { FormProviderContextValue } from './FormProviderContext'
+import FormProviderContext, { FormProviderContextValue } from './FormProviderContext'
 import { EmitterProvider, events } from '../EmitterProvider'
 import { createEmitter } from '../../utils'
 import { FieldApi } from '../Field'
 import { SubmitFormFn, ValidationErrors } from './types'
 import { Scope } from '../Scope'
-
-const DEFAULT_VALIDATION_OPTIONS: Partial<types.IValidatorOptions> = {
-  coerceTypes: false,
-  removeAdditional: false
-}
 
 export type FormProviderRef = {
   submit: SubmitFormFn
@@ -40,13 +34,12 @@ type DataState = {
 }
 
 type Props = {
-  validationOptions?: Partial<types.IValidatorOptions>,
   data?: any,
   children: React.ReactNode
 }
 
 function FormProvider (props: Props, elRef: React.Ref<FormProviderRef>) {
-  const { data, validationOptions, children } = props
+  const { data, children } = props
   const [dataState, setDataState] = useState<DataState>(() => ({
     initialData: _cloneDeep(data),
     dataStorage: new Storage(_cloneDeep(data)),
@@ -76,24 +69,16 @@ function FormProvider (props: Props, elRef: React.Ref<FormProviderRef>) {
   }, [])
 
   useEffect(() => {
-    if (!_isEqual(dataState.initialData, data)) {
-      setDataState({
-        initialData: _cloneDeep(data),
-        dataStorage: new Storage(_cloneDeep(data)),
-        initialDataStorage: new Storage(_cloneDeep(data))
-      })
-    }
+    setDataState({
+      initialData: _cloneDeep(data),
+      dataStorage: new Storage(_cloneDeep(data)),
+      initialDataStorage: new Storage(_cloneDeep(data))
+    })
   }, [data])
-
-  const _validationOptions = useMemo(
-    () => _merge({}, DEFAULT_VALIDATION_OPTIONS, validationOptions),
-    []
-  )
 
   const context = useMemo<FormProviderContextValue>(() => ({
     dataStorage: dataState.dataStorage,
     initialDataStorage: dataState.initialDataStorage,
-    validationOptions: _validationOptions,
     submit: async () => {
       const results = await Promise.all(fields.map((item) => item.validate()))
       const invalidResult = results.find((res) => !res.valid)
@@ -123,7 +108,7 @@ function FormProvider (props: Props, elRef: React.Ref<FormProviderRef>) {
 
       return res
     }
-  }), [dataState, fields, _validationOptions])
+  }), [dataState, fields])
 
   useEffect(() => {
     return () => {
@@ -139,7 +124,7 @@ function FormProvider (props: Props, elRef: React.Ref<FormProviderRef>) {
     }
   }, [context])
 
-  return <ProviderContext.Provider
+  return <FormProviderContext.Provider
     value={context}
   >
     <Scope path="/">
@@ -147,9 +132,9 @@ function FormProvider (props: Props, elRef: React.Ref<FormProviderRef>) {
         {children}
       </EmitterProvider>
     </Scope>
-  </ProviderContext.Provider>
+  </FormProviderContext.Provider>
 }
 
 const forwardedRef = forwardRef<FormProviderRef, Props>(FormProvider)
 
-export default memo<typeof forwardedRef>(forwardedRef, _isEqual)
+export default memo<typeof forwardedRef>(forwardedRef)

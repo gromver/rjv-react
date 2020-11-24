@@ -1,11 +1,11 @@
-import React, { useCallback, useRef } from 'react'
-import { Form, Input, Button, Row, Col } from 'antd'
+import React from 'react'
+import { Form, Input, Row, Col } from 'antd'
 import { storiesOf } from '@storybook/react'
 
-import { FormProvider, FormProviderRef } from '../FormProvider'
+import { FormProvider } from '../FormProvider'
 import { Watch } from './index'
 import { Field } from '../Field'
-import { getValidationStatus } from '../../stories/helpers'
+import { getValidationStatus, SubmitBtn } from '../../stories/helpers'
 import { Scope } from '../Scope'
 
 type Props = { path: string }
@@ -38,18 +38,8 @@ function InputField ({ path }: Props) {
 
 storiesOf('Watch', module)
   .add('Watch', () => {
-    const providerRef = useRef<FormProviderRef>(null)
-    const handleSubmit = useCallback(async () => {
-      if (providerRef.current) {
-        const res = await providerRef.current.submit()
-        console.log('RESULT', res)
-        if (!res.valid) {
-          res.firstErrorField && res.firstErrorField.focus()
-        }
-      }
-    }, [providerRef.current])
     return <Form style={{ maxWidth: '1000px' }}>
-      <FormProvider ref={providerRef} data={{}}>
+      <FormProvider data={{}}>
         <Row gutter={16}>
           <Col sm={12}>
             <InputField path={'/a'} />
@@ -57,7 +47,7 @@ storiesOf('Watch', module)
             <InputField path={'/obj/a'} />
             <InputField path={'/obj/b'} />
             <InputField path={'/obj/c/d'} />
-            <Button onClick={handleSubmit}>Submit</Button>
+            <SubmitBtn />
           </Col>
           <Col sm={12}>
             <h4>Watch: '/a', '/b', '/obj/*'</h4>

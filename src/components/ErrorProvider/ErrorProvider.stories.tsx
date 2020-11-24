@@ -1,12 +1,11 @@
-import React, { useCallback, useContext, useEffect, useRef, useState } from 'react'
-import { Form, Input, Card, Button, Alert } from 'antd'
+import React from 'react'
+import { Form, Input, Card } from 'antd'
 import { storiesOf } from '@storybook/react'
 
-import { FormProvider, FormProviderRef, ValidationErrors } from '../FormProvider'
+import { FormProvider } from '../FormProvider'
 import { ErrorProvider } from './index'
 import { Field } from '../Field'
-import { getValidationStatus, ShowErrors } from '../../stories/helpers'
-import ErrorProviderContext from './ErrorProviderContext'
+import { getValidationStatus, ShowErrors, SubmitBtn } from '../../stories/helpers'
 
 type Props = { path: string }
 
@@ -38,19 +37,8 @@ function InputField ({ path }: Props) {
 
 storiesOf('ErrorProvider', module)
   .add('Example', () => {
-    const providerRef = useRef<FormProviderRef>(null)
-    const handleSubmit = useCallback(async () => {
-      if (providerRef.current) {
-        const res = await providerRef.current.submit()
-        console.log('RESULT', res)
-        if (!res.valid) {
-          res.firstErrorField && res.firstErrorField.focus()
-        }
-      }
-    }, [providerRef.current])
-
     return <Form style={{ maxWidth: '800px' }}>
-      <FormProvider ref={providerRef} data={{}}>
+      <FormProvider data={{}}>
         <ErrorProvider>
           <p>Global error provider:</p>
           <ShowErrors />
@@ -69,7 +57,7 @@ storiesOf('ErrorProvider', module)
         </ErrorProvider>
 
         <br />
-        <Button onClick={handleSubmit}>Submit</Button>
+        <SubmitBtn />
       </FormProvider>
     </Form>
   })

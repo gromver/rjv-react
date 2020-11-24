@@ -1,8 +1,8 @@
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useState } from 'react'
 import { FieldApi } from '../components/Field'
-import { ValidationErrors } from '../components/FormProvider'
+import { ValidationErrors, FormProviderContext } from '../components/FormProvider'
 import ErrorProviderContext from '../components/ErrorProvider/ErrorProviderContext'
-import { Alert } from 'antd'
+import { Alert, Button } from 'antd'
 
 /**
  * Extracts validation status for the Antd's Form.Item component
@@ -26,19 +26,18 @@ export function getValidationStatus (field: FieldApi) {
   return undefined
 }
 
+/**
+ * A react component - shows errors caught by ErrorProvider
+ * @constructor
+ */
 export function ShowErrors () {
   const [errors, setErrors] = useState<ValidationErrors>([])
   const errorProviderContext = useContext(ErrorProviderContext)
 
   useEffect(() => {
     if (errorProviderContext) {
-      // return errorProviderContext
-      //   .subscribe((errors) => setErrors(errors))
       return errorProviderContext
-        .subscribe((errors) => {
-          console.log('errrrors', errors)
-          setErrors(errors)
-        })
+        .subscribe((errors) => setErrors(errors))
     }
   }, [errorProviderContext])
 
@@ -54,4 +53,26 @@ export function ShowErrors () {
   }
 
   return null
+}
+
+/**
+ * A react component - submits form, logging the result of submission
+ * and tries to focus invalid field, if data is not valid
+ * @constructor
+ */
+export function SubmitBtn () {
+  const providerContext = useContext(FormProviderContext)
+  const handleSubmit = useCallback(async () => {
+    if (providerContext) {
+      const res = await providerContext.submit()
+
+      console.log('SUBMIT RESULT:', res)
+
+      if (!res.valid) {
+        res.firstErrorField && res.firstErrorField.focus()
+      }
+    }
+  }, [providerContext])
+
+  return <Button onClick={handleSubmit}>Submit</Button>
 }

@@ -5,7 +5,6 @@ import { SubmitFormFn, ValidationErrors } from './types'
 export type FormProviderContextValue = {
   dataStorage: types.IStorage
   initialDataStorage: types.IStorage
-  validationOptions: Partial<types.IValidatorOptions>
   submit: SubmitFormFn
   getData: () => any
   getErrors: () => ValidationErrors

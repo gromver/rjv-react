@@ -1,6 +1,6 @@
 /**
  *
- * Field - a component renders field and provides an api to interact with data and state
+ * Field - renders field and provides an api to interact with data and state
  *
  */
 
@@ -13,8 +13,12 @@ import { FormProviderContext, FormProviderContextValue } from '../FormProvider'
 import { ScopeContext, ScopeContextValue } from '../Scope'
 import { EmitterProviderContext, EmitterProviderContextValue, events } from '../EmitterProvider'
 import { EventEmitter2, Listener } from 'eventemitter2'
-import { descriptionResolver } from '../../utils'
 import { TrackingRef, EmittingRef } from '../../refs'
+import { OptionsProviderContext, OptionsProviderContextValue } from '../OptionsProvider'
+import {
+  DEFAULT_DESCRIPTION_RESOLVER,
+  DEFAULT_VALIDATOR_OPTIONS
+} from '../OptionsProvider/OptionsProvider'
 
 function extractMessageFromResult (res: types.IValidationResult, ref: types.IRef): ValidationMessage {
   return res.results[ref.path]
@@ -123,7 +127,7 @@ export class FieldApi {
   get messageDescription (): string | undefined {
     const message = this.component.state.isValidated ? this.component.state.message : undefined
 
-    return message && descriptionResolver(message)
+    return message && this.component.options.descriptionResolver(message)
   }
 }
 
@@ -150,6 +154,11 @@ const DEFAULT_STATE: State = {
   isReadonly: false
 }
 
+const DEFAULT_OPTIONS: OptionsProviderContextValue = {
+  validatorOptions: DEFAULT_VALIDATOR_OPTIONS,
+  descriptionResolver: DEFAULT_DESCRIPTION_RESOLVER
+}
+
 type ComponentProps = {
   fieldRef?: (field: FieldApi) => void
   render: (field: FieldApi, inputRef: RefObject<any>) => React.ReactNode
@@ -161,6 +170,7 @@ type ComponentPropsWithContexts = ComponentProps & {
   providerContext: FormProviderContextValue
   scopeContext: ScopeContextValue
   emitterContext: EmitterProviderContextValue
+  optionsContext: OptionsProviderContextValue
 }
 
 class FieldComponent extends React.Component<ComponentPropsWithContexts, State> {
@@ -172,12 +182,13 @@ class FieldComponent extends React.Component<ComponentPropsWithContexts, State> 
   emitter: EventEmitter2
   inputRef: RefObject<any>
   listeners: Listener[]
+  options: OptionsProviderContextValue
 
   constructor (props: ComponentPropsWithContexts) {
     super(props)
 
     const {
-      path, schema, providerContext, scopeContext, emitterContext, fieldRef
+      path, schema, providerContext, scopeContext, emitterContext, optionsContext, fieldRef
     } = props
 
     if (!providerContext) {
@@ -200,8 +211,9 @@ class FieldComponent extends React.Component<ComponentPropsWithContexts, State> 
 
     this.schema = schema
     this.emitter = emitterContext.emitter
+    this.options = optionsContext || DEFAULT_OPTIONS
     this.ref = new EmittingRef(providerContext.dataStorage, this.path, this.emitter)
-    this.validator = new Validator(this.schema, providerContext.validationOptions)
+    this.validator = new Validator(this.schema, this.options.validatorOptions)
     this.api = new FieldApi(this)
     this.inputRef = createRef()
     this.listeners = []
@@ -248,6 +260,31 @@ class FieldComponent extends React.Component<ComponentPropsWithContexts, State> 
         .catch((e) => { throw e })
 
       this._processResolveSchema()
+    }
+
+    if (prevProps.optionsContext !== this.props.optionsContext) {
+      this.options = this.props.optionsContext || DEFAULT_OPTIONS
+
+      if (prevProps.optionsContext && this.props.optionsContext) {
+        if (prevProps.optionsContext.validatorOptions !== this.props.optionsContext.validatorOptions) {
+          this.validator = new Validator(this.schema, this.options.validatorOptions)
+
+          if (this.state.isValidated) {
+            this.api.validate().catch((e) => { throw e })
+          } else {
+            this.validator.validateRef(this.ref).catch((e) => { throw e })
+          }
+
+          this._processResolveSchema()
+        }
+
+        if (prevProps.optionsContext.descriptionResolver !== this.props.optionsContext.descriptionResolver) {
+          if (this.state.isValidated) {
+            this.emitter.emit(this.path, new events.ValidatedEvent())
+          }
+          this.forceUpdate()
+        }
+      }
     }
   }
 
@@ -328,16 +365,21 @@ class FieldComponent extends React.Component<ComponentPropsWithContexts, State> 
 
 export default (props: ComponentProps) => (
   <FormProviderContext.Consumer>
-    {(providerContext) => (
+    {(formContext) => (
       <ScopeContext.Consumer>
         {(scopeContext) => (
           <EmitterProviderContext.Consumer>
-            {(emitterContext) => <FieldComponent
-              {...props}
-              providerContext={providerContext as any}
-              scopeContext={scopeContext as any}
-              emitterContext={emitterContext as any}
-            />}
+            {(emitterContext) => (
+              <OptionsProviderContext.Consumer>
+                {(optionsContext) => <FieldComponent
+                  {...props}
+                  providerContext={formContext as any}
+                  scopeContext={scopeContext as any}
+                  emitterContext={emitterContext as any}
+                  optionsContext={optionsContext as any}
+                />}
+              </OptionsProviderContext.Consumer>
+            )}
           </EmitterProviderContext.Consumer>
         )}
       </ScopeContext.Consumer>
