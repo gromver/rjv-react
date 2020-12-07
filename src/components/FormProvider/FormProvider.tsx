@@ -10,7 +10,7 @@ import React, {
   useImperativeHandle,
   useMemo,
   memo,
-  useState
+  useState, useRef
 } from 'react'
 import _cloneDeep from 'lodash/cloneDeep'
 import { types, Storage } from 'rjv'
@@ -40,6 +40,8 @@ type Props = {
 
 function FormProvider (props: Props, elRef: React.Ref<FormProviderRef>) {
   const { data, children } = props
+  const dataRef = useRef(data)
+
   const [dataState, setDataState] = useState<DataState>(() => ({
     initialData: _cloneDeep(data),
     dataStorage: new Storage(_cloneDeep(data)),
@@ -69,11 +71,15 @@ function FormProvider (props: Props, elRef: React.Ref<FormProviderRef>) {
   }, [])
 
   useEffect(() => {
-    setDataState({
-      initialData: _cloneDeep(data),
-      dataStorage: new Storage(_cloneDeep(data)),
-      initialDataStorage: new Storage(_cloneDeep(data))
-    })
+    if (data !== dataRef.current) {
+      dataRef.current = data
+
+      setDataState({
+        initialData: _cloneDeep(data),
+        dataStorage: new Storage(_cloneDeep(data)),
+        initialDataStorage: new Storage(_cloneDeep(data))
+      })
+    }
   }, [data])
 
   const context = useMemo<FormProviderContextValue>(() => ({
