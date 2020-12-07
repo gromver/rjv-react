@@ -22,7 +22,7 @@ import {
 
 function extractMessageFromResult (res: types.IValidationResult, ref: types.IRef): ValidationMessage {
   return res.results[ref.path]
-    ? res.results[ref.path].messages[0]
+    ? res.results[ref.path]!.messages[0]
     : new ValidationMessage(false, 'react', 'The field has no validation rules, check the schema')
 }
 
@@ -292,10 +292,6 @@ class FieldComponent extends React.Component<ComponentPropsWithContexts, State> 
     this.emitter.emit(this.path, new events.UnregisterFieldEvent(this.api))
 
     this.listeners.forEach((listener) => listener.off())
-  }
-
-  handleRegisterControl (el: any) {
-    this.inputRef = el
   }
 
   render () {

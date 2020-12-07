@@ -1,3 +1,4 @@
+export * from './components/OptionsProvider'
 export * from './components/FormProvider'
 export * from './components/EmitterProvider'
 export * from './components/ErrorProvider'

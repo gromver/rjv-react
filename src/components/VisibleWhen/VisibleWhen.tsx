@@ -57,15 +57,15 @@ export default function VisibleWhen (
   const scopeContext = useContext(ScopeContext)
 
   const useMount = useMemo(() => !useVisibilityStyle, [])
-  const ref = useMemo(() => {
-    const normalizedPath = utils.resolvePath(path || '', scopeContext?.scope || '/')
+  const normalizedPath = useMemo(() => utils.resolvePath(path || '', scopeContext?.scope || '/'), [])
 
+  const ref = useMemo(() => {
     if (providerContext) {
       return new ReadonlyRef(providerContext.dataStorage, normalizedPath)
     }
 
     throw new Error('providerContext doesn\'t exists')
-  }, [])
+  }, [providerContext!.dataStorage])
 
   const validator = useMemo(() => new Validator(schema), [])
 
@@ -103,7 +103,7 @@ export default function VisibleWhen (
         listeners.forEach((listener) => listener.off())
       }
     }
-  }, [])
+  }, [emitterContext, ref])
 
   if (useMount) {
     return visible ? <>{children}</> : null
