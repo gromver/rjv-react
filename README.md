@@ -16,7 +16,7 @@ React components for creating forms powered by [Rjv](https://github.com/gromver/
 
 ## Install
 ```
-yarn add lodash rxjs rxjs-compat rjv rjv-react
+yarn add rjv rjv-react
 ```
 
 ## Guide

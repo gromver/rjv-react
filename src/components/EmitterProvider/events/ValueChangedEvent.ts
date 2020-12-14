@@ -1,7 +1,7 @@
 import BaseEvent from './BaseEvent'
 
 export default class ValueChangedEvent extends BaseEvent {
-  static TYPE = 'valueChanged'
+  static TYPE = 'valueChanged' as const
 
   constructor () {
     super(ValueChangedEvent.TYPE)

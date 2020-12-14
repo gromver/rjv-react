@@ -1,7 +1,7 @@
 import BaseEvent from './BaseEvent'
 
 export default class RegisterFieldEvent extends BaseEvent {
-  static TYPE = 'registerField'
+  static TYPE = 'registerField' as const
 
   /**
    * Register field api event

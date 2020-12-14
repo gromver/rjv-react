@@ -1,7 +1,7 @@
 import BaseEvent from './BaseEvent'
 
 export default class UnregisterFieldEvent extends BaseEvent {
-  static TYPE = 'unregisterField'
+  static TYPE = 'unregisterField' as const
 
   /**
    * Unregister field api event

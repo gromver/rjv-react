@@ -44,7 +44,7 @@ export default function ErrorProvider ({ children }: Props) {
 
     const subscribe: Subscribe = (handler: SubscribeHandler): Unsubscribe => {
       const listener: Listener = emitter.on('**', (event: events.BaseEvent) => {
-        if (VALIDATION_STATE_CHANGED_EVENTS.includes(event.type)) {
+        if (VALIDATION_STATE_CHANGED_EVENTS.includes(event.type as any)) {
           handler(getErrors())
         }
       }, { objectify: true }) as Listener

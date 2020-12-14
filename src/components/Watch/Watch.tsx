@@ -15,14 +15,24 @@ import { FormProviderContext } from '../FormProvider'
 import { EmitterProviderContext, events } from '../EmitterProvider'
 import { EmittingRef } from '../../refs'
 
-const DEFAULT_EVENT_TYPES = [events.ValueChangedEvent.TYPE]
+const allowedEvents = [
+  events.ValueChangedEvent.TYPE,
+  events.InvalidatedEvent.TYPE,
+  events.ValidatedEvent.TYPE,
+  events.RegisterFieldEvent.TYPE,
+  events.UnregisterFieldEvent.TYPE
+] as const
+
+type EventTypeList = typeof allowedEvents[number][]
 
 type Props = {
-  props: types.Path[]   // an empty array do not subscribes to events - just provides a root Ref
-  events?: string[]     // an empty array allows tracking all types of events
+  props: types.Path[]     // an empty array do not subscribes to events - just provides a root Ref
+  events?: EventTypeList  // an empty array allows tracking all types of events
   debounce?: number
   render: (ref: EmittingRef) => ReactElement | null
 }
+
+const DEFAULT_EVENT_TYPES: EventTypeList = [events.ValueChangedEvent.TYPE]
 
 /**
  * Watch
