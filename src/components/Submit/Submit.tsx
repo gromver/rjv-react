@@ -1,71 +1,47 @@
 /**
  *
- * Submit
- * A wrapper component for buttons, exposes onSubmit, onSuccess and onError events
+ * Submit - a wrapper component for buttons, exposes onSubmit, onSuccess and onError events
  *
  */
 
-import React, { useCallback, useMemo } from 'react'
-import { Model, Ref } from 'rjv'
-import { ModelProviderContext, ModelProviderContextValue } from '../ModelProvider'
+import React, { useCallback, useContext } from 'react'
+import { FormProviderContext } from '../FormProvider'
+import { FieldApi } from '../Field'
 
-type PropsPartial = {
-  onSubmit?: (model: Model) => void
-  onSuccess?: (data: any, model: Model) => void
-  onError?: (firstError: Ref, model: Model) => void
+type Props = {
+  onSubmit?: (data: any) => void
+  onSuccess?: (data: any) => void
+  onError?: (firstErrorField: FieldApi) => void
   focusFirstError?: boolean
   render: (handleSubmit: () => void) => React.ReactElement | null
 }
-type Props = PropsPartial & {
-  providerContext?: ModelProviderContextValue
-}
 
-function Submit (props: Props) {
+export default function Submit (props: Props) {
   const { onSubmit, onError, onSuccess, render, focusFirstError = true } = props
 
-  const providerContext = useMemo(() => {
-    // todo check shape
-    if (!props.providerContext) {
-      throw new Error('Received invalid providerContext')
-    }
-
-    return props.providerContext
-  }, [props.providerContext])
+  const providerContext = useContext(FormProviderContext)
 
   const handleSubmit = useCallback(async () => {
-    const { model, getRef } = providerContext
+    if (providerContext) {
+      const { submit, getData } = providerContext
 
-    onSubmit && onSubmit(model)
+      onSubmit && onSubmit(getData())
 
-    const isValid = await model.validate()
+      const { valid, data, firstErrorField } = await submit()
 
-    if (isValid) {
-      onSuccess && onSuccess(model.data, model)
-    } else {
-      const errorRef = model.ref().firstError as Ref
+      if (valid) {
+        onSuccess && onSuccess(data)
+      } else {
+        if (firstErrorField) {
+          if (focusFirstError) {
+            firstErrorField.focus()
+          }
 
-      if (focusFirstError) {
-        const errorComponent = getRef(errorRef.path)
-
-        if ((errorComponent as any).focus && typeof (errorComponent as any).focus === 'function') {
-          (errorComponent as any).focus()
+          onError && onError(firstErrorField)
         }
       }
-
-      onError && onError(errorRef, model)
     }
   }, [providerContext])
 
   return render(handleSubmit)
 }
-
-export default (props: PropsPartial) => (
-  <ModelProviderContext.Consumer>
-    {(providerContext) => (
-      <Submit
-        {...props}
-        providerContext={providerContext}
-      />
-    )}
-  </ModelProviderContext.Consumer>
-)

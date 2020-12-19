@@ -3,9 +3,9 @@ import { storiesOf } from '@storybook/react'
 import { Button, Form, Input } from 'antd'
 
 import Submit from './Submit'
-import { ModelProvider } from '../ModelProvider'
+import { FormProvider } from '../FormProvider'
 import { Field } from '../Field'
-import { getMessage, getValidationStatus } from '../../stories/utils'
+import { getValidationStatus } from '../../stories/helpers'
 
 const initialData = {}
 
@@ -15,20 +15,18 @@ function RequiredField () {
     schema={{
       type: 'string', default: '', minLength: 2, presence: true
     }}
-    render={(ref, register) => {
-      const message = getMessage(ref)
-
+    render={(field, inputRef) => {
       return (
         <Form.Item
           label="Name"
-          validateStatus={getValidationStatus(ref)}
-          help={message}
-          required={ref.isShouldNotBeBlank}
+          validateStatus={getValidationStatus(field)}
+          help={field.messageDescription}
+          required={field.isRequired}
         >
           <Input
-            ref={register}
-            value={ref.getValue()}
-            onChange={(e) => ref.setValue(e.target.value)}
+            ref={inputRef}
+            value={field.value}
+            onChange={(e) => field.value = e.target.value}
           />
         </Form.Item>
       )
@@ -36,9 +34,9 @@ function RequiredField () {
   />
 }
 
-storiesOf('SubmitBtn', module)
+storiesOf('Submit', module)
   .add('Test buttons', () => {
-    return <ModelProvider data={initialData}>
+    return <FormProvider data={initialData}>
       <p>You should open console to see events</p>
 
       <br />
@@ -49,16 +47,16 @@ storiesOf('SubmitBtn', module)
         <p>focusFirstError = true (default)</p>
 
         <Submit
-          onSubmit={(model) => console.log('onSubmit', model)}
-          onSuccess={(data, model) => console.log('onSuccess', data, model)}
-          onError={(firstError, model) => console.log('onError', firstError, model)}
+          onSubmit={(data) => console.log('onSubmit', data)}
+          onSuccess={(data) => console.log('onSuccess', data)}
+          onError={(firstError) => console.log('onError', firstError)}
           render={(handleSubmit) => <button onClick={handleSubmit}>submit</button>}
         />
 
         <Submit
-          onSubmit={(model) => console.log('onSubmit', model)}
-          onSuccess={(data, model) => console.log('onSuccess', data, model)}
-          onError={(firstError, model) => console.log('onError', firstError, model)}
+          onSubmit={(data) => console.log('onSubmit', data)}
+          onSuccess={(data) => console.log('onSuccess', data)}
+          onError={(firstError) => console.log('onError', firstError)}
           render={(handleSubmit) => <Button onClick={handleSubmit}>Ant submit</Button>}
         />
 
@@ -68,20 +66,20 @@ storiesOf('SubmitBtn', module)
         <p>focusFirstError = false</p>
 
         <Submit
-          onSubmit={(model) => console.log('onSubmit', model)}
-          onSuccess={(data, model) => console.log('onSuccess', data, model)}
-          onError={(firstError, model) => console.log('onError', firstError, model)}
+          onSubmit={(data) => console.log('onSubmit', data)}
+          onSuccess={(data) => console.log('onSuccess', data)}
+          onError={(firstError) => console.log('onError', firstError)}
           render={(handleSubmit) => <button onClick={handleSubmit}>submit</button>}
           focusFirstError={false}
         />
 
         <Submit
-          onSubmit={(model) => console.log('onSubmit', model)}
-          onSuccess={(data, model) => console.log('onSuccess', data, model)}
-          onError={(firstError, model) => console.log('onError', firstError, model)}
+          onSubmit={(data) => console.log('onSubmit', data)}
+          onSuccess={(data) => console.log('onSuccess', data)}
+          onError={(firstError) => console.log('onError', firstError)}
           render={(handleSubmit) => <Button onClick={handleSubmit}>Ant submit</Button>}
           focusFirstError={false}
         />
       </Form>
-    </ModelProvider>
+    </FormProvider>
   })

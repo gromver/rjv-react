@@ -1,51 +1,11 @@
-import React, { useRef } from 'react'
-import { Model, Ref } from 'rjv'
-import { Form, Input, Alert } from 'antd'
+import React, { useCallback, useRef } from 'react'
+import { Form, Input } from 'antd'
 import { storiesOf } from '@storybook/react'
 
-import { ModelProvider, ModelProviderRef } from '../ModelProvider'
-import { Subscribe } from '../Subscribe'
+import { FormProvider, FormProviderRef } from '../FormProvider'
+import Scope from './Scope'
 import { Field } from '../Field'
-import { Scope } from '../Scope'
-
-// --- helpers ---
-export function getValidationStatus (ref: Ref) {
-  if (ref.isValidating) {
-    return 'validating'
-  }
-
-  if (ref.isValid) {
-    return 'success'
-  }
-
-  if (ref.isInvalid) {
-    return 'error'
-  }
-
-  return undefined
-}
-
-export function getMessage (ref) {
-  const { state } = ref
-  let message = ''
-
-  if (ref.isValidated) {
-    message = state.message && state.message.description
-  }
-
-  return message
-}
-
-const schema = {
-  properties: {
-    auth: {
-      properties: {
-        name: { type: 'string', default: '', presence: true },
-        email: { type: 'string', default: '', presence: true, format: 'email' }
-      }
-    }
-  }
-}
+import { getValidationStatus } from '../../stories/helpers'
 
 const initialData = {
   auth: {}
@@ -58,42 +18,35 @@ storiesOf('Scope', module)
   })
 
 function SimpleForm () {
-  const formRef = useRef<ModelProviderRef>()
+  const providerRef = useRef<FormProviderRef>(null)
+  const handleSubmit = useCallback(async () => {
+    if (providerRef.current) {
+      const res = await providerRef.current.submit()
+      console.log('DATA', res.data)
+      if (!res.valid) {
+        res.firstErrorField && res.firstErrorField.focus()
+      }
+    }
+  }, [providerRef.current])
 
   return (
     <Form style={{ maxWidth: '400px' }}>
-      <ModelProvider ref={formRef} data={initialData} schema={schema}>
-        <Subscribe
-          render={(model: Model) => {
-            const ref = model.ref()
-            const errors = ref.errors.map((err, index) => (
-              <p key={`err-${index}`}>
-                {err.path || '..'}: {err.message && err.message.description}
-              </p>
-            ))
-
-            return errors.length && ref.isValidated
-              ? <Alert type="error" message={errors} />
-              : (ref.isValidated ? <Alert type="success" message="Success" /> : null)
-          }}
-        />
-
+      <FormProvider ref={providerRef} data={initialData}>
         <Scope path="auth">
           <Field
             path="name"
-            render={(ref) => {
-              const message = getMessage(ref)
-
+            schema={{ type: 'string', default: '', presence: true }}
+            render={(field) => {
               return (
                 <Form.Item
                   label="Name"
-                  validateStatus={getValidationStatus(ref)}
-                  help={message}
-                  required={ref.isShouldNotBeBlank}
+                  validateStatus={getValidationStatus(field)}
+                  help={field.messageDescription}
+                  required={field.isRequired}
                 >
                   <Input
-                    value={ref.getValue()}
-                    onChange={(e) => ref.setValue(e.target.value)}
+                    value={field.value}
+                    onChange={(e) => field.value = e.target.value}
                   />
                 </Form.Item>
               )
@@ -102,19 +55,18 @@ function SimpleForm () {
 
           <Field
             path="email"
-            render={(ref) => {
-              const message = getMessage(ref)
-
+            schema={{ type: 'string', default: '', presence: true, format: 'email' }}
+            render={(field) => {
               return (
                 <Form.Item
                   label="Email"
-                  validateStatus={getValidationStatus(ref)}
-                  help={message}
-                  required={ref.isShouldNotBeBlank}
+                  validateStatus={getValidationStatus(field)}
+                  help={field.messageDescription}
+                  required={field.isRequired}
                 >
                   <Input
-                    value={ref.getValue()}
-                    onChange={(e) => ref.setValue(e.target.value)}
+                    value={field.value}
+                    onChange={(e) => field.value = e.target.value}
                   />
                 </Form.Item>
               )
@@ -122,14 +74,10 @@ function SimpleForm () {
           />
         </Scope>
 
-        <button
-          onClick={() => {
-            formRef.current && formRef.current.submit()
-          }}
-        >
+        <button onClick={handleSubmit}>
           Submit
         </button>
-      </ModelProvider>
+      </FormProvider>
     </Form>
   )
 }
