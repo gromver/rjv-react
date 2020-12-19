@@ -5,7 +5,7 @@ import { storiesOf } from '@storybook/react'
 
 import { ModelProvider } from '../ModelProvider'
 import { Field } from '../Field'
-import { getMessage, getValidationStatus } from '../stories/utils'
+import { getMessage, getValidationStatus } from '../../stories/utils'
 import { IfRefsProvided } from './index'
 
 const schema: types.ISchema = {

@@ -1,12 +1,13 @@
-import React, { useMemo, useRef, createRef, useState } from 'react'
+import React, { useRef, createRef, useState } from 'react'
 import { Model, Ref, types } from 'rjv'
 import { Form, Input, Alert, Button, Card } from 'antd'
 import { storiesOf } from '@storybook/react'
 
-import { ModelProvider, ModelProviderRef } from '../ModelProvider'
-import { Subscribe } from '../Subscribe'
-import { Field } from '../Field'
-import { Scope } from '../Scope'
+import { ModelProvider, ModelProviderRef } from '../components/ModelProvider'
+import { Subscribe } from '../components/Subscribe'
+import { Field } from '../components/Field'
+import { Scope } from '../components/Scope'
+import { IfModelProvided } from '../components/IfModelProvided'
 import { getMessage, getValidationStatus } from './utils'
 
 const schema: types.ISchema = {
@@ -24,7 +25,7 @@ let nodeId = 1
 const initialData = { __id: nodeId }
 
 storiesOf('Nested Form', module)
-  .add('Using schema', () => {
+  .add('Using UI', () => {
 
     return <NestedSchemaForm />
   })
@@ -58,6 +59,7 @@ function renderNode (nodeRef: Ref) {
             </Form.Item>
           )
         }}
+        schema={{ type: 'string', default: '', presence: true }}
       />
 
       <h4>Nodes:</h4>
@@ -137,10 +139,9 @@ function CreateNodeForm ({ nodeRef }: { nodeRef: Ref }) {
 
 function NestedSchemaForm () {
   const formRef = useRef<ModelProviderRef>()
-  const model = useMemo(() => new Model(schema, initialData), [])
 
   return (
-    <ModelProvider ref={formRef} model={model}>
+    <ModelProvider ref={formRef} data={initialData}>
       <Subscribe
         render={(model: Model) => {
           const ref = model.ref()
@@ -156,7 +157,9 @@ function NestedSchemaForm () {
         }}
       />
 
-      {renderNode(model.ref())}
+      <IfModelProvided
+        render={(model) => renderNode(model.ref())}
+      />
 
       <button
         onClick={() => {

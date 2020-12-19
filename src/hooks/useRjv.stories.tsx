@@ -3,7 +3,7 @@ import { storiesOf } from '@storybook/react'
 import { Form, Input } from 'antd'
 import { ModelProvider } from '../components/ModelProvider'
 import { Field } from '../components/Field'
-import { getMessage, getValidationStatus } from '../components/stories/utils'
+import { getMessage, getValidationStatus } from '../stories/utils'
 import useRjv from './useRjv'
 
 const initialData = {}
