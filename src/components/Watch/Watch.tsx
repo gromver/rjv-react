@@ -12,6 +12,7 @@ import { types, utils } from 'rjv'
 import { Listener } from 'eventemitter2'
 import { ScopeContext } from '../Scope'
 import { FormProviderContext } from '../FormProvider'
+import { FieldApi } from '../Field'
 import { EmitterProviderContext, events } from '../EmitterProvider'
 import { EmittingRef } from '../../refs'
 
@@ -25,11 +26,16 @@ const allowedEvents = [
 
 type EventTypeList = typeof allowedEvents[number][]
 
+type WatchRenderFn = (
+  getRef: (path: types.Path) => EmittingRef,
+  getField: (path: types.Path) => FieldApi | undefined
+) => ReactElement | null
+
 type Props = {
   props: types.Path[]     // an empty array do not subscribes to events - just provides a root Ref
   events?: EventTypeList  // an empty array allows tracking all types of events
   debounce?: number
-  render: (ref: EmittingRef) => ReactElement | null
+  render: WatchRenderFn
 }
 
 const DEFAULT_EVENT_TYPES: EventTypeList = [events.ValueChangedEvent.TYPE]
@@ -55,6 +61,30 @@ export default function Watch ({ render, props, events = DEFAULT_EVENT_TYPES, de
 
     throw new Error('providerContext doesn\'t exists')
   }, [providerContext])
+
+  const getField = useMemo(() => {
+    if (providerContext) {
+      return (fieldPath: types.Path): FieldApi | undefined => {
+        const path = scopeContext
+        ? utils.resolvePath(fieldPath, scopeContext.scope)
+        : utils.resolvePath(fieldPath, '/')
+
+        return providerContext.getField(path) as FieldApi
+      }
+    }
+
+    throw new Error('providerContext doesn\'t exists')
+  }, [providerContext])
+
+  const getRef = useMemo(() => {
+    return (fieldPath: types.Path): EmittingRef => {
+      const path = scopeContext
+      ? utils.resolvePath(fieldPath, scopeContext.scope)
+      : utils.resolvePath(fieldPath, '/')
+
+      return ref.ref(path)
+    }
+  }, [ref])
 
   const watchProps = useMemo(() => {
     return props.map((path) => utils.resolvePath(path, scopeContext?.scope || '/'))
@@ -90,5 +120,5 @@ export default function Watch ({ render, props, events = DEFAULT_EVENT_TYPES, de
     }
   }, [])
 
-  return render(ref)
+  return render(getRef, getField)
 }

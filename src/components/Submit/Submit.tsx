@@ -37,7 +37,7 @@ export default function Submit (props: Props) {
             firstErrorField.focus()
           }
 
-          onError && onError(firstErrorField)
+          onError && onError(firstErrorField as FieldApi)
         }
       }
     }

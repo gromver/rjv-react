@@ -53,16 +53,16 @@ storiesOf('Watch', module)
             <h4>Watch: '/a', '/b', '/obj/*'</h4>
             <Watch
               props={['/a', '/b', '/obj/*']}
-              render={(ref) => <div>
-                {JSON.stringify(ref.value)}
+              render={(getRef) => <div>
+                {JSON.stringify(getRef('/').value)}
               </div>}
             />
             <br />
             <h4>Watch: '/obj/**'</h4>
             <Watch
               props={['/obj/**']}
-              render={(ref) => <div>
-                {JSON.stringify(ref.ref('obj').value)}
+              render={(getRef) => <div>
+                {JSON.stringify(getRef('obj').value)}
               </div>}
             />
             <br />
@@ -70,8 +70,8 @@ storiesOf('Watch', module)
               <h4>Watch from scope /obj: '**', '../a'</h4>
               <Watch
                 props={['**', '../a']}
-                render={(ref) => <div>
-                  {JSON.stringify(ref.value)}
+                render={(getRef) => <div>
+                  {JSON.stringify(getRef('/').value)}
                 </div>}
               />
             </Scope>
@@ -80,3 +80,34 @@ storiesOf('Watch', module)
       </FormProvider>
     </Form>
   })
+  .add('GetField', () => {
+    return <FormProvider data={{}}>
+      <InputField path="foo/bar" />
+
+      <Watch
+        props={['**']}
+        render={(ref, getField) => {
+          const field = getField('foo/bar')
+
+          return <div>Value: {field!.value}</div>
+        }}
+      />
+    </FormProvider>
+  })
+  .add('GetField with scope', () => {
+    return <FormProvider data={{}}>
+      <InputField path="foo/bar" />
+
+      <Scope path="foo">
+        <Watch
+          props={['bar']}
+          render={(ref, getField) => {
+            const field = getField('bar')
+
+            return <div>Value: {field!.value}</div>
+          }}
+        />
+      </Scope>
+    </FormProvider>
+  })
+

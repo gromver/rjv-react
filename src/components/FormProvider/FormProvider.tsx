@@ -17,13 +17,13 @@ import { types, Storage } from 'rjv'
 import FormProviderContext, { FormProviderContextValue } from './FormProviderContext'
 import { EmitterProvider, events } from '../EmitterProvider'
 import { createEmitter } from '../../utils'
-import { FieldApi } from '../Field'
-import { SubmitFormFn, ValidationErrors } from './types'
+import { SubmitFormFn, ValidationErrors, IFieldApi } from './types'
 import { Scope } from '../Scope'
 
 export type FormProviderRef = {
   submit: SubmitFormFn
   getData: () => any
+  getField: (path: types.Path) => IFieldApi | undefined
   getErrors: () => ValidationErrors
 }
 
@@ -50,7 +50,7 @@ function FormProvider (props: Props, elRef: React.Ref<FormProviderRef>) {
 
   const { fields, emitter } = useMemo(() => {
     const emitter = createEmitter()
-    const fields: FieldApi[] = []
+    const fields: IFieldApi[] = []
 
     emitter.onAny((path: string, event: events.BaseEvent) => {
       if (event instanceof events.RegisterFieldEvent) {
@@ -103,6 +103,7 @@ function FormProvider (props: Props, elRef: React.Ref<FormProviderRef>) {
       }
     },
     getData: () => dataState.dataStorage.get([]),
+    getField: (path) => fields.find((item) => item.ref.path === path),
     getErrors: () => {
       const res: ValidationErrors = []
 
@@ -126,6 +127,7 @@ function FormProvider (props: Props, elRef: React.Ref<FormProviderRef>) {
     return {
       submit: context.submit,
       getData: context.getData,
+      getField: context.getField,
       getErrors: context.getErrors
     }
   }, [context])

@@ -50,7 +50,7 @@ function renderNode (nodeRef: types.IRef) {
             </Form.Item>
           )
         }}
-        schema={{ type: 'string', default: '', presence: true }}
+        schema={{ type: 'string', default: '', presence: true, minLength: 2 }}
       />
 
       <h4>Nodes:</h4>
@@ -83,7 +83,7 @@ function CreateNodeForm ({ nodeRef }: { nodeRef: types.IRef }) {
       <Field
         path="name"
         schema={{
-          type: 'string', default: '', minLength: 2, presence: true
+          type: 'string', default: '', presence: true, minLength: 2
         }}
         render={(field, inputRef) => {
           return (
@@ -110,9 +110,10 @@ function CreateNodeForm ({ nodeRef }: { nodeRef: types.IRef }) {
           createNodeFormRef.current && createNodeFormRef.current.submit()
             .then(({ valid, data }) => {
               if (valid) {
-                const nodes = nodeRef.ref('nodes').value || []
+                const subNodesRef = nodeRef.ref('nodes')
+                const nodes = subNodesRef.value || []
 
-                nodeRef.ref('nodes').value = [
+                subNodesRef.value = [
                   ...nodes,
                   { __id: ++nodeId, name: data.name }
                 ]
@@ -167,7 +168,7 @@ function NestedSchemaForm () {
         }}
       />
 
-      <Watch props={[]} render={renderNode} />
+      <Watch props={[]} render={(getRef) => renderNode(getRef('/'))} />
 
       <button onClick={handleSubmit}>
         Submit

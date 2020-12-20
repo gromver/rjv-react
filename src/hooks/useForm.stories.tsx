@@ -4,12 +4,12 @@ import { Form, Input } from 'antd'
 import { FormProvider } from '../components/FormProvider'
 import { Field } from '../components/Field'
 import { getValidationStatus } from '../stories/helpers'
-import useRjv from './useRjv'
+import useForm from './useForm'
 
 const initialData = {}
 
 function HookTest () {
-  const context = useRjv()
+  const context = useForm()
 
   console.log('retrieved context', context)
 
@@ -17,11 +17,11 @@ function HookTest () {
 }
 
 function SubmitBtn (props) {
-  const rjv = useRjv()
+  const formApi = useForm()
 
   const handleSubmit = useCallback(async () => {
-    if (rjv) {
-      const {submit} = rjv
+    if (formApi) {
+      const {submit} = formApi
 
       const {valid, data, firstErrorField} = await submit()
 
@@ -34,14 +34,14 @@ function SubmitBtn (props) {
         }
       }
     }
-  }, [rjv])
+  }, [formApi])
 
   return <button onClick={handleSubmit}>
     {props.children}
   </button>
 }
 
-storiesOf('useRjv', module)
+storiesOf('useForm', module)
   .add('Provider exists', () => {
     return <FormProvider data={initialData}>
       <p>You should open console to see result</p>

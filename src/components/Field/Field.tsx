@@ -9,7 +9,12 @@ import React, {
   RefObject
 } from 'react'
 import { utils, types, Validator, ValidationMessage } from 'rjv'
-import { FormProviderContext, FormProviderContextValue } from '../FormProvider'
+import {
+  FormProviderContext,
+  FormProviderContextValue,
+  IFieldApi,
+  IFieldState
+} from '../FormProvider'
 import { ScopeContext, ScopeContextValue } from '../Scope'
 import { EmitterProviderContext, EmitterProviderContextValue, events } from '../EmitterProvider'
 import { EventEmitter2, Listener } from 'eventemitter2'
@@ -26,7 +31,7 @@ function extractMessageFromResult (res: types.IValidationResult, ref: types.IRef
     : new ValidationMessage(false, 'react', 'The field has no validation rules, check the schema')
 }
 
-export class FieldApi {
+export class FieldApi implements IFieldApi {
   constructor (private component: FieldComponent) {}
 
   set value (value: any) {
@@ -137,17 +142,8 @@ export class FieldApi {
   }
 }
 
-type State = {
-  isValid: boolean,
-  isValidating: boolean,
-  isValidated: boolean,
-  isPristine: boolean,
-  isTouched: boolean,
-  isDirty: boolean,
-  isRequired: boolean,
-  isReadonly: boolean,
-  isInitiated: boolean,
-  message?: any
+type State = IFieldState & {
+  isInitiated: boolean
 }
 
 const DEFAULT_STATE: State = {
