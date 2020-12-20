@@ -37,7 +37,7 @@ storiesOf('Field', module)
       </FormProvider>
     </Form>
   })
-  .add('Same fields', () => {
+  .add('Field with different rules', () => {
     return <Form layout="horizontal" style={{ maxWidth: '400px' }}>
       <FormProvider data={''}>
         <Field
@@ -261,3 +261,57 @@ storiesOf('Field', module)
       </FormProvider>
     </Form>
   })
+  .add('Simple Form', () => {
+    return (
+      <div className="App">
+      <FormProvider data={{}}>
+        <Field
+          schema={{
+            default: "",
+            presence: true,
+            format: "email",
+            errors: {
+              format: "Type correct email please!"
+            }
+          }}
+          path="email"
+          render={field => (
+            <div>
+              <input
+                value={field.value}
+                onChange={e => (field.markAsDirty().value = e.target.value)}
+                onBlur={() => field.validate()}
+                placeholder="Email"
+              />
+              {field.state.isValidated && !field.state.isValid && field.messageDescription}
+            </div>
+          )}
+        />
+        <Field
+          schema={{
+            default: "",
+            presence: true,
+            not: {
+              const: "admin"
+            },
+            errors: { not: "Should not be admin" }
+          }}
+          path="username"
+          render={field => (
+            <div>
+              <input
+                value={field.value}
+                onChange={e => (field.markAsDirty().value = e.target.value)}
+                onBlur={() => field.validate()}
+                placeholder="Username"
+              />
+              {field.state.isValidated && !field.state.isValid && field.messageDescription}
+            </div>
+          )}
+        />
+        <SubmitBtn />
+      </FormProvider>
+    </div>
+    )
+  })
+

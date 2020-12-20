@@ -40,6 +40,12 @@ export class FieldApi {
   }
 
   get value (): any {
+    if (!this.state.isInitiated) {
+      return this.component.ref.value === undefined
+        ? this.component.schema.default
+        : this.component.ref.value
+    }
+
     return this.component.ref.value
   }
 
@@ -140,6 +146,7 @@ type State = {
   isDirty: boolean,
   isRequired: boolean,
   isReadonly: boolean,
+  isInitiated: boolean,
   message?: any
 }
 
@@ -151,7 +158,8 @@ const DEFAULT_STATE: State = {
   isTouched: false,
   isDirty: false,
   isRequired: false,
-  isReadonly: false
+  isReadonly: false,
+  isInitiated: false
 }
 
 const DEFAULT_OPTIONS: OptionsProviderContextValue = {
@@ -223,7 +231,7 @@ class FieldComponent extends React.Component<ComponentPropsWithContexts, State> 
     this.listeners.push(this.emitter.on(this.path, (event: events.BaseEvent) => {
       switch (event.type) {
         case events.ValueChangedEvent.TYPE:
-          this.setState({})
+          this.state.isInitiated && this.setState({})
           break
       }
     }, { objectify: true }) as Listener)
@@ -240,14 +248,19 @@ class FieldComponent extends React.Component<ComponentPropsWithContexts, State> 
   }
 
   componentDidMount () {
-    this.validator.validateRef(this.ref)
-      .catch((e) => { throw e })
+    this._initiateField()
+  }
 
-    this._processResolveSchema()
+  shouldComponentUpdate (nextProps: ComponentPropsWithContexts, nextState: State) {
+    return nextState !== this.state
+      || nextProps.providerContext !== this.props.providerContext
+      || nextProps.optionsContext !== this.props.optionsContext
   }
 
   componentDidUpdate (prevProps: Readonly<ComponentPropsWithContexts>, prevState: Readonly<State>, snapshot?: any) {
     if (prevProps.providerContext !== this.props.providerContext) {
+      // data context changed - the form has been reset
+      // need to update the ref to the new data and init field
       this.ref = new EmittingRef(this.props.providerContext.dataStorage, this.path, this.emitter)
 
       this.setState({
@@ -256,10 +269,7 @@ class FieldComponent extends React.Component<ComponentPropsWithContexts, State> 
         isReadonly: !!this.schema.readonly
       }, () => this.emitter.emit(this.path, new events.InvalidatedEvent()))
 
-      this.validator.validateRef(this.ref)
-        .catch((e) => { throw e })
-
-      this._processResolveSchema()
+      this._initiateField()
     }
 
     if (prevProps.optionsContext !== this.props.optionsContext) {
@@ -267,6 +277,7 @@ class FieldComponent extends React.Component<ComponentPropsWithContexts, State> 
 
       if (prevProps.optionsContext && this.props.optionsContext) {
         if (prevProps.optionsContext.validatorOptions !== this.props.optionsContext.validatorOptions) {
+          // default validator options changed - update validator
           this.validator = new Validator(this.schema, this.options.validatorOptions)
 
           if (this.state.isValidated) {
@@ -279,6 +290,7 @@ class FieldComponent extends React.Component<ComponentPropsWithContexts, State> 
         }
 
         if (prevProps.optionsContext.descriptionResolver !== this.props.optionsContext.descriptionResolver) {
+          // localization changed - revalidate if needed and refresh field
           if (this.state.isValidated) {
             this.emitter.emit(this.path, new events.ValidatedEvent())
           }
@@ -298,6 +310,22 @@ class FieldComponent extends React.Component<ComponentPropsWithContexts, State> 
     return this.props.render(this.api, this.inputRef)
   }
 
+  protected _initiateField () {
+    this.validator.validateRef(this.ref)
+      .then(() => {
+        this.setState({ isInitiated: true })
+      })
+      .catch((e) => { throw e })
+
+    this._processResolveSchema()
+  }
+
+  /**
+   * If the field schema contains the "resolveSchema" keyword,
+   * try to resolve it and update isRequired, isReadonly states.
+   * If the "resolveSchema" keyword depends on the values of other fields,
+   * subscribe to those fields and recalculate each time the value changes.
+   */
   protected _processResolveSchema () {
     const resolveSchema = this.schema.resolveSchema
 
