@@ -20,10 +20,10 @@ type Props = {
   coerceTypes?: boolean;
   removeAdditional?: boolean;
   errors?: {
-    [keywordName: string]: any;
+    [keywordName: string]: string;
   };
   warnings?: {
-    [keywordName: string]: any;
+    [keywordName: string]: string;
   };
   keywords?: types.IKeyword[];
   descriptionResolver?: DescriptionResolverFn
