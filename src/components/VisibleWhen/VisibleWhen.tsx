@@ -29,7 +29,7 @@ type Props = {
   path?: types.Path             // absolute or relative path to data, by default root '/'
   schema: types.ISchema         // schema used to check data
   children: ReactNode           // content to be shown
-  // using scc visibility style and do not unmount children components
+  // using css visibility style and do not unmount children components
   // it is more efficient but keeps their validation state
   useVisibilityStyle?: boolean
   visibleStyles?: CSSProperties
