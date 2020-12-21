@@ -1,8 +1,8 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react'
-import { FieldApi } from '../components/Field'
-import { ValidationErrors, FormProviderContext } from '../components/FormProvider'
-import ErrorProviderContext from '../components/ErrorProvider/ErrorProviderContext'
+import React, { useCallback, useContext } from 'react'
 import { Alert, Button } from 'antd'
+import { useErrors } from '../hooks'
+import { FormProviderContext } from '../components/FormProvider'
+import { FieldApi } from '../components/Field'
 
 /**
  * Extracts validation status for the Antd's Form.Item component
@@ -31,15 +31,7 @@ export function getValidationStatus (field: FieldApi) {
  * @constructor
  */
 export function ShowErrors () {
-  const [errors, setErrors] = useState<ValidationErrors>([])
-  const errorProviderContext = useContext(ErrorProviderContext)
-
-  useEffect(() => {
-    if (errorProviderContext) {
-      return errorProviderContext
-        .subscribe((errors) => setErrors(errors))
-    }
-  }, [errorProviderContext])
+  const errors = useErrors()
 
   if (errors.length) {
     return <Alert
