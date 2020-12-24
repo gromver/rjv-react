@@ -7,16 +7,16 @@
 import React, { createRef, RefObject } from 'react'
 import { utils, types, Validator, ValidationMessage } from 'rjv'
 import {
-  FormProviderContext,
-  FormProviderContextValue,
+  FormContext,
+  FormContextValue,
   IFieldApi,
   IFieldState
 } from '../FormProvider'
 import { ScopeContext, ScopeContextValue } from '../Scope'
-import { EmitterProviderContext, EmitterProviderContextValue, events } from '../EmitterProvider'
+import { EmitterContext, EmitterContextValue, events } from '../EmitterProvider'
 import { EventEmitter2, Listener } from 'eventemitter2'
 import { TrackingRef, EmittingRef } from '../../refs'
-import { OptionsProviderContext, OptionsProviderContextValue } from '../OptionsProvider'
+import { OptionsContext, OptionsContextValue } from '../OptionsProvider'
 import {
   DEFAULT_DESCRIPTION_RESOLVER,
   DEFAULT_VALIDATOR_OPTIONS
@@ -155,7 +155,7 @@ const DEFAULT_STATE: State = {
   isInitiated: false
 }
 
-const DEFAULT_OPTIONS: OptionsProviderContextValue = {
+const DEFAULT_OPTIONS: OptionsContextValue = {
   validatorOptions: DEFAULT_VALIDATOR_OPTIONS,
   descriptionResolver: DEFAULT_DESCRIPTION_RESOLVER
 }
@@ -168,10 +168,10 @@ type ComponentProps = {
 }
 
 type ComponentPropsWithContexts = ComponentProps & {
-  providerContext: FormProviderContextValue
+  formContext: FormContextValue
   scopeContext: ScopeContextValue
-  emitterContext: EmitterProviderContextValue
-  optionsContext: OptionsProviderContextValue
+  emitterContext: EmitterContextValue
+  optionsContext: OptionsContextValue
 }
 
 class FieldComponent extends React.Component<ComponentPropsWithContexts, State> {
@@ -183,17 +183,17 @@ class FieldComponent extends React.Component<ComponentPropsWithContexts, State> 
   emitter: EventEmitter2
   inputRef: RefObject<any>
   listeners: Listener[]
-  options: OptionsProviderContextValue
+  options: OptionsContextValue
 
   constructor (props: ComponentPropsWithContexts) {
     super(props)
 
     const {
-      path, schema, providerContext, scopeContext, emitterContext, optionsContext, fieldRef
+      path, schema, formContext, scopeContext, emitterContext, optionsContext, fieldRef
     } = props
 
-    if (!providerContext) {
-      throw new Error('Received invalid providerContext')
+    if (!formContext) {
+      throw new Error('Received invalid formContext')
     }
 
     if (!emitterContext) {
@@ -213,7 +213,7 @@ class FieldComponent extends React.Component<ComponentPropsWithContexts, State> 
     this.schema = schema
     this.emitter = emitterContext.emitter
     this.options = optionsContext || DEFAULT_OPTIONS
-    this.ref = new EmittingRef(providerContext.dataStorage, this.path, this.emitter)
+    this.ref = new EmittingRef(formContext.dataStorage, this.path, this.emitter)
     this.validator = new Validator(this.schema, this.options.validatorOptions)
     this.api = new FieldApi(this)
     this.inputRef = createRef()
@@ -238,13 +238,13 @@ class FieldComponent extends React.Component<ComponentPropsWithContexts, State> 
 
   shouldComponentUpdate (nextProps: ComponentPropsWithContexts, nextState: State) {
     return nextState !== this.state
-      || nextProps.providerContext !== this.props.providerContext
+      || nextProps.formContext !== this.props.formContext
       || nextProps.optionsContext !== this.props.optionsContext
       || nextProps.emitterContext !== this.props.emitterContext
   }
 
   // getSnapshotBeforeUpdate (prevProps) {
-  //   if (prevProps.providerContext !== this.props.providerContext || prevProps.emitterContext !== this.props.emitterContext) {
+  //   if (prevProps.formContext !== this.props.formContext || prevProps.emitterContext !== this.props.emitterContext) {
   //     if (prevProps.emitterContext !== this.props.emitterContext) {
   //       // clean old emitter
   //       this.emitter.emit(this.path, new events.UnregisterFieldEvent(this.api))
@@ -254,7 +254,7 @@ class FieldComponent extends React.Component<ComponentPropsWithContexts, State> 
 
   //     // update the ref
   //     this.emitter = this.props.emitterContext.emitter
-  //     this.ref = new EmittingRef(this.props.providerContext.dataStorage, this.path, this.emitter)
+  //     this.ref = new EmittingRef(this.props.formContext.dataStorage, this.path, this.emitter)
   //   }
 
   //   if (prevProps.emitterContext !== this.props.emitterContext) {
@@ -268,7 +268,7 @@ class FieldComponent extends React.Component<ComponentPropsWithContexts, State> 
   // }
 
   componentDidUpdate (prevProps: Readonly<ComponentPropsWithContexts>, prevState: Readonly<State>, snapshot?: any) {
-    if (prevProps.providerContext !== this.props.providerContext || prevProps.emitterContext !== this.props.emitterContext) {
+    if (prevProps.formContext !== this.props.formContext || prevProps.emitterContext !== this.props.emitterContext) {
       if (prevProps.emitterContext !== this.props.emitterContext) {
         // emit unregistered event and free old emitter
         this.emitter.emit(this.path, new events.UnregisterFieldEvent(this.api))
@@ -278,7 +278,7 @@ class FieldComponent extends React.Component<ComponentPropsWithContexts, State> 
 
       // update the ref
       this.emitter = this.props.emitterContext.emitter
-      this.ref = new EmittingRef(this.props.providerContext.dataStorage, this.path, this.emitter)
+      this.ref = new EmittingRef(this.props.formContext.dataStorage, this.path, this.emitter)
     }
 
     if (prevProps.emitterContext !== this.props.emitterContext) {
@@ -288,7 +288,7 @@ class FieldComponent extends React.Component<ComponentPropsWithContexts, State> 
       this._connectToEmitter()
     }
 
-    if (prevProps.providerContext !== this.props.providerContext) {
+    if (prevProps.formContext !== this.props.formContext) {
       // data context changed - the form has been reset
       // have to init the field
       this.setState({
@@ -370,7 +370,7 @@ class FieldComponent extends React.Component<ComponentPropsWithContexts, State> 
     const resolveSchema = this.schema.resolveSchema
 
     if (resolveSchema) {
-      const trackingRef = new TrackingRef(this.props.providerContext.dataStorage, this.ref.path)
+      const trackingRef = new TrackingRef(this.props.formContext.dataStorage, this.ref.path)
 
       Promise.resolve(resolveSchema(trackingRef))
         .then((initiallyResolvedSchema) => {
@@ -428,25 +428,25 @@ class FieldComponent extends React.Component<ComponentPropsWithContexts, State> 
 }
 
 export default (props: ComponentProps) => (
-  <FormProviderContext.Consumer>
+  <FormContext.Consumer>
     {(formContext) => (
       <ScopeContext.Consumer>
         {(scopeContext) => (
-          <EmitterProviderContext.Consumer>
+          <EmitterContext.Consumer>
             {(emitterContext) => (
-              <OptionsProviderContext.Consumer>
+              <OptionsContext.Consumer>
                 {(optionsContext) => <FieldComponent
                   {...props}
-                  providerContext={formContext as any}
+                  formContext={formContext as any}
                   scopeContext={scopeContext as any}
                   emitterContext={emitterContext as any}
                   optionsContext={optionsContext as any}
                 />}
-              </OptionsProviderContext.Consumer>
+              </OptionsContext.Consumer>
             )}
-          </EmitterProviderContext.Consumer>
+          </EmitterContext.Consumer>
         )}
       </ScopeContext.Consumer>
     )}
-  </FormProviderContext.Consumer>
+  </FormContext.Consumer>
 )

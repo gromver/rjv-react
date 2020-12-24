@@ -3,8 +3,8 @@ export {
 } from './OptionsProvider'
 
 export {
-  default as OptionsProviderContext,
-  OptionsProviderContextValue
-} from './OptionsProviderContext'
+  default as OptionsContext,
+  OptionsContextValue
+} from './OptionsContext'
 
 export * from './types'

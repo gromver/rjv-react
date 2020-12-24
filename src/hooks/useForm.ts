@@ -1,5 +1,5 @@
 import { useContext, useMemo } from 'react'
-import { FormProviderContext, FormProviderRef } from '../components/FormProvider'
+import { FormContext, FormProviderRef } from '../components/FormProvider'
 import { ScopeContext } from '../components/Scope'
 
 type FormApi = {
@@ -7,22 +7,22 @@ type FormApi = {
 } & FormProviderRef
 
 export default function useForm (): FormApi | undefined {
-  const providerContext = useContext(FormProviderContext)
+  const formContext = useContext(FormContext)
   const scopeContext = useContext(ScopeContext)
 
   const api: FormApi | undefined = useMemo(() => {
-    if (providerContext && scopeContext) {
+    if (formContext && scopeContext) {
       return {
         scope: scopeContext.scope,
-        submit: providerContext.submit,
-        getData: providerContext.getData,
-        getField: providerContext.getField,
-        getErrors: providerContext.getErrors
+        submit: formContext.submit,
+        getData: formContext.getData,
+        getField: formContext.getField,
+        getErrors: formContext.getErrors
       }
     }
 
     return undefined
-  }, [providerContext, scopeContext])
+  }, [formContext, scopeContext])
 
   return api
 }

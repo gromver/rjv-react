@@ -1,11 +1,11 @@
 import { useContext, useMemo } from 'react'
 import { types, utils } from 'rjv'
-import { FormProviderContext } from '../components/FormProvider'
+import { FormContext } from '../components/FormProvider'
 import { FieldApi } from '../components/Field'
 import { ScopeContext } from '../components/Scope'
 
 export default function useField (fieldPath: types.Path): FieldApi | undefined {
-  const providerContext = useContext(FormProviderContext)
+  const formContext = useContext(FormContext)
   const scopeContext = useContext(ScopeContext)
 
   const path = useMemo(() => {
@@ -15,10 +15,10 @@ export default function useField (fieldPath: types.Path): FieldApi | undefined {
   }, [scopeContext])
 
   return useMemo(() => {
-    if (providerContext) {
-      return providerContext.getField(path) as FieldApi
+    if (formContext) {
+      return formContext.getField(path) as FieldApi
     }
 
     return undefined
-  }, [providerContext, path])
+  }, [formContext, path])
 }

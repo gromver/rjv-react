@@ -7,7 +7,7 @@
 import React, { useMemo, memo } from 'react'
 import { utils, types } from 'rjv'
 import ScopeContext, { ScopeContextValue } from './ScopeContext'
-import { FormProviderContext, FormProviderContextValue } from '../FormProvider'
+import { FormContext, FormContextValue } from '../FormProvider'
 
 type PropsPartial = {
   path: types.Path
@@ -15,20 +15,20 @@ type PropsPartial = {
 }
 
 type Props = PropsPartial & {
-  providerContext?: FormProviderContextValue
+  formContext?: FormContextValue
   scopeContext?: ScopeContextValue
 }
 
 const Scope = memo<Props>((props: Props) => {
   const { path, children, scopeContext } = props
 
-  const providerContext = useMemo(() => {
-    if (!props.providerContext) {
-      throw new Error('Received invalid providerContext')
+  const formContext = useMemo(() => {
+    if (!props.formContext) {
+      throw new Error('Received invalid formContext')
     }
 
-    return props.providerContext
-  }, [props.providerContext])
+    return props.formContext
+  }, [props.formContext])
 
   const context = useMemo(() => {
     if (scopeContext) {
@@ -40,7 +40,7 @@ const Scope = memo<Props>((props: Props) => {
     return {
       scope: utils.resolvePath(path, '/')
     }
-  }, [path, providerContext, scopeContext])
+  }, [path, formContext, scopeContext])
 
   return <ScopeContext.Provider
     value={context}
@@ -50,11 +50,11 @@ const Scope = memo<Props>((props: Props) => {
 })
 
 export default (props: PropsPartial) => (
-  <FormProviderContext.Consumer>
-    {(providerContext) => (
+  <FormContext.Consumer>
+    {(formContext) => (
       <ScopeContext.Consumer>
-        {(scopeContext) => <Scope {...props} providerContext={providerContext} scopeContext={scopeContext} />}
+        {(scopeContext) => <Scope {...props} formContext={formContext} scopeContext={scopeContext} />}
       </ScopeContext.Consumer>
     )}
-  </FormProviderContext.Consumer>
+  </FormContext.Consumer>
 )

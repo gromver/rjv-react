@@ -1,17 +1,17 @@
 import { useContext, useState, useEffect } from 'react'
 import { ValidationErrors } from '../components/FormProvider'
-import { ErrorProviderContext } from '../components/ErrorProvider'
+import { ErrorContext } from '../components/ErrorProvider'
 
 export default function useErrors (): ValidationErrors {
   const [errors, setErrors] = useState<ValidationErrors>([])
-  const errorProviderContext = useContext(ErrorProviderContext)
+  const errorContext = useContext(ErrorContext)
 
   useEffect(() => {
-    if (errorProviderContext) {
-      return errorProviderContext
+    if (errorContext) {
+      return errorContext
         .subscribe((errors) => setErrors(errors))
     }
-  }, [errorProviderContext])
+  }, [errorContext])
 
   return errors
 }

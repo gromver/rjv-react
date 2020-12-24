@@ -6,9 +6,9 @@ export {
 } from './EmitterProvider'
 
 export {
-  default as EmitterProviderContext,
-  EmitterProviderContextValue
-} from './EmitterProviderContext'
+  default as EmitterContext,
+  EmitterContextValue
+} from './EmitterContext'
 
 export {
   events

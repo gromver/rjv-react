@@ -1,7 +1,7 @@
 import React, { useCallback, useContext } from 'react'
 import { Alert, Button } from 'antd'
 import { useErrors } from '../hooks'
-import { FormProviderContext } from '../components/FormProvider'
+import { FormContext } from '../components/FormProvider'
 import { FieldApi } from '../components/Field'
 
 /**
@@ -53,10 +53,10 @@ export function ShowErrors () {
  * @constructor
  */
 export function SubmitBtn () {
-  const providerContext = useContext(FormProviderContext)
+  const formContext = useContext(FormContext)
   const handleSubmit = useCallback(async () => {
-    if (providerContext) {
-      const res = await providerContext.submit()
+    if (formContext) {
+      const res = await formContext.submit()
 
       console.log('SUBMIT RESULT:', res)
 
@@ -64,7 +64,7 @@ export function SubmitBtn () {
         res.firstErrorField && res.firstErrorField.focus()
       }
     }
-  }, [providerContext])
+  }, [formContext])
 
   return <Button onClick={handleSubmit}>Submit</Button>
 }

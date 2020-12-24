@@ -5,9 +5,9 @@ export type SubscribeHandler = (errors: ValidationErrors) => void
 export type Unsubscribe = () => void
 export type Subscribe = (handler: SubscribeHandler) => Unsubscribe
 
-export type ErrorProviderContextValue = {
+export type ErrorContextValue = {
   subscribe: Subscribe
   getErrors: () => ValidationErrors
 }
 
-export default createContext<ErrorProviderContextValue | undefined>(undefined)
+export default createContext<ErrorContextValue | undefined>(undefined)

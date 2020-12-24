@@ -7,13 +7,13 @@
 
 import React, { ReactNode, useContext, useMemo } from 'react'
 import { Listener } from 'eventemitter2'
-import ErrorProviderContext, {
-  ErrorProviderContextValue,
+import ErrorContext, {
+  ErrorContextValue,
   Subscribe,
   SubscribeHandler,
   Unsubscribe
-} from './ErrorProviderContext'
-import { EmitterProvider, EmitterProviderContext, events } from '../EmitterProvider'
+} from './ErrorContext'
+import { EmitterProvider, EmitterContext, events } from '../EmitterProvider'
 import { createEmitter } from '../../utils'
 import { FieldApi } from '../Field'
 import { ValidationErrors } from '../FormProvider'
@@ -25,7 +25,7 @@ type Props = {
 const VALIDATION_STATE_CHANGED_EVENTS = [events.ValidatedEvent.TYPE, events.InvalidatedEvent.TYPE]
 
 export default function ErrorProvider ({ children }: Props) {
-  const emitterContext = useContext(EmitterProviderContext)
+  const emitterContext = useContext(EmitterContext)
 
   const { emitter, context, fields } = useMemo(() => {
     const emitter = createEmitter()
@@ -68,7 +68,7 @@ export default function ErrorProvider ({ children }: Props) {
       })
     }
 
-    const context: ErrorProviderContextValue = {
+    const context: ErrorContextValue = {
       subscribe,
       getErrors
     }
@@ -80,9 +80,9 @@ export default function ErrorProvider ({ children }: Props) {
     }
   }, [emitterContext])
 
-  return <ErrorProviderContext.Provider value={context}>
+  return <ErrorContext.Provider value={context}>
     <EmitterProvider emitter={emitter}>
       {children}
     </EmitterProvider>
-  </ErrorProviderContext.Provider>
+  </ErrorContext.Provider>
 }

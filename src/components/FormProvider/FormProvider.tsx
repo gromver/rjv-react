@@ -14,7 +14,7 @@ import React, {
 } from 'react'
 import _cloneDeep from 'lodash/cloneDeep'
 import { types, Storage } from 'rjv'
-import FormProviderContext, { FormProviderContextValue } from './FormProviderContext'
+import FormContext, { FormContextValue } from './FormContext'
 import { EmitterProvider, events } from '../EmitterProvider'
 import { createEmitter } from '../../utils'
 import { SubmitFormFn, ValidationErrors, IFieldApi } from './types'
@@ -84,16 +84,6 @@ function FormProvider (props: Props, elRef: React.Ref<FormProviderRef>) {
 
           setEmitter(createEmitter())
         }
-
-        // if (event instanceof events.UnregisterFieldEvent) {
-        //   // if a field needs to be unregistered
-        //   // just remove it from the fields list
-        //   const i = fieldsRef.current.indexOf(event.field)
-
-        //   if (i !== -1) {
-        //     fieldsRef.current.splice(i, 1)
-        //   }
-        // }
       })
     }
   }, [emitter, registerFieldHandler])
@@ -110,7 +100,7 @@ function FormProvider (props: Props, elRef: React.Ref<FormProviderRef>) {
     }
   }, [data])
 
-  const context = useMemo<FormProviderContextValue>(() => ({
+  const context = useMemo<FormContextValue>(() => ({
     dataStorage: dataState.dataStorage,
     initialDataStorage: dataState.initialDataStorage,
     submit: async () => {
@@ -160,7 +150,7 @@ function FormProvider (props: Props, elRef: React.Ref<FormProviderRef>) {
     }
   }, [context])
 
-  return <FormProviderContext.Provider
+  return <FormContext.Provider
     value={context}
   >
     <Scope path="/">
@@ -168,7 +158,7 @@ function FormProvider (props: Props, elRef: React.Ref<FormProviderRef>) {
         {children}
       </EmitterProvider>
     </Scope>
-  </FormProviderContext.Provider>
+  </FormContext.Provider>
 }
 
 const forwardedRef = forwardRef<FormProviderRef, Props>(FormProvider)

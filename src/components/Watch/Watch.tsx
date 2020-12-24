@@ -11,9 +11,9 @@ import _debounce from 'lodash/debounce'
 import { types, utils } from 'rjv'
 import { Listener } from 'eventemitter2'
 import { ScopeContext } from '../Scope'
-import { FormProviderContext } from '../FormProvider'
+import { FormContext } from '../FormProvider'
 import { FieldApi } from '../Field'
-import { EmitterProviderContext, events } from '../EmitterProvider'
+import { EmitterContext, events } from '../EmitterProvider'
 import { ReadonlyRef } from '../../refs'
 
 const allowedEvents = [
@@ -50,31 +50,31 @@ const DEFAULT_EVENT_TYPES: EventTypeList = [events.ValueChangedEvent.TYPE]
  */
 export default function Watch ({ render, props, events = DEFAULT_EVENT_TYPES, debounce = 0 }: Props) {
   const [, update] = useState<events.BaseEvent>()
-  const providerContext = useContext(FormProviderContext)
-  const emitterContext = useContext(EmitterProviderContext)
+  const formContext = useContext(FormContext)
+  const emitterContext = useContext(EmitterContext)
   const scopeContext = useContext(ScopeContext)
 
   const ref = useMemo(() => {
-    if (providerContext) {
-      return new ReadonlyRef(providerContext.dataStorage, '/')
+    if (formContext) {
+      return new ReadonlyRef(formContext.dataStorage, '/')
     }
 
-    throw new Error('providerContext doesn\'t exists')
-  }, [providerContext])
+    throw new Error('formContext doesn\'t exists')
+  }, [formContext])
 
   const getField = useMemo(() => {
-    if (providerContext) {
+    if (formContext) {
       return (fieldPath: types.Path = ''): FieldApi | undefined => {
         const path = scopeContext
         ? utils.resolvePath(fieldPath, scopeContext.scope)
         : utils.resolvePath(fieldPath, '/')
 
-        return providerContext.getField(path) as FieldApi
+        return formContext.getField(path) as FieldApi
       }
     }
 
-    throw new Error('providerContext doesn\'t exists')
-  }, [providerContext])
+    throw new Error('formContext doesn\'t exists')
+  }, [formContext])
 
   const getRef = useMemo(() => {
     return (fieldPath: types.Path = ''): ReadonlyRef => {

@@ -2,9 +2,9 @@ import { createContext } from 'react'
 import { types } from 'rjv'
 import { DescriptionResolverFn } from './types'
 
-export type OptionsProviderContextValue = {
+export type OptionsContextValue = {
   validatorOptions: Partial<types.IValidatorOptions>
   descriptionResolver: DescriptionResolverFn
 }
 
-export default createContext<OptionsProviderContextValue | undefined>(undefined)
+export default createContext<OptionsContextValue | undefined>(undefined)

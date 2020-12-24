@@ -6,7 +6,7 @@
 
 import React, { useMemo } from 'react'
 import { types } from 'rjv'
-import OptionsProviderContext, { OptionsProviderContextValue } from './OptionsProviderContext'
+import OptionsContext, { OptionsContextValue } from './OptionsContext'
 import { DescriptionResolverFn } from './types'
 
 export const DEFAULT_VALIDATOR_OPTIONS: Partial<types.IValidatorOptions> = {
@@ -44,12 +44,12 @@ export default function OptionsProvider (props: Props) {
     ]
   )
 
-  const context = useMemo<OptionsProviderContextValue>(() => ({
+  const context = useMemo<OptionsContextValue>(() => ({
     validatorOptions,
     descriptionResolver: descriptionResolver || DEFAULT_DESCRIPTION_RESOLVER
   }), [validatorOptions, descriptionResolver])
 
-  return <OptionsProviderContext.Provider value={context}>
+  return <OptionsContext.Provider value={context}>
     {children}
-  </OptionsProviderContext.Provider>
+  </OptionsContext.Provider>
 }

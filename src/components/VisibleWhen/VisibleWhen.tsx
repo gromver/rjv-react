@@ -10,8 +10,8 @@ import React, {
 import { types, utils, Validator } from 'rjv'
 import { Listener } from 'eventemitter2'
 import { ScopeContext } from '../Scope'
-import { FormProviderContext } from '../FormProvider'
-import { EmitterProvider, EmitterProviderContext, events } from '../EmitterProvider'
+import { FormContext } from '../FormProvider'
+import { EmitterProvider, EmitterContext, events } from '../EmitterProvider'
 import { getPropsToObserveFromSchema, createEmitter } from '../../utils'
 import ReadonlyRef from '../../refs/ReadonlyRef'
 
@@ -52,20 +52,20 @@ export default function VisibleWhen (
   }: Props
 ) {
   const [visible, setVisible] = useState(false)
-  const providerContext = useContext(FormProviderContext)
-  const emitterContext = useContext(EmitterProviderContext)
+  const formContext = useContext(FormContext)
+  const emitterContext = useContext(EmitterContext)
   const scopeContext = useContext(ScopeContext)
 
   const useMount = useMemo(() => !useVisibilityStyle, [])
   const normalizedPath = useMemo(() => utils.resolvePath(path || '', scopeContext?.scope || '/'), [])
 
   const ref = useMemo(() => {
-    if (providerContext) {
-      return new ReadonlyRef(providerContext.dataStorage, normalizedPath)
+    if (formContext) {
+      return new ReadonlyRef(formContext.dataStorage, normalizedPath)
     }
 
-    throw new Error('providerContext doesn\'t exists')
-  }, [providerContext!.dataStorage])
+    throw new Error('formContext doesn\'t exists')
+  }, [formContext!.dataStorage])
 
   const validator = useMemo(() => new Validator(schema), [])
 

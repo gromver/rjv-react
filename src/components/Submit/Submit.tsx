@@ -5,7 +5,7 @@
  */
 
 import React, { useCallback, useContext } from 'react'
-import { FormProviderContext } from '../FormProvider'
+import { FormContext } from '../FormProvider'
 import { FieldApi } from '../Field'
 
 type Props = {
@@ -19,11 +19,11 @@ type Props = {
 export default function Submit (props: Props) {
   const { onSubmit, onError, onSuccess, render, focusFirstError = true } = props
 
-  const providerContext = useContext(FormProviderContext)
+  const formContext = useContext(FormContext)
 
   const handleSubmit = useCallback(async () => {
-    if (providerContext) {
-      const { submit, getData } = providerContext
+    if (formContext) {
+      const { submit, getData } = formContext
 
       onSubmit && onSubmit(getData())
 
@@ -41,7 +41,7 @@ export default function Submit (props: Props) {
         }
       }
     }
-  }, [providerContext])
+  }, [formContext])
 
   return render(handleSubmit)
 }

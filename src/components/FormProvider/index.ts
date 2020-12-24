@@ -4,8 +4,8 @@ export {
 } from './FormProvider'
 
 export {
-  default as FormProviderContext,
-  FormProviderContextValue
-} from './FormProviderContext'
+  default as FormContext,
+  FormContextValue
+} from './FormContext'
 
 export * from './types'
