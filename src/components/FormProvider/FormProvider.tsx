@@ -19,6 +19,7 @@ import { EmitterProvider, events } from '../EmitterProvider'
 import { createEmitter } from '../../utils'
 import { SubmitFormFn, ValidationErrors, IFieldApi } from './types'
 import { Scope } from '../Scope'
+import { FieldApi } from '../Field'
 
 export type FormProviderRef = {
   submit: SubmitFormFn
@@ -42,33 +43,60 @@ function FormProvider (props: Props, elRef: React.Ref<FormProviderRef>) {
   const { data, children } = props
   const dataRef = useRef(data)
 
+  const [emitter, setEmitter] = useState(() => createEmitter())
+  const emitterRef = useRef() as any
+
+  const fieldsRef = useRef<FieldApi[]>([])
+
   const [dataState, setDataState] = useState<DataState>(() => ({
     initialData: _cloneDeep(data),
     dataStorage: new Storage(_cloneDeep(data)),
     initialDataStorage: new Storage(_cloneDeep(data))
   }))
 
-  const { fields, emitter } = useMemo(() => {
-    const emitter = createEmitter()
-    const fields: IFieldApi[] = []
+  const registerFieldHandler = useMemo(() => {
+    fieldsRef.current = []
 
-    emitter.onAny((path: string, event: events.BaseEvent) => {
+    const registerFieldHandler = (path: string, event: events.BaseEvent) => {
+      // fields reconcile phase
       if (event instanceof events.RegisterFieldEvent) {
-        fields.push(event.field)
+        fieldsRef.current.push(event.field)
       }
-      if (event instanceof events.UnregisterFieldEvent) {
-        const i = fields.indexOf(event.field)
-        if (i !== -1) {
-          fields.splice(i, 1)
-        }
-      }
-    })
-
-    return {
-      emitter,
-      fields
     }
-  }, [])
+
+    emitter.onAny(registerFieldHandler)
+
+    return registerFieldHandler
+  }, [emitter])
+
+  useEffect(() => {
+    if (emitter !== emitterRef.current) {
+      emitterRef.current = emitter
+
+      // fields reconcile phase cancelled
+      emitter.offAny(registerFieldHandler)
+
+      emitter.on('**', (event: events.BaseEvent) => {
+        if (event instanceof events.RegisterFieldEvent || event instanceof events.UnregisterFieldEvent) {
+          // a new field registered/unregistered after the fields have been reconciled
+          // have to change emitter and reconcile fields again
+          emitter.removeAllListeners()
+
+          setEmitter(createEmitter())
+        }
+
+        // if (event instanceof events.UnregisterFieldEvent) {
+        //   // if a field needs to be unregistered
+        //   // just remove it from the fields list
+        //   const i = fieldsRef.current.indexOf(event.field)
+
+        //   if (i !== -1) {
+        //     fieldsRef.current.splice(i, 1)
+        //   }
+        // }
+      })
+    }
+  }, [emitter, registerFieldHandler])
 
   useEffect(() => {
     if (data !== dataRef.current) {
@@ -86,14 +114,14 @@ function FormProvider (props: Props, elRef: React.Ref<FormProviderRef>) {
     dataStorage: dataState.dataStorage,
     initialDataStorage: dataState.initialDataStorage,
     submit: async () => {
-      const results = await Promise.all(fields.map((item) => item.validate()))
+      const results = await Promise.all(fieldsRef.current.map((item) => item.validate()))
       const invalidResult = results.find((res) => !res.valid)
 
       if (invalidResult) {
         const i = results.indexOf(invalidResult)
         return {
           valid: false,
-          firstErrorField: fields[i]
+          firstErrorField: fieldsRef.current[i]
         }
       }
 
@@ -103,11 +131,11 @@ function FormProvider (props: Props, elRef: React.Ref<FormProviderRef>) {
       }
     },
     getData: () => dataState.dataStorage.get([]),
-    getField: (path) => fields.find((item) => item.ref.path === path),
+    getField: (path) => fieldsRef.current.find((item) => item.ref.path === path),
     getErrors: () => {
       const res: ValidationErrors = []
 
-      fields.forEach((field) => {
+      fieldsRef.current.forEach((field) => {
         if (field.state.isValidated && !field.state.isValid) {
           res.push([field.ref.path, field.messageDescription as any])
         }
@@ -115,7 +143,7 @@ function FormProvider (props: Props, elRef: React.Ref<FormProviderRef>) {
 
       return res
     }
-  }), [dataState, fields])
+  }), [dataState])
 
   useEffect(() => {
     return () => {

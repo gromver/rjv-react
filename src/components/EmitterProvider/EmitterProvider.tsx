@@ -22,18 +22,16 @@ type Props = {
   emitter?: EventEmitter2
 }
 
-function EmitterProvider (props: Props, ref) {
+function EmitterProvider (props: Props, ref: React.Ref<EmitterProviderRef>) {
   const { children, emitter } = props
 
   const context = useMemo<EmitterProviderContextValue>(() => ({
     emitter: emitter || createEmitter()
-  }), [])
+  }), [emitter])  // recreate context
 
   useImperativeHandle(ref, () => {
-    return {
-      emitter: context.emitter
-    }
-  }, [context.emitter])
+    return context
+  }, [context])
 
   return (
     <EventEmitterContext.Provider value={context}>

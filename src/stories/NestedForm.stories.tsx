@@ -1,16 +1,17 @@
-import React, { useRef, createRef, useState, useCallback } from 'react'
+import React from 'react'
 import { types } from 'rjv'
 import { Form, Input, Alert, Button, Card } from 'antd'
 import { storiesOf } from '@storybook/react'
-import { getValidationStatus } from './helpers'
+import { getValidationStatus, SubmitBtn, ShowErrors } from './helpers'
 import {
   FormProvider,
-  FormProviderRef,
   Watch,
   Field,
   Scope,
-  events
+  Submit
 } from '../index'
+import { FieldApi } from '../components/Field'
+import { ErrorProvider } from '../components/ErrorProvider'
 
 let nodeId = 1
 const initialData = { __id: nodeId }
@@ -25,7 +26,7 @@ function NodeWrapper ({ children }) {
   return <Card style={{ paddingLeft: 40, marginBottom: 15, width: 500 }}>{children}</Card>
 }
 
-function renderNode (nodeRef: types.IRef) {
+function renderNode (nodeRef: types.IRef, getField: (path?: string) => FieldApi | undefined) {
   return <Scope
     key={`key_${nodeRef.value.__id}`}
     path={nodeRef.path}
@@ -64,24 +65,21 @@ function renderNode (nodeRef: types.IRef) {
           const nodesValues = field.value
 
           return nodesValues
-            ? nodesValues.map((item, index) => renderNode(field.ref.ref(`${index}`)))
+            ? nodesValues.map((item, index) => renderNode(field.ref.ref(`${index}`), getField))
             : null
         }}
       />
 
-      <CreateNodeForm nodeRef={nodeRef} />
+      <CreateNodeForm nodeRef={nodeRef} getField={getField} />
     </NodeWrapper>
   </Scope>
 }
 
-function CreateNodeForm ({ nodeRef }: { nodeRef: types.IRef }) {
-  const createNodeFormRef = createRef<FormProviderRef>()
-  const [createNodeFormKey, setCreateNodeFormKey] = useState(1)
-
-  return <FormProvider key={`formKey-${createNodeFormKey}`} ref={createNodeFormRef} data={{}}>
+function CreateNodeForm ({ nodeRef, getField }: { nodeRef: types.IRef, getField: any }) {
+  return <FormProvider data={{}}>
     <Form layout="inline">
       <Field
-        path="name"
+        path="new"
         schema={{
           type: 'string', default: '', presence: true, minLength: 2
         }}
@@ -103,76 +101,32 @@ function CreateNodeForm ({ nodeRef }: { nodeRef: types.IRef }) {
         }}
       />
 
-      <Button
-        // icon="plus"
-        type="primary"
-        onClick={() => {
-          createNodeFormRef.current && createNodeFormRef.current.submit()
-            .then(({ valid, data }) => {
-              if (valid) {
-                const subNodesRef = nodeRef.ref('nodes')
-                const nodes = subNodesRef.value || []
+      <Submit
+        onSuccess={(data) => {
+          const subNodesField = getField(nodeRef.ref('nodes').path)
+          const nodes = subNodesField.value || []
 
-                subNodesRef.value = [
-                  ...nodes,
-                  { __id: ++nodeId, name: data.name }
-                ]
-
-                setCreateNodeFormKey(createNodeFormKey + 1)
-              }
-            })
+          subNodesField.value = [
+            ...nodes,
+            { __id: ++nodeId, name: data.new }
+          ]
         }}
-      >
-        Add
-      </Button>
+        render={(handleSubmit) => <Button onClick={handleSubmit}>Add</Button>}
+      />
     </Form>
   </FormProvider>
 }
 
 function NestedSchemaForm () {
-  const providerRef = useRef<FormProviderRef>(null)
-  const handleSubmit = useCallback(async () => {
-    if (providerRef.current) {
-      const res = await providerRef.current.submit()
-      console.log('RESULT', res)
-      if (!res.valid) {
-        res.firstErrorField && res.firstErrorField.focus()
-      }
-    }
-  }, [providerRef.current])
-
   return (
-    <FormProvider ref={providerRef} data={initialData}>
-      <Watch
-        props={[events.ValidatedEvent.TYPE]}
-        debounce={50}
-        render={() => {
-          if (providerRef.current) {
-            const errors = providerRef.current.getErrors()
+    <FormProvider data={initialData}>
+      <ErrorProvider>
+        <ShowErrors />
 
-            const entries = Object.entries(errors)
+        <Watch props={[]} render={(getRef, getField) => renderNode(getRef('/'), getField)} />
 
-            if (entries.length) {
-              return <Alert
-                type="error"
-                message={entries.map(([path, message]) => (
-                  <p key={`err-${path}`}>
-                    {path}: {message}
-                  </p>
-                ))}
-              />
-            }
-          }
-
-          return null
-        }}
-      />
-
-      <Watch props={[]} render={(getRef) => renderNode(getRef('/'))} />
-
-      <button onClick={handleSubmit}>
-        Submit
-      </button>
+        <SubmitBtn />
+      </ErrorProvider>
     </FormProvider>
   )
 }

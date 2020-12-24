@@ -4,10 +4,7 @@
  *
  */
 
-import React, {
-  createRef,
-  RefObject
-} from 'react'
+import React, { createRef, RefObject } from 'react'
 import { utils, types, Validator, ValidationMessage } from 'rjv'
 import {
   FormProviderContext,
@@ -222,15 +219,7 @@ class FieldComponent extends React.Component<ComponentPropsWithContexts, State> 
     this.inputRef = createRef()
     this.listeners = []
 
-    this.emitter.emit(this.path, new events.RegisterFieldEvent(this.api))
-
-    this.listeners.push(this.emitter.on(this.path, (event: events.BaseEvent) => {
-      switch (event.type) {
-        case events.ValueChangedEvent.TYPE:
-          this.state.isInitiated && this.setState({})
-          break
-      }
-    }, { objectify: true }) as Listener)
+    this._connectToEmitter()
 
     if (fieldRef) {
       fieldRef(this.api)
@@ -251,14 +240,57 @@ class FieldComponent extends React.Component<ComponentPropsWithContexts, State> 
     return nextState !== this.state
       || nextProps.providerContext !== this.props.providerContext
       || nextProps.optionsContext !== this.props.optionsContext
+      || nextProps.emitterContext !== this.props.emitterContext
   }
 
+  // getSnapshotBeforeUpdate (prevProps) {
+  //   if (prevProps.providerContext !== this.props.providerContext || prevProps.emitterContext !== this.props.emitterContext) {
+  //     if (prevProps.emitterContext !== this.props.emitterContext) {
+  //       // clean old emitter
+  //       this.emitter.emit(this.path, new events.UnregisterFieldEvent(this.api))
+
+  //       this.listeners.forEach((listener) => listener.off())
+  //     }
+
+  //     // update the ref
+  //     this.emitter = this.props.emitterContext.emitter
+  //     this.ref = new EmittingRef(this.props.providerContext.dataStorage, this.path, this.emitter)
+  //   }
+
+  //   if (prevProps.emitterContext !== this.props.emitterContext) {
+  //     // connect to new emitter
+  //     this.listeners = []
+
+  //     this._connectToEmitter()
+  //   }
+
+  //   return null
+  // }
+
   componentDidUpdate (prevProps: Readonly<ComponentPropsWithContexts>, prevState: Readonly<State>, snapshot?: any) {
+    if (prevProps.providerContext !== this.props.providerContext || prevProps.emitterContext !== this.props.emitterContext) {
+      if (prevProps.emitterContext !== this.props.emitterContext) {
+        // emit unregistered event and free old emitter
+        this.emitter.emit(this.path, new events.UnregisterFieldEvent(this.api))
+
+        this.listeners.forEach((listener) => listener.off())
+      }
+
+      // update the ref
+      this.emitter = this.props.emitterContext.emitter
+      this.ref = new EmittingRef(this.props.providerContext.dataStorage, this.path, this.emitter)
+    }
+
+    if (prevProps.emitterContext !== this.props.emitterContext) {
+      // connect to new emitter
+      this.listeners = []
+
+      this._connectToEmitter()
+    }
+
     if (prevProps.providerContext !== this.props.providerContext) {
       // data context changed - the form has been reset
-      // need to update the ref to the new data and init field
-      this.ref = new EmittingRef(this.props.providerContext.dataStorage, this.path, this.emitter)
-
+      // have to init the field
       this.setState({
         ...DEFAULT_STATE,
         isRequired: !!this.schema.presence,
@@ -314,6 +346,18 @@ class FieldComponent extends React.Component<ComponentPropsWithContexts, State> 
       .catch((e) => { throw e })
 
     this._processResolveSchema()
+  }
+
+  protected _connectToEmitter () {
+    this.emitter.emit(this.path, new events.RegisterFieldEvent(this.api))
+
+    this.listeners.push(this.emitter.on(this.path, (event: events.BaseEvent) => {
+      switch (event.type) {
+        case events.ValueChangedEvent.TYPE:
+          this.state.isInitiated && this.setState({})
+          break
+      }
+    }, { objectify: true }) as Listener)
   }
 
   /**

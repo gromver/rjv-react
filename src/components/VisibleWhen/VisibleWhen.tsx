@@ -11,8 +11,8 @@ import { types, utils, Validator } from 'rjv'
 import { Listener } from 'eventemitter2'
 import { ScopeContext } from '../Scope'
 import { FormProviderContext } from '../FormProvider'
-import { EmitterProviderContext, events } from '../EmitterProvider'
-import { getPropsToObserveFromSchema } from '../../utils'
+import { EmitterProvider, EmitterProviderContext, events } from '../EmitterProvider'
+import { getPropsToObserveFromSchema, createEmitter } from '../../utils'
 import ReadonlyRef from '../../refs/ReadonlyRef'
 
 const HIDDEN_EL_STYLES: CSSProperties = {
@@ -71,9 +71,30 @@ export default function VisibleWhen (
 
   const watchProps = useMemo(() => getPropsToObserveFromSchema(schema, ref.path), [])
 
+  const innerEmitter = useMemo(() => {
+    if (!useMount) {
+      const emitter = createEmitter()
+
+      if (emitterContext && visible) {
+        // forward events
+        emitter.onAny((path, event: events.BaseEvent) => emitterContext.emitter.emit(path, event))
+      }
+
+      return emitter
+    }
+  }, [useMount, emitterContext, visible])
+
   useEffect(() => {
     if (emitterContext?.emitter) {
       const listeners: Listener[] = []
+
+      // const handleVisibility = (isValid: boolean) => {
+      //   setVisible(isValid)
+
+      //   if (!useMount) {
+      //     // innerEmitter?.emit('/', isValid ? new events.RevealFieldsEvent() : new events.HideFieldsEvent())
+      //   }
+      // }
 
       watchProps.forEach((path) => {
         const listener = emitterContext.emitter
@@ -81,37 +102,43 @@ export default function VisibleWhen (
             if (event instanceof events.ValueChangedEvent) {
               const res = await validator.validateRef(ref)
 
-              if (res.valid) {
-                setVisible(true)
-              } else {
-                setVisible(false)
-              }
+              setVisible(res.valid)
+              // if (res.valid) {
+              //   setVisible(true)
+              // } else {
+              //   setVisible(false)
+              // }
+              // handleVisibility(res.valid)
             }
           }, { objectify: true }) as Listener
         listeners.push(listener)
       })
 
       validator.validateRef(ref).then((res) => {
-        if (res.valid) {
-          setVisible(true)
-        } else {
-          setVisible(false)
-        }
+        setVisible(res.valid)
+        // handleVisibility(res.valid)
+        // if (res.valid) {
+        //   setVisible(true)
+        // } else {
+        //   setVisible(false)
+        // }
       })
 
       return () => {
         listeners.forEach((listener) => listener.off())
       }
     }
-  }, [emitterContext, ref])
+  }, [emitterContext, innerEmitter, ref])
 
   if (useMount) {
-    return visible ? <>{children}</> : null
+    return visible ? children as any : null
   }
 
-  return <div
-    style={visible ? visibleStyles : hiddenStyles}
-  >
-    {children}
-  </div>
+  return <EmitterProvider emitter={innerEmitter}>
+    <div
+      style={visible ? visibleStyles : hiddenStyles}
+    >
+      {children}
+    </div>
+  </EmitterProvider>
 }

@@ -1,6 +1,6 @@
 /**
  *
- * Watch - subscribes to events and passes a root ref to the render fn
+ * Watch - re-renders content when desired events of the certain field are acquired
  *
  */
 
@@ -14,7 +14,7 @@ import { ScopeContext } from '../Scope'
 import { FormProviderContext } from '../FormProvider'
 import { FieldApi } from '../Field'
 import { EmitterProviderContext, events } from '../EmitterProvider'
-import { EmittingRef } from '../../refs'
+import { ReadonlyRef } from '../../refs'
 
 const allowedEvents = [
   events.ValueChangedEvent.TYPE,
@@ -27,8 +27,8 @@ const allowedEvents = [
 type EventTypeList = typeof allowedEvents[number][]
 
 type WatchRenderFn = (
-  getRef: (path: types.Path) => EmittingRef,
-  getField: (path: types.Path) => FieldApi | undefined
+  getRef: (path?: types.Path) => ReadonlyRef,
+  getField: (path?: types.Path) => FieldApi | undefined
 ) => ReactElement | null
 
 type Props = {
@@ -55,8 +55,8 @@ export default function Watch ({ render, props, events = DEFAULT_EVENT_TYPES, de
   const scopeContext = useContext(ScopeContext)
 
   const ref = useMemo(() => {
-    if (providerContext && emitterContext) {
-      return new EmittingRef(providerContext.dataStorage, '/', emitterContext.emitter)
+    if (providerContext) {
+      return new ReadonlyRef(providerContext.dataStorage, '/')
     }
 
     throw new Error('providerContext doesn\'t exists')
@@ -64,7 +64,7 @@ export default function Watch ({ render, props, events = DEFAULT_EVENT_TYPES, de
 
   const getField = useMemo(() => {
     if (providerContext) {
-      return (fieldPath: types.Path): FieldApi | undefined => {
+      return (fieldPath: types.Path = ''): FieldApi | undefined => {
         const path = scopeContext
         ? utils.resolvePath(fieldPath, scopeContext.scope)
         : utils.resolvePath(fieldPath, '/')
@@ -77,7 +77,7 @@ export default function Watch ({ render, props, events = DEFAULT_EVENT_TYPES, de
   }, [providerContext])
 
   const getRef = useMemo(() => {
-    return (fieldPath: types.Path): EmittingRef => {
+    return (fieldPath: types.Path = ''): ReadonlyRef => {
       const path = scopeContext
       ? utils.resolvePath(fieldPath, scopeContext.scope)
       : utils.resolvePath(fieldPath, '/')
@@ -118,7 +118,7 @@ export default function Watch ({ render, props, events = DEFAULT_EVENT_TYPES, de
         listeners.forEach((listener) => listener.off())
       }
     }
-  }, [])
+  }, [emitterContext, watchProps])
 
   return render(getRef, getField)
 }

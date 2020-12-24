@@ -5,7 +5,7 @@ import { storiesOf } from '@storybook/react'
 import { FormProvider } from '../FormProvider'
 import { VisibleWhen } from './index'
 import { Field } from '../Field'
-import { getValidationStatus } from '../../stories/helpers'
+import { getValidationStatus, SubmitBtn } from '../../stories/helpers'
 
 storiesOf('Visible', module)
   .add('Simple', () => {
@@ -148,7 +148,7 @@ storiesOf('Visible', module)
             }}
           />
         </VisibleWhen>
-        <p>Footer</p>
+        <SubmitBtn />
       </FormProvider>
     </Form>
   })
@@ -210,7 +210,7 @@ storiesOf('Visible', module)
             }}
           />
         </VisibleWhen>
-        <p>Footer</p>
+        <SubmitBtn />
       </FormProvider>
     </Form>
   })

@@ -78,7 +78,7 @@ export default function ErrorProvider ({ children }: Props) {
       context,
       fields: [] as FieldApi[]
     }
-  }, [])
+  }, [emitterContext])
 
   return <ErrorProviderContext.Provider value={context}>
     <EmitterProvider emitter={emitter}>
