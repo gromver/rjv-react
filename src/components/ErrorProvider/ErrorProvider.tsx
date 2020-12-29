@@ -16,7 +16,7 @@ import ErrorContext, {
 import { EmitterProvider, EmitterContext, events } from '../EmitterProvider'
 import { createEmitter } from '../../utils'
 import { FieldApi } from '../Field'
-import { ValidationErrors } from '../FormProvider'
+import { ValidationErrors } from '../FormProvider/types'
 
 type Props = {
   children: ReactNode

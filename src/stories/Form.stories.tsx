@@ -1,9 +1,9 @@
 import React, { useRef, useState } from 'react'
-import { Form, Input, Alert } from 'antd'
+import { Form, Input } from 'antd'
 import { storiesOf } from '@storybook/react'
 
-import { getValidationStatus } from './helpers'
-import { FormProvider, FormProviderRef, Field, Watch, events } from '../index'
+import { getValidationStatus, ShowErrors } from './helpers'
+import { FormProvider, FormProviderRef, Field } from '../index'
 
 const initialData = {}
 
@@ -20,30 +20,7 @@ function SimpleForm () {
   return (
     <Form style={{ maxWidth: '400px' }}>
       <FormProvider ref={providerRef} data={initialData}>
-        <Watch
-          props={['**']}
-          events={[events.ValidatedEvent.TYPE]}
-          debounce={50}
-          render={() => {
-            console.log('rerender only on ValidatedEvent')
-            if (providerRef.current) {
-              const errors = providerRef.current.getErrors()
-
-              if (errors.length) {
-                return <Alert
-                  type="error"
-                  message={errors.map(([path, message]) => (
-                    <p key={`err-${path}`}>
-                      {path}: {message}
-                    </p>
-                  ))}
-                />
-              }
-            }
-
-            return null
-          }}
-        />
+        <ShowErrors />
 
         <br />
 

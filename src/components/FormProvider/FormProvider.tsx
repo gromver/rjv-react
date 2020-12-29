@@ -19,6 +19,7 @@ import { EmitterProvider, events } from '../EmitterProvider'
 import { createEmitter } from '../../utils'
 import { SubmitFormFn, ValidationErrors, IFieldApi } from './types'
 import { Scope } from '../Scope'
+import { ErrorProvider } from '../ErrorProvider'
 import { FieldApi } from '../Field'
 
 export type FormProviderRef = {
@@ -155,7 +156,9 @@ function FormProvider (props: Props, elRef: React.Ref<FormProviderRef>) {
   >
     <Scope path="/">
       <EmitterProvider emitter={emitter}>
-        {children}
+        <ErrorProvider>
+          {children}
+        </ErrorProvider>
       </EmitterProvider>
     </Scope>
   </FormContext.Provider>

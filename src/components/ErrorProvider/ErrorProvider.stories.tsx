@@ -39,22 +39,20 @@ storiesOf('ErrorProvider', module)
   .add('Example', () => {
     return <Form style={{ maxWidth: '800px' }}>
       <FormProvider data={{}}>
-        <ErrorProvider>
-          <p>Global error provider:</p>
-          <ShowErrors />
-          <br />
-          <InputField path="name" />
+        <p>Global error provider:</p>
+        <ShowErrors />
+        <br />
+        <InputField path="name" />
 
-          <Card>
-            <ErrorProvider>
-              <p>Local error provider:</p>
-              <ShowErrors />
-              <br />
-              <InputField path="foo" />
-              <InputField path="a/b/c" />
-            </ErrorProvider>
-          </Card>
-        </ErrorProvider>
+        <Card>
+          <ErrorProvider>
+            <p>Local error provider:</p>
+            <ShowErrors />
+            <br />
+            <InputField path="foo" />
+            <InputField path="a/b/c" />
+          </ErrorProvider>
+        </Card>
 
         <br />
         <SubmitBtn />
