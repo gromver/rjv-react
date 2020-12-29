@@ -7,7 +7,7 @@
 import React, { useMemo, memo } from 'react'
 import { utils, types } from 'rjv'
 import ScopeContext, { ScopeContextValue } from './ScopeContext'
-import { FormContext, FormContextValue } from '../FormProvider'
+import FormContext, { FormContextValue } from '../FormProvider/FormContext'
 
 type PropsPartial = {
   path: types.Path
