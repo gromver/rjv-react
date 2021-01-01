@@ -35,7 +35,7 @@ export default function ErrorProvider ({ children }: Props) {
 
       fields.forEach((field) => {
         if (field.state.isValidated && !field.state.isValid) {
-          res.push([field.ref.path, field.messageDescription as any])
+          res.push({path: field.ref.path, message: field.messageDescription as any})
         }
       })
 

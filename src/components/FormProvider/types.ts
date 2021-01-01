@@ -21,7 +21,7 @@ export interface IFieldApi {
   focus (): void
 }
 
-export type ValidationErrors = [path: string, message: string][]
+export type ValidationErrors = {path: string, message: string}[]
 
 export type SubmitFormFn = () => Promise<{
   valid: boolean

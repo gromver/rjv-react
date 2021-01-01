@@ -36,7 +36,7 @@ export function ShowErrors () {
   if (errors.length) {
     return <Alert
       type="error"
-      message={errors.map(([path, message]) => (
+      message={errors.map(({path, message}) => (
         <p key={`err-${path}`}>
           {path}: {message}
         </p>

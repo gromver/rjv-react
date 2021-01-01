@@ -2,7 +2,7 @@ import React from 'react'
 import { storiesOf } from '@storybook/react'
 import { Form, Input } from 'antd'
 import ErrorMessages from './ErrorMessages'
-import { FormProvider } from '../FormProvider'
+import { FormProvider, ValidationErrors } from '../FormProvider'
 import { Field } from '../Field'
 import { ErrorProvider } from '../ErrorProvider'
 import { getValidationStatus } from '../../stories/helpers'
@@ -37,8 +37,8 @@ function InputField ({ path }: Props) {
   />
 }
 
-function renderErrors (errors) {
-  return errors.map(([path, message]) => <p key={path}><strong>{path}</strong> - {message}</p>)
+function renderErrors (errors: ValidationErrors) {
+  return errors.map(({path, message}) => <p key={path}><strong>{path}</strong> - {message}</p>)
 }
 
 storiesOf('ErrorMessages', module)

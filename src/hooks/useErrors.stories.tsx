@@ -40,7 +40,7 @@ function InputField ({ path }: Props) {
 function ShowErrors () {
   const errors = useErrors()
 
-  return errors.map(([path, message]) => <p key={path}><strong>{path}</strong> - {message}</p>) as any
+  return errors.map(({path, message}) => <p key={path}><strong>{path}</strong> - {message}</p>) as any
 }
 
 storiesOf('useErrors', module)

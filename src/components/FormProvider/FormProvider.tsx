@@ -128,7 +128,7 @@ function FormProvider (props: Props, elRef: React.Ref<FormProviderRef>) {
 
       fieldsRef.current.forEach((field) => {
         if (field.state.isValidated && !field.state.isValid) {
-          res.push([field.ref.path, field.messageDescription as any])
+          res.push({path: field.ref.path, message: field.messageDescription as any})
         }
       })
 
