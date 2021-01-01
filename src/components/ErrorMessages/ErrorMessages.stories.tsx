@@ -28,7 +28,7 @@ function InputField ({ path }: Props) {
             ref={inputRef}
             value={field.value}
             onFocus={() => field.markAsTouched()}
-            onChange={(e) => field.value = e.target.value}
+            onChange={(e) => field.markAsPristine().value = e.target.value}
             onBlur={() => field.validate()}
           />
         </Form.Item>

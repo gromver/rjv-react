@@ -101,6 +101,8 @@ export class FieldApi implements IFieldApi {
       isPristine: true
     })
 
+    this.component.emitter.emit(this.component.ref.path, new events.InvalidatedEvent())
+
     return this
   }
 
