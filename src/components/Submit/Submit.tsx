@@ -41,7 +41,7 @@ export default function Submit (props: Props) {
         }
       }
     }
-  }, [formContext])
+  }, [formContext, onSubmit, onSuccess, onError, focusFirstError])
 
   return render(handleSubmit)
 }
