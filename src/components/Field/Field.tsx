@@ -42,7 +42,7 @@ export class FieldApi implements IFieldApi {
   }
 
   get value (): any {
-    if (!this.state.isInitiated) {
+    if (!this.component.initiated) {
       return this.component.ref.value === undefined
         ? this.component.schema.default
         : this.component.ref.value
@@ -51,7 +51,7 @@ export class FieldApi implements IFieldApi {
     return this.component.ref.value
   }
 
-  get state (): State {
+  get state (): IFieldState {
     return this.component.state
   }
 
@@ -141,11 +141,7 @@ export class FieldApi implements IFieldApi {
   }
 }
 
-type State = IFieldState & {
-  isInitiated: boolean
-}
-
-const DEFAULT_STATE: State = {
+const DEFAULT_STATE: IFieldState = {
   isValid: false,
   isValidating: false,
   isValidated: false,
@@ -153,8 +149,7 @@ const DEFAULT_STATE: State = {
   isTouched: false,
   isDirty: false,
   isRequired: false,
-  isReadonly: false,
-  isInitiated: false
+  isReadonly: false
 }
 
 const DEFAULT_OPTIONS: OptionsContextValue = {
@@ -176,7 +171,7 @@ type ComponentPropsWithContexts = ComponentProps & {
   optionsContext: OptionsContextValue
 }
 
-class FieldComponent extends React.Component<ComponentPropsWithContexts, State> {
+class FieldComponent extends React.Component<ComponentPropsWithContexts, IFieldState> {
   path: types.Path
   schema: types.ISchema
   ref: EmittingRef
@@ -186,6 +181,7 @@ class FieldComponent extends React.Component<ComponentPropsWithContexts, State> 
   inputRef: RefObject<any>
   listeners: Listener[]
   options: OptionsContextValue
+  initiated: boolean
 
   constructor (props: ComponentPropsWithContexts) {
     super(props)
@@ -220,6 +216,7 @@ class FieldComponent extends React.Component<ComponentPropsWithContexts, State> 
     this.api = new FieldApi(this)
     this.inputRef = createRef()
     this.listeners = []
+    this.initiated = false
 
     this._connectToEmitter()
 
@@ -238,41 +235,17 @@ class FieldComponent extends React.Component<ComponentPropsWithContexts, State> 
     this._initiateField()
   }
 
-  shouldComponentUpdate (nextProps: ComponentPropsWithContexts, nextState: State) {
+  shouldComponentUpdate (nextProps: ComponentPropsWithContexts, nextState: IFieldState) {
     return nextState !== this.state
       || nextProps.formContext !== this.props.formContext
       || nextProps.optionsContext !== this.props.optionsContext
       || nextProps.emitterContext !== this.props.emitterContext
   }
 
-  // getSnapshotBeforeUpdate (prevProps) {
-  //   if (prevProps.formContext !== this.props.formContext || prevProps.emitterContext !== this.props.emitterContext) {
-  //     if (prevProps.emitterContext !== this.props.emitterContext) {
-  //       // clean old emitter
-  //       this.emitter.emit(this.path, new events.UnregisterFieldEvent(this.api))
-
-  //       this.listeners.forEach((listener) => listener.off())
-  //     }
-
-  //     // update the ref
-  //     this.emitter = this.props.emitterContext.emitter
-  //     this.ref = new EmittingRef(this.props.formContext.dataStorage, this.path, this.emitter)
-  //   }
-
-  //   if (prevProps.emitterContext !== this.props.emitterContext) {
-  //     // connect to new emitter
-  //     this.listeners = []
-
-  //     this._connectToEmitter()
-  //   }
-
-  //   return null
-  // }
-
-  componentDidUpdate (prevProps: Readonly<ComponentPropsWithContexts>, prevState: Readonly<State>, snapshot?: any) {
+  getSnapshotBeforeUpdate (prevProps) {
     if (prevProps.formContext !== this.props.formContext || prevProps.emitterContext !== this.props.emitterContext) {
       if (prevProps.emitterContext !== this.props.emitterContext) {
-        // emit unregistered event and free old emitter
+        // clean old emitter
         this.emitter.emit(this.path, new events.UnregisterFieldEvent(this.api))
 
         this.listeners.forEach((listener) => listener.off())
@@ -289,6 +262,30 @@ class FieldComponent extends React.Component<ComponentPropsWithContexts, State> 
 
       this._connectToEmitter()
     }
+
+    return null
+  }
+
+  componentDidUpdate (prevProps: Readonly<ComponentPropsWithContexts>, prevState: Readonly<IFieldState>, snapshot?: any) {
+    // if (prevProps.formContext !== this.props.formContext || prevProps.emitterContext !== this.props.emitterContext) {
+    //   if (prevProps.emitterContext !== this.props.emitterContext) {
+    //     // emit unregistered event and free old emitter
+    //     this.emitter.emit(this.path, new events.UnregisterFieldEvent(this.api))
+    //
+    //     this.listeners.forEach((listener) => listener.off())
+    //   }
+    //
+    //   // update the ref
+    //   this.emitter = this.props.emitterContext.emitter
+    //   this.ref = new EmittingRef(this.props.formContext.dataStorage, this.path, this.emitter)
+    // }
+    //
+    // if (prevProps.emitterContext !== this.props.emitterContext) {
+    //   // connect to new emitter
+    //   this.listeners = []
+    //
+    //   this._connectToEmitter()
+    // }
 
     if (prevProps.formContext !== this.props.formContext) {
       // data context changed - the form has been reset
@@ -343,7 +340,7 @@ class FieldComponent extends React.Component<ComponentPropsWithContexts, State> 
   protected _initiateField () {
     this.validator.validateRef(this.ref)
       .then(() => {
-        this.setState({ isInitiated: true })
+        this.initiated = true
       })
       .catch((e) => { throw e })
 
@@ -356,7 +353,7 @@ class FieldComponent extends React.Component<ComponentPropsWithContexts, State> 
     this.listeners.push(this.emitter.on(this.path, (event: events.BaseEvent) => {
       switch (event.type) {
         case events.ValueChangedEvent.TYPE:
-          this.state.isInitiated && this.setState({})
+          this.initiated && this.setState({})
           break
       }
     }, { objectify: true }) as Listener)

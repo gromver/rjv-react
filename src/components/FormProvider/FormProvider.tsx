@@ -10,7 +10,8 @@ import React, {
   useImperativeHandle,
   useMemo,
   memo,
-  useState, useRef
+  useState,
+  useRef
 } from 'react'
 import _cloneDeep from 'lodash/cloneDeep'
 import { types, Storage } from 'rjv'
