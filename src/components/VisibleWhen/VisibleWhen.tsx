@@ -59,13 +59,11 @@ export default function VisibleWhen (
   const useMount = useMemo(() => !useVisibilityStyle, [])
   const normalizedPath = useMemo(() => utils.resolvePath(path || '', scopeContext?.scope || '/'), [])
 
-  const ref = useMemo(() => {
-    if (formContext) {
-      return new ReadonlyRef(formContext.dataStorage, normalizedPath)
-    }
+  if (!formContext) {
+    throw new Error('VisibleWhen - FormContext must be provided')
+  }
 
-    throw new Error('formContext doesn\'t exists')
-  }, [formContext!.dataStorage])
+  const ref = useMemo(() => new ReadonlyRef(formContext.dataStorage, normalizedPath), [formContext!.dataStorage])
 
   const validator = useMemo(() => new Validator(schema), [])
 
@@ -88,14 +86,6 @@ export default function VisibleWhen (
     if (emitterContext?.emitter) {
       const listeners: Listener[] = []
 
-      // const handleVisibility = (isValid: boolean) => {
-      //   setVisible(isValid)
-
-      //   if (!useMount) {
-      //     // innerEmitter?.emit('/', isValid ? new events.RevealFieldsEvent() : new events.HideFieldsEvent())
-      //   }
-      // }
-
       watchProps.forEach((path) => {
         const listener = emitterContext.emitter
           .on(path, async (event) => {
@@ -103,12 +93,6 @@ export default function VisibleWhen (
               const res = await validator.validateRef(ref)
 
               setVisible(res.valid)
-              // if (res.valid) {
-              //   setVisible(true)
-              // } else {
-              //   setVisible(false)
-              // }
-              // handleVisibility(res.valid)
             }
           }, { objectify: true }) as Listener
         listeners.push(listener)
@@ -116,12 +100,6 @@ export default function VisibleWhen (
 
       validator.validateRef(ref).then((res) => {
         setVisible(res.valid)
-        // handleVisibility(res.valid)
-        // if (res.valid) {
-        //   setVisible(true)
-        // } else {
-        //   setVisible(false)
-        // }
       })
 
       return () => {

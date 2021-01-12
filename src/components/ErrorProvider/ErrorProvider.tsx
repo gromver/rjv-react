@@ -6,7 +6,7 @@
  */
 
 import React, { ReactNode, useContext, useMemo } from 'react'
-import { Listener } from 'eventemitter2'
+import { EventEmitter2, Listener } from 'eventemitter2'
 import ErrorContext, {
   ErrorContextValue,
   Subscribe,
@@ -15,27 +15,39 @@ import ErrorContext, {
 } from './ErrorContext'
 import { EmitterProvider, EmitterContext, events } from '../EmitterProvider'
 import { createEmitter } from '../../utils'
-import { FieldApi } from '../Field'
-import { ValidationErrors } from '../FormProvider/types'
+import FormContext from '../FormProvider/FormContext'
+import { IField, IFieldState, ValidationErrors } from '../FormProvider/types'
 
 type Props = {
+  emitter?: EventEmitter2,
   children: ReactNode
 }
 
-const VALIDATION_STATE_CHANGED_EVENTS = [events.ValidatedEvent.TYPE, events.InvalidatedEvent.TYPE]
+const VALIDATION_STATE_CHANGED_EVENTS = [events.FieldValidatedEvent.TYPE, events.FieldInvalidatedEvent.TYPE]
 
-export default function ErrorProvider ({ children }: Props) {
+export default function ErrorProvider ({ emitter, children }: Props) {
   const emitterContext = useContext(EmitterContext)
+  const formContext = useContext(FormContext)
 
-  const { emitter, context, fields } = useMemo(() => {
-    const emitter = createEmitter()
+  if (!formContext) {
+    throw new Error('ErrorProvider - FormContext must be provided')
+  }
+
+  if (!emitterContext) {
+    throw new Error('ErrorProvider - EmitterContext must be provided')
+  }
+
+  const { innerEmitter, context, fields } = useMemo(() => {
+    const innerEmitter = emitter || createEmitter()
 
     const getErrors = () => {
       const res: ValidationErrors = []
 
       fields.forEach((field) => {
-        if (field.state.isValidated && !field.state.isValid) {
-          res.push({path: field.ref.path, message: field.messageDescription as any})
+        const state = formContext.getFieldState(field) as IFieldState
+
+        if (state.isValidated && !state.isValid) {
+          res.push({path: field.ref().path, message: formContext.getMessageDescription(field) as string})
         }
       })
 
@@ -43,28 +55,33 @@ export default function ErrorProvider ({ children }: Props) {
     }
 
     const subscribe: Subscribe = (handler: SubscribeHandler): Unsubscribe => {
-      const listener: Listener = emitter.on('**', (event: events.BaseEvent) => {
+      const fieldListener: Listener = innerEmitter.on('**', (event: events.BaseEvent) => {
         if (VALIDATION_STATE_CHANGED_EVENTS.includes(event.type as any)) {
           handler(getErrors())
         }
       }, { objectify: true }) as Listener
 
-      return () => listener.off()
+      return () => {
+        fieldListener.off()
+      }
     }
 
-    if (emitterContext) {
-      emitter.onAny((path, event: events.BaseEvent) => {
+    if (!emitter) {
+      innerEmitter.onAny((path, event: events.BaseEvent) => {
+        // register fields
         if (event instanceof events.RegisterFieldEvent) {
           fields.push(event.field)
         }
-        if (event instanceof events.UnregisterFieldEvent) {
-          const i = fields.indexOf(event.field)
-          if (i !== -1) {
-            fields.splice(i, 1)
-          }
-        }
 
+        // forward events to the upper emitter
         emitterContext.emitter.emit(path, event)
+      })
+    } else {
+      innerEmitter.onAny((path, event: events.BaseEvent) => {
+        // register fields
+        if (event instanceof events.RegisterFieldEvent) {
+          fields.push(event.field)
+        }
       })
     }
 
@@ -74,14 +91,20 @@ export default function ErrorProvider ({ children }: Props) {
     }
 
     return {
-      emitter,
+      innerEmitter,
       context,
-      fields: [] as FieldApi[]
+      fields: [] as IField[]
     }
-  }, [emitterContext])
+  }, [emitterContext, formContext])
+
+  if (emitter) {
+    return <ErrorContext.Provider value={context}>
+      {children}
+    </ErrorContext.Provider>
+  }
 
   return <ErrorContext.Provider value={context}>
-    <EmitterProvider emitter={emitter}>
+    <EmitterProvider emitter={innerEmitter}>
       {children}
     </EmitterProvider>
   </ErrorContext.Provider>

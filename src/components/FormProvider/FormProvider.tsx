@@ -11,22 +11,73 @@ import React, {
   useMemo,
   memo,
   useState,
-  useRef
+  useRef,
+  useContext,
+  useCallback
 } from 'react'
 import _cloneDeep from 'lodash/cloneDeep'
-import { types, Storage } from 'rjv'
+import { types, Storage, ValidationMessage } from 'rjv'
 import FormContext, { FormContextValue } from './FormContext'
+import UpdaterContext from './UpdaterContext'
 import { EmitterProvider, events } from '../EmitterProvider'
 import { createEmitter } from '../../utils'
-import { SubmitFormFn, ValidationErrors, IFieldApi } from './types'
+import { SubmitFormFn, ValidationErrors, IField, IFieldState } from './types'
 import { Scope } from '../Scope'
 import { ErrorProvider } from '../ErrorProvider'
-import { FieldApi } from '../Field'
+import { DEFAULT_OPTIONS } from './constants'
+import { OptionsContext, OptionsContextValue } from '../OptionsProvider'
+import { EventEmitter2 } from 'eventemitter2'
 
+function extractMessageFromResult (res: types.IValidationResult, ref: types.IRef): ValidationMessage {
+  return res.results[ref.path]
+    ? res.results[ref.path]!.messages[0]
+    : new ValidationMessage(false, 'react', 'The field has no validation rules, check the schema')
+}
+
+function createDefaultStateFromSchema (schema: types.ISchema): IFieldState {
+  const isRequired = typeof schema.presence === 'boolean'
+    ? schema.presence : false
+  const isReadonly = typeof schema.readonly === 'boolean'
+    ? schema.readonly : false
+
+  return {
+    isRequired,
+    isReadonly,
+    isValid: false,
+    isValidating: false,
+    isValidated: false,
+    isPristine: true,
+    isTouched: false,
+    isDirty: false
+  }
+}
+
+// FormUpdater
+type FormUpdaterProps = {
+  children: React.ReactNode
+}
+
+type FormUpdaterRef = {
+  updateForm (): void
+}
+
+function FormUpdater ({ children }: FormUpdaterProps, elRef: React.Ref<FormUpdaterRef>) {
+  const [updater, setUpdater] = useState({})
+
+  useImperativeHandle(elRef, () => ({
+    updateForm: () => setUpdater({})
+  }))
+
+  return <UpdaterContext.Provider value={updater}>{children}</UpdaterContext.Provider>
+}
+
+const FormUpdaterWithRef = forwardRef<FormUpdaterRef, FormUpdaterProps>(FormUpdater)
+
+// FormProvider
 export type FormProviderRef = {
   submit: SubmitFormFn
   getData: () => any
-  getField: (path: types.Path) => IFieldApi | undefined
+  getField: (path: types.Path) => IField | undefined
   getErrors: () => ValidationErrors
 }
 
@@ -43,13 +94,13 @@ type Props = {
 
 function FormProvider (props: Props, elRef: React.Ref<FormProviderRef>) {
   const { data, children } = props
-  const dataRef = useRef(data)
+  const dataRef = useRef<any>(data)
+  const updaterRef = useRef<FormUpdaterRef>(null)
+  const emitterRef = useRef<EventEmitter2>()
+  const fieldsRef = useRef<Map<IField, IFieldState>>(new Map())
+  const optionsRef = useRef<OptionsContextValue>()
 
   const [emitter, setEmitter] = useState(() => createEmitter())
-  const emitterRef = useRef() as any
-
-  const fieldsRef = useRef<FieldApi[]>([])
-
   const [dataState, setDataState] = useState<DataState>(() => ({
     initialData: _cloneDeep(data),
     dataStorage: new Storage(_cloneDeep(data)),
@@ -57,12 +108,13 @@ function FormProvider (props: Props, elRef: React.Ref<FormProviderRef>) {
   }))
 
   const registerFieldHandler = useMemo(() => {
-    fieldsRef.current = []
+    const curFieldsMap = fieldsRef.current
+    const fieldsMap = fieldsRef.current = new Map<IField, IFieldState>()
 
     const registerFieldHandler = (path: string, event: events.BaseEvent) => {
       // fields reconcile phase
       if (event instanceof events.RegisterFieldEvent) {
-        fieldsRef.current.push(event.field)
+        fieldsMap.set(event.field, curFieldsMap.get(event.field) ?? createDefaultStateFromSchema(event.field.schema))
       }
     }
 
@@ -87,6 +139,18 @@ function FormProvider (props: Props, elRef: React.Ref<FormProviderRef>) {
           setEmitter(createEmitter())
         }
       })
+
+      // init registered fields
+      // console.time('initiating')
+      // Promise.all(
+      //   Array
+      //     .from(fieldsRef.current.keys())
+      //     .map((field) => field.init()))
+      //   .then(() => {
+      //     console.timeEnd('initiating')
+      //     updaterRef.current?.updateForm()
+      //   })
+      // updaterRef.current?.updateForm()
     }
   }, [emitter, registerFieldHandler])
 
@@ -94,26 +158,68 @@ function FormProvider (props: Props, elRef: React.Ref<FormProviderRef>) {
     if (data !== dataRef.current) {
       dataRef.current = data
 
+      fieldsRef.current.forEach((state, field) => {
+        fieldsRef.current.set(field, createDefaultStateFromSchema(field.schema))
+      })
+
       setDataState({
         initialData: _cloneDeep(data),
         dataStorage: new Storage(_cloneDeep(data)),
         initialDataStorage: new Storage(_cloneDeep(data))
       })
+
+      updaterRef.current?.updateForm()
     }
   }, [data])
 
+  const optionsContext = useContext(OptionsContext)
+
+  const options = useMemo(() => {
+    return optionsRef.current = optionsContext || DEFAULT_OPTIONS
+  }, [optionsContext])
+
+  const getFieldState = useCallback((field: IField) => {
+    return fieldsRef.current.get(field) || createDefaultStateFromSchema(field.schema)
+  }, [])
+
   const context = useMemo<FormContextValue>(() => ({
+    options,
+    emitter,
     dataStorage: dataState.dataStorage,
     initialDataStorage: dataState.initialDataStorage,
     submit: async () => {
-      const results = await Promise.all(fieldsRef.current.map((item) => item.validate()))
-      const invalidResult = results.find((res) => !res.valid)
+      // todo refactor validation process to increase performance
+      let firstErrorField: IField | undefined
+      await Promise.all(
+        Array
+          .from(fieldsRef.current.keys())
+          .map((field) => {
+            return field.validate()
+              .then((res) => {
+                const curState = fieldsRef.current.get(field)
 
-      if (invalidResult) {
-        const i = results.indexOf(invalidResult)
+                fieldsRef.current.set(field, {
+                  ...curState,
+                  isValid: res.valid,
+                  isTouched: true,
+                  isValidated: true,
+                  isValidating: false,
+                  message: extractMessageFromResult(res, field.ref())
+                } as IFieldState)
+
+                if (!firstErrorField && !res.valid) {
+                  firstErrorField = field
+                }
+              })
+          }))
+
+      // update view
+      updaterRef.current?.updateForm()
+
+      if (firstErrorField) {
         return {
-          valid: false,
-          firstErrorField: fieldsRef.current[i]
+          firstErrorField,
+          valid: false
         }
       }
 
@@ -123,25 +229,40 @@ function FormProvider (props: Props, elRef: React.Ref<FormProviderRef>) {
       }
     },
     getData: () => dataState.dataStorage.get([]),
-    getField: (path) => fieldsRef.current.find((item) => item.ref.path === path),
+    getField: (path) => Array.from(fieldsRef.current.keys()).find((item) => item.ref().path === path),
     getErrors: () => {
       const res: ValidationErrors = []
 
-      fieldsRef.current.forEach((field) => {
-        if (field.state.isValidated && !field.state.isValid) {
-          res.push({path: field.ref.path, message: field.messageDescription as any})
+      fieldsRef.current.forEach((state, field) => {
+        if (state.isValidated && !state.isValid) {
+          const message = state.message && optionsRef.current?.descriptionResolver(state.message) || ''
+
+          res.push({path: field.ref().path, message})
         }
       })
 
       return res
+    },
+    getFieldState,
+    setFieldState: (field, state) => {
+      const curState = getFieldState(field)
+
+      fieldsRef.current.set(field, { ...curState, ...state })
+    },
+    getMessageDescription: (field) => {
+      const state = fieldsRef.current.get(field)
+
+      const message = state && (state.isValidated ? state.message : undefined)
+
+      return message && optionsRef.current?.descriptionResolver(message)
     }
-  }), [dataState])
+  }), [dataState, options, emitter, getFieldState])
 
   useEffect(() => {
     return () => {
       emitter.removeAllListeners()
     }
-  }, [])
+  }, [emitter])
 
   useImperativeHandle(elRef, () => {
     return {
@@ -157,8 +278,10 @@ function FormProvider (props: Props, elRef: React.Ref<FormProviderRef>) {
   >
     <Scope path="/">
       <EmitterProvider emitter={emitter}>
-        <ErrorProvider>
-          {children}
+        <ErrorProvider emitter={emitter}>
+          <FormUpdaterWithRef ref={updaterRef}>
+            {children}
+          </FormUpdaterWithRef>
         </ErrorProvider>
       </EmitterProvider>
     </Scope>

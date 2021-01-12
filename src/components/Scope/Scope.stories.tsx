@@ -22,9 +22,11 @@ function SimpleForm () {
   const handleSubmit = useCallback(async () => {
     if (providerRef.current) {
       const res = await providerRef.current.submit()
-      console.log('DATA', res.data)
+
       if (!res.valid) {
         res.firstErrorField && res.firstErrorField.focus()
+      } else {
+        console.log('DATA', res.data)
       }
     }
   }, [providerRef.current])
@@ -42,7 +44,7 @@ function SimpleForm () {
                   label="Name"
                   validateStatus={getValidationStatus(field)}
                   help={field.messageDescription}
-                  required={field.isRequired}
+                  required={field.state.isRequired}
                 >
                   <Input
                     value={field.value}
@@ -62,7 +64,7 @@ function SimpleForm () {
                   label="Email"
                   validateStatus={getValidationStatus(field)}
                   help={field.messageDescription}
-                  required={field.isRequired}
+                  required={field.state.isRequired}
                 >
                   <Input
                     value={field.value}

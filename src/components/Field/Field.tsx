@@ -4,23 +4,27 @@
  *
  */
 
-import React, { createRef, RefObject } from 'react'
-import { utils, types, Validator, ValidationMessage } from 'rjv'
+import React, {
+  RefObject,
+  useContext, useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState
+} from 'react'
+import { utils, types, Validator, ValidationMessage, Ref } from 'rjv'
+import _isPlainObject from 'lodash/isPlainObject'
 import {
   FormContext,
   FormContextValue,
-  IFieldApi,
+  IField,
   IFieldState
 } from '../FormProvider'
-import { ScopeContext, ScopeContextValue } from '../Scope'
-import { EmitterContext, EmitterContextValue, events } from '../EmitterProvider'
+import { ScopeContext } from '../Scope'
+import { EmitterContext, events } from '../EmitterProvider'
 import { EventEmitter2, Listener } from 'eventemitter2'
-import { TrackingRef, EmittingRef } from '../../refs'
-import { OptionsContext, OptionsContextValue } from '../OptionsProvider'
-import {
-  DEFAULT_DESCRIPTION_RESOLVER,
-  DEFAULT_VALIDATOR_OPTIONS
-} from '../OptionsProvider/OptionsProvider'
+import UpdaterContext from '../FormProvider/UpdaterContext'
+import { EmittingRef } from '../../refs'
 
 function extractMessageFromResult (res: types.IValidationResult, ref: types.IRef): ValidationMessage {
   return res.results[ref.path]
@@ -28,424 +32,223 @@ function extractMessageFromResult (res: types.IValidationResult, ref: types.IRef
     : new ValidationMessage(false, 'react', 'The field has no validation rules, check the schema')
 }
 
-export class FieldApi implements IFieldApi {
-  constructor (private component: FieldComponent) {}
+function extractStateFromSchema (schema: types.ISchema): Partial<IFieldState> {
+  const isRequired = typeof schema.presence === 'boolean'
+    ? schema.presence : false
+  const isReadonly = typeof schema.readonly === 'boolean'
+    ? schema.readonly : false
+
+  return { isRequired, isReadonly }
+}
+
+export class FieldApi {
+  constructor (private field: IField, private formContext: FormContextValue) {}
 
   set value (value: any) {
-    this.component.setState({
-      isTouched: true,
-      isDirty: true,
-      isPristine: false
-    })
-
-    this.component.ref.value = value
+    this.field.ref().value = value
   }
 
   get value (): any {
-    if (!this.component.initiated) {
-      return this.component.ref.value === undefined
-        ? this.component.schema.default
-        : this.component.ref.value
-    }
+    const value = this.field.ref().value
 
-    return this.component.ref.value
+    return value === undefined ? this.field.schema.default : value
   }
 
   get state (): IFieldState {
-    return this.component.state
+    return this.formContext.getFieldState(this.field)
   }
 
   get ref (): types.IRef {
-    return this.component.ref
+    return this.field.ref()
   }
 
   async validate (): Promise<types.IValidationResult> {
-    this.component.setState({ isValidating: true })
+    const res = await this.field.validate()
 
-    const ref = this.component.ref
-    const res = await this.component.validator.validateRef(ref)
-
-    this.component.setState({
+    this.formContext.setFieldState(this.field, {
       isValid: res.valid,
       isTouched: true,
       isValidated: true,
       isValidating: false,
-      message: extractMessageFromResult(res, ref)
-    }, () => {
-      this.component.emitter.emit(ref.path, new events.ValidatedEvent())
+      message: extractMessageFromResult(res, this.field.ref())
     })
+
+    this.field.emit(this.field.ref().path, new events.FieldValidatedEvent())
 
     return res
   }
 
   focus () {
-    this.component.inputRef.current
-    && this.component.inputRef.current.focus
-    && this.component.inputRef.current.focus()
+    this.field.focus()
   }
 
   markAsTouched (): this {
-    this.component.setState({
+    this.formContext.setFieldState(this.field, {
       isTouched: true,
       isPristine: false
     })
+
+    this.field.emit(this.field.ref().path, new events.StateChangedEvent())
 
     return this
   }
 
   markAsPristine (): this {
-    this.component.setState({
+    this.formContext.setFieldState(this.field, {
       isTouched: false,
       isValidated: false,
       isDirty: false,
       isPristine: true
     })
 
-    this.component.emitter.emit(this.component.ref.path, new events.InvalidatedEvent())
+    this.field.emit(this.field.ref().path, new events.FieldInvalidatedEvent())
 
     return this
   }
 
   markAsDirty (): this {
-    this.component.setState({
+    this.formContext.setFieldState(this.field, {
       isTouched: true,
       isDirty: true,
       isPristine: false
     })
 
+    this.field.emit(this.field.ref().path, new events.StateChangedEvent())
+
     return this
   }
 
   markAsInvalidated (): this {
-    this.component.setState({
+    this.formContext.setFieldState(this.field, {
       isValidated: false
-    }, () => {
-      this.component.emitter.emit(this.component.ref.path, new events.InvalidatedEvent())
     })
+
+    this.field.emit(this.field.ref().path, new events.FieldInvalidatedEvent())
 
     return this
   }
 
-  get isRequired (): boolean {
-    return this.component.state.isRequired
-  }
-
-  get isReadonly (): boolean {
-    return this.component.state.isReadonly
-  }
-
   get messageDescription (): string | undefined {
-    const message = this.component.state.isValidated ? this.component.state.message : undefined
-
-    return message && this.component.options.descriptionResolver(message)
+    return this.formContext.getMessageDescription(this.field)
   }
 }
 
-const DEFAULT_STATE: IFieldState = {
-  isValid: false,
-  isValidating: false,
-  isValidated: false,
-  isPristine: true,
-  isTouched: false,
-  isDirty: false,
-  isRequired: false,
-  isReadonly: false
-}
-
-const DEFAULT_OPTIONS: OptionsContextValue = {
-  validatorOptions: DEFAULT_VALIDATOR_OPTIONS,
-  descriptionResolver: DEFAULT_DESCRIPTION_RESOLVER
-}
-
-type ComponentProps = {
-  fieldRef?: (field: FieldApi) => void
-  render: (field: FieldApi, inputRef: RefObject<any>) => React.ReactNode
+type FieldProps = {
+  render: (field: FieldApi, inputRef: RefObject<any>) => React.ReactElement
   path: types.Path
   schema: types.ISchema
 }
 
-type ComponentPropsWithContexts = ComponentProps & {
-  formContext: FormContextValue
-  scopeContext: ScopeContextValue
-  emitterContext: EmitterContextValue
-  optionsContext: OptionsContextValue
-}
+export default function Field ({render, path, schema}: FieldProps) {
+  const [, update] = useState({})
+  const formContext = useContext(FormContext)
+  const emitterContext = useContext(EmitterContext)
+  const scopeContext = useContext(ScopeContext)
+  useContext(UpdaterContext)
 
-class FieldComponent extends React.Component<ComponentPropsWithContexts, IFieldState> {
-  path: types.Path
-  schema: types.ISchema
-  ref: EmittingRef
-  validator: Validator
-  api: FieldApi
-  emitter: EventEmitter2
-  inputRef: RefObject<any>
-  listeners: Listener[]
-  options: OptionsContextValue
-  initiated: boolean
+  if (!emitterContext) {
+    throw new Error('Field - EmitterContext must be provided')
+  }
 
-  constructor (props: ComponentPropsWithContexts) {
-    super(props)
+  if (!formContext) {
+    throw new Error('Field - FormContext must be provided')
+  }
 
-    const {
-      path, schema, formContext, scopeContext, emitterContext, optionsContext, fieldRef
-    } = props
+  if (!_isPlainObject(schema)) {
+    throw new Error('Field - a schema object is not provided')
+  }
 
-    if (!formContext) {
-      throw new Error('Received invalid formContext')
-    }
+  const inputRef = useRef<any>()
+  const isInitiatedRef = useRef(false)
+  const emitterRef = useRef<EventEmitter2>(emitterContext.emitter)
+  const dataRef = useRef<types.IRef>(null as any)
 
-    if (!emitterContext) {
-      throw new Error('Received invalid emitterContext')
-    }
+  const _schema = useMemo(() => schema, [])
 
-    if (!schema) {
-      throw new Error('Schema is not provided')
-    }
-
+  const _path = useMemo(() => {
     if (scopeContext) {
-      this.path = utils.resolvePath(path, scopeContext.scope)
+      return utils.resolvePath(path, scopeContext.scope)
     } else {
-      this.path = utils.resolvePath(path, '/')
+      return utils.resolvePath(path, '/')
     }
+  }, [])
 
-    this.schema = schema
-    this.emitter = emitterContext.emitter
-    this.options = optionsContext || DEFAULT_OPTIONS
-    this.ref = new EmittingRef(formContext.dataStorage, this.path, this.emitter)
-    this.validator = new Validator(this.schema, this.options.validatorOptions)
-    this.api = new FieldApi(this)
-    this.inputRef = createRef()
-    this.listeners = []
-    this.initiated = false
+  const _validator = useMemo(() => {
+    return new Validator(_schema, formContext.options.validatorOptions)
+  }, [])
 
-    this._connectToEmitter()
+  useMemo(
+    () => dataRef.current = new EmittingRef(formContext.dataStorage, _path, emitterContext.emitter),
+    [formContext.dataStorage, emitterContext.emitter]
+  )
 
-    if (fieldRef) {
-      fieldRef(this.api)
-    }
+  // set default value silently using "default" keyword of the schema if it exists
+  useMemo(
+    () => {
+      const ref = new Ref(formContext.dataStorage, _path)
 
-    this.state = {
-      ...DEFAULT_STATE,
-      isRequired: !!schema.presence,
-      isReadonly: !!schema.readonly
-    }
-  }
-
-  componentDidMount () {
-    this._initiateField()
-  }
-
-  shouldComponentUpdate (nextProps: ComponentPropsWithContexts, nextState: IFieldState) {
-    return nextState !== this.state
-      || nextProps.formContext !== this.props.formContext
-      || nextProps.optionsContext !== this.props.optionsContext
-      || nextProps.emitterContext !== this.props.emitterContext
-  }
-
-  getSnapshotBeforeUpdate (prevProps) {
-    if (prevProps.formContext !== this.props.formContext || prevProps.emitterContext !== this.props.emitterContext) {
-      if (prevProps.emitterContext !== this.props.emitterContext) {
-        // clean old emitter
-        this.emitter.emit(this.path, new events.UnregisterFieldEvent(this.api))
-
-        this.listeners.forEach((listener) => listener.off())
+      if (ref.value === undefined && _schema.default !== undefined) {
+        ref.value = _schema.default
       }
+    },
+    [formContext.dataStorage]
+  )
 
-      // update the ref
-      this.emitter = this.props.emitterContext.emitter
-      this.ref = new EmittingRef(this.props.formContext.dataStorage, this.path, this.emitter)
+  useMemo(() => {
+    emitterRef.current = emitterContext.emitter
+  }, [emitterContext])
+
+  useLayoutEffect(() => {
+    // subscribe to the root emitter
+    const listener = formContext.emitter.on(_path, (/* event: events.BaseEvent */) => {
+      update({})
+    }, {objectify: true}) as Listener
+
+    return () => {
+      listener.off()
     }
+  }, [formContext.emitter])
 
-    if (prevProps.emitterContext !== this.props.emitterContext) {
-      // connect to new emitter
-      this.listeners = []
-
-      this._connectToEmitter()
-    }
-
-    return null
-  }
-
-  componentDidUpdate (prevProps: Readonly<ComponentPropsWithContexts>, prevState: Readonly<IFieldState>, snapshot?: any) {
-    // if (prevProps.formContext !== this.props.formContext || prevProps.emitterContext !== this.props.emitterContext) {
-    //   if (prevProps.emitterContext !== this.props.emitterContext) {
-    //     // emit unregistered event and free old emitter
-    //     this.emitter.emit(this.path, new events.UnregisterFieldEvent(this.api))
-    //
-    //     this.listeners.forEach((listener) => listener.off())
-    //   }
-    //
-    //   // update the ref
-    //   this.emitter = this.props.emitterContext.emitter
-    //   this.ref = new EmittingRef(this.props.formContext.dataStorage, this.path, this.emitter)
-    // }
-    //
-    // if (prevProps.emitterContext !== this.props.emitterContext) {
-    //   // connect to new emitter
-    //   this.listeners = []
-    //
-    //   this._connectToEmitter()
-    // }
-
-    if (prevProps.formContext !== this.props.formContext) {
-      // data context changed - the form has been reset
-      // have to init the field
-      this.setState({
-        ...DEFAULT_STATE,
-        isRequired: !!this.schema.presence,
-        isReadonly: !!this.schema.readonly
-      }, () => this.emitter.emit(this.path, new events.InvalidatedEvent()))
-
-      this._initiateField()
-    }
-
-    if (prevProps.optionsContext !== this.props.optionsContext) {
-      this.options = this.props.optionsContext || DEFAULT_OPTIONS
-
-      if (prevProps.optionsContext && this.props.optionsContext) {
-        if (prevProps.optionsContext.validatorOptions !== this.props.optionsContext.validatorOptions) {
-          // default validator options changed - update validator
-          this.validator = new Validator(this.schema, this.options.validatorOptions)
-
-          if (this.state.isValidated) {
-            this.api.validate().catch((e) => { throw e })
-          } else {
-            this.validator.validateRef(this.ref).catch((e) => { throw e })
-          }
-
-          this._processResolveSchema()
+  const field: IField = useMemo(() => {
+    return {
+      schema: _schema,
+      ref: () => dataRef.current,
+      emit: (path, event) => emitterRef.current.emit(path, event),
+      validate: () => _validator.validateRef(dataRef.current),
+      focus () {
+        inputRef.current && inputRef.current.focus && inputRef.current.focus()
+      },
+      async init () {
+        if (isInitiatedRef.current) {
+          return
         }
 
-        if (prevProps.optionsContext.descriptionResolver !== this.props.optionsContext.descriptionResolver) {
-          // localization changed - revalidate if needed and refresh field
-          if (this.state.isValidated) {
-            this.emitter.emit(this.path, new events.ValidatedEvent())
-          }
-          this.forceUpdate()
-        }
-      }
-    }
-  }
+        const res = await _validator.validateRef(dataRef.current)
 
-  componentWillUnmount () {
-    this.emitter.emit(this.path, new events.UnregisterFieldEvent(this.api))
-
-    this.listeners.forEach((listener) => listener.off())
-  }
-
-  render () {
-    return this.props.render(this.api, this.inputRef)
-  }
-
-  protected _initiateField () {
-    this.validator.validateRef(this.ref)
-      .then(() => {
-        this.initiated = true
-      })
-      .catch((e) => { throw e })
-
-    this._processResolveSchema()
-  }
-
-  protected _connectToEmitter () {
-    this.emitter.emit(this.path, new events.RegisterFieldEvent(this.api))
-
-    this.listeners.push(this.emitter.on(this.path, (event: events.BaseEvent) => {
-      switch (event.type) {
-        case events.ValueChangedEvent.TYPE:
-          this.initiated && this.setState({})
-          break
-      }
-    }, { objectify: true }) as Listener)
-  }
-
-  /**
-   * If the field schema contains the "resolveSchema" keyword,
-   * try to resolve it and update isRequired, isReadonly states.
-   * If the "resolveSchema" keyword depends on the values of other fields,
-   * subscribe to those fields and recalculate each time the value changes.
-   */
-  protected _processResolveSchema () {
-    const resolveSchema = this.schema.resolveSchema
-
-    if (resolveSchema) {
-      const trackingRef = new TrackingRef(this.props.formContext.dataStorage, this.ref.path)
-
-      Promise.resolve(resolveSchema(trackingRef))
-        .then((initiallyResolvedSchema) => {
-          // resolves schema and applies state changes
-          const handler = async (event: events.BaseEvent) => {
-            if (event instanceof events.ValueChangedEvent) {
-              const resolvedSchema = await resolveSchema(this.ref)
-              const [isRequired, isReadonly] = this._extractMetadata(resolvedSchema)
-
-              if (this.state.isValidated) {
-                this.setState({ isValidating: true })
-
-                const res = await this.validator.validateRef(this.ref)
-
-                this.setState({
-                  isRequired,
-                  isReadonly,
-                  isValid: res.valid,
-                  isValidating: false,
-                  message: extractMessageFromResult(res, this.ref)
-                }, () => {
-                  this.emitter.emit(this.ref.path, new events.ValidatedEvent())
-                })
-              } else if (isRequired !== this.state.isRequired || isReadonly !== this.state.isReadonly) {
-                this.setState({ isRequired, isReadonly })
-              }
-            }
-          }
-
-          // subscribe to the props that affects resolvedSchema keyword
-          trackingRef.propsToTrack.forEach((path) => {
-            this.listeners.push(this.emitter.on(path, handler, { objectify: true }) as Listener)
-          })
-
-          // apply an initial state of the resolved schema
-          const [isRequired, isReadonly] = this._extractMetadata(initiallyResolvedSchema)
-
-          if (isRequired !== this.state.isRequired || isReadonly !== this.state.isReadonly) {
-            this.setState({ isRequired, isReadonly })
-          }
-        }).catch((e) => {
-          throw e
+        formContext.setFieldState(field, {
+          ...extractStateFromSchema(_schema),
+          isValid: res.valid,
+          message: extractMessageFromResult(res, dataRef.current)
         })
+
+        isInitiatedRef.current = true
+      }
     }
-  }
+  }, [])
 
-  protected _extractMetadata (schema: types.ISchema): [isRequired: boolean, isReadonly: boolean] {
-    const isRequired = typeof schema.presence === 'boolean'
-      ? schema.presence : !!this.schema.presence
-    const isReadonly = typeof schema.readonly === 'boolean'
-      ? schema.readonly : !!this.schema.readonly
+  useLayoutEffect(() => {
+    emitterContext.emitter.emit(_path, new events.RegisterFieldEvent(field))
+  }, [emitterContext, field])
 
-    return [isRequired, isReadonly]
-  }
+  const fieldApi: FieldApi = useMemo(() => {
+    return new FieldApi(field, formContext)
+  }, [formContext, field])
+
+  useEffect(() => {
+    return () => {
+      emitterRef.current.emit(_path, new events.UnregisterFieldEvent(field))
+    }
+  }, [])
+
+  return render(fieldApi as any, inputRef)
 }
-
-export default (props: ComponentProps) => (
-  <FormContext.Consumer>
-    {(formContext) => (
-      <ScopeContext.Consumer>
-        {(scopeContext) => (
-          <EmitterContext.Consumer>
-            {(emitterContext) => (
-              <OptionsContext.Consumer>
-                {(optionsContext) => <FieldComponent
-                  {...props}
-                  formContext={formContext as any}
-                  scopeContext={scopeContext as any}
-                  emitterContext={emitterContext as any}
-                  optionsContext={optionsContext as any}
-                />}
-              </OptionsContext.Consumer>
-            )}
-          </EmitterContext.Consumer>
-        )}
-      </ScopeContext.Consumer>
-    )}
-  </FormContext.Consumer>
-)

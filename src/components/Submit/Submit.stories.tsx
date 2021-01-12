@@ -21,7 +21,7 @@ function RequiredField () {
           label="Name"
           validateStatus={getValidationStatus(field)}
           help={field.messageDescription}
-          required={field.isRequired}
+          required={field.state.isRequired}
         >
           <Input
             ref={inputRef}

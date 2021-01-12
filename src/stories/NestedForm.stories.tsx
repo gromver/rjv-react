@@ -1,6 +1,5 @@
 import React from 'react'
-import { types } from 'rjv'
-import { Form, Input, Alert, Button, Card } from 'antd'
+import { Form, Input, Button, Card } from 'antd'
 import { storiesOf } from '@storybook/react'
 import { getValidationStatus, SubmitBtn, ShowErrors } from './helpers'
 import {
@@ -26,10 +25,10 @@ function NodeWrapper ({ children }) {
   return <Card style={{ paddingLeft: 40, marginBottom: 15, width: 500 }}>{children}</Card>
 }
 
-function renderNode (nodeRef: types.IRef, getField: (path?: string) => FieldApi | undefined) {
+function renderNode (path: string, value: any) {
   return <Scope
-    key={`key_${nodeRef.value.__id}`}
-    path={nodeRef.path}
+    key={`key_${value.__id}`}
+    path={path}
   >
     <NodeWrapper>
       <Field
@@ -40,7 +39,7 @@ function renderNode (nodeRef: types.IRef, getField: (path?: string) => FieldApi 
               label="Name"
               validateStatus={getValidationStatus(field)}
               help={field.messageDescription}
-              required={field.isRequired}
+              required={field.state.isRequired}
             >
               <Input
                 ref={inputRef}
@@ -64,18 +63,20 @@ function renderNode (nodeRef: types.IRef, getField: (path?: string) => FieldApi 
         render={(field) => {
           const nodesValues = field.value
 
-          return nodesValues
-            ? nodesValues.map((item, index) => renderNode(field.ref.ref(`${index}`), getField))
-            : null
+          return <>
+            {nodesValues
+              ? nodesValues.map((item, index) => renderNode(`${field.ref.path}/${index}`, nodesValues[index]))
+              : null}
+
+            <CreateNodeForm nodesField={field} />
+          </>
         }}
       />
-
-      <CreateNodeForm nodeRef={nodeRef} getField={getField} />
     </NodeWrapper>
   </Scope>
 }
 
-function CreateNodeForm ({ nodeRef, getField }: { nodeRef: types.IRef, getField: any }) {
+function CreateNodeForm ({ nodesField }: { nodesField: FieldApi }) {
   return <FormProvider data={{}}>
     <Form layout="inline">
       <Field
@@ -89,12 +90,13 @@ function CreateNodeForm ({ nodeRef, getField }: { nodeRef: types.IRef, getField:
               label="New node name"
               validateStatus={getValidationStatus(field)}
               help={field.messageDescription}
-              required={field.isRequired}
+              required={field.state.isRequired}
             >
               <Input
                 ref={inputRef}
                 value={field.value}
                 onChange={(e) => field.value = e.target.value}
+                onBlur={() => field.validate()}
               />
             </Form.Item>
           )
@@ -103,10 +105,9 @@ function CreateNodeForm ({ nodeRef, getField }: { nodeRef: types.IRef, getField:
 
       <Submit
         onSuccess={(data) => {
-          const subNodesField = getField(nodeRef.ref('nodes').path)
-          const nodes = subNodesField.value || []
+          const nodes = nodesField.value || []
 
-          subNodesField.value = [
+          nodesField.value = [
             ...nodes,
             { __id: ++nodeId, name: data.new }
           ]
@@ -123,7 +124,7 @@ function NestedSchemaForm () {
       <ErrorProvider>
         <ShowErrors />
 
-        <Watch props={[]} render={(getRef, getField) => renderNode(getRef('/'), getField)} />
+        <Watch props={[]} render={(getValue) => renderNode('/', getValue('/'))} />
 
         <SubmitBtn />
       </ErrorProvider>

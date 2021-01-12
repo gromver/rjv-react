@@ -19,7 +19,7 @@ storiesOf('Field', module)
                 label="Value"
                 validateStatus={getValidationStatus(field)}
                 help={field.messageDescription}
-                required={field.isRequired}
+                required={field.state.isRequired}
                 hasFeedback
               >
                 <Input
@@ -49,7 +49,7 @@ storiesOf('Field', module)
                 label="Value #1 (presence)"
                 validateStatus={getValidationStatus(field)}
                 help={field.messageDescription}
-                required={field.isRequired}
+                required={field.state.isRequired}
               >
                 <Input
                   ref={inputRef}
@@ -71,7 +71,7 @@ storiesOf('Field', module)
                 label="Value #2 (email)"
                 validateStatus={getValidationStatus(field)}
                 help={field.messageDescription}
-                required={field.isRequired}
+                required={field.state.isRequired}
               >
                 <Input
                   ref={inputRef}
@@ -108,7 +108,7 @@ storiesOf('Field', module)
                 label="User name"
                 validateStatus={getValidationStatus(field)}
                 help={field.messageDescription || 'Should not be "admin"'}
-                required={field.isRequired}
+                required={field.state.isRequired}
                 hasFeedback
               >
                 <Input
@@ -138,7 +138,7 @@ storiesOf('Field', module)
                 label="Email required?"
                 validateStatus={getValidationStatus(field)}
                 help={field.messageDescription}
-                required={field.isRequired}
+                required={field.state.isRequired}
               >
                 <Select
                   ref={inputRef}
@@ -176,7 +176,7 @@ storiesOf('Field', module)
                 label="Email"
                 validateStatus={getValidationStatus(field)}
                 help={field.messageDescription}
-                required={field.isRequired}
+                required={field.state.isRequired}
               >
                 <Input
                   ref={inputRef}
@@ -184,7 +184,7 @@ storiesOf('Field', module)
                   onFocus={() => field.markAsTouched()}
                   onChange={(e) => field.value = e.target.value}
                   onBlur={() => field.validate()}
-                  readOnly={field.isReadonly}
+                  readOnly={field.state.isReadonly}
                 />
               </Form.Item>
             )
@@ -206,7 +206,7 @@ storiesOf('Field', module)
                 label="Field readonly?"
                 validateStatus={getValidationStatus(field)}
                 help={field.messageDescription}
-                required={field.isRequired}
+                required={field.state.isRequired}
               >
                 <Select
                   ref={inputRef}
@@ -243,15 +243,15 @@ storiesOf('Field', module)
                 label="Field"
                 validateStatus={getValidationStatus(field)}
                 help={field.messageDescription}
-                required={field.isRequired}
+                required={field.state.isRequired}
               >
                 <Input
                   ref={inputRef}
                   value={field.value}
                   onFocus={() => field.markAsTouched()}
                   onChange={(e) => field.value = e.target.value}
-                  onBlur={() => !field.isReadonly && field.validate()}
-                  readOnly={field.isReadonly}
+                  onBlur={() => !field.state.isReadonly && field.validate()}
+                  readOnly={field.state.isReadonly}
                 />
               </Form.Item>
             )
@@ -267,19 +267,19 @@ storiesOf('Field', module)
       <FormProvider data={{}}>
         <Field
           schema={{
-            default: "",
+            default: '',
             presence: true,
-            format: "email",
+            format: 'email',
             errors: {
-              format: "Type correct email please!"
+              format: 'Type correct email please!'
             }
           }}
           path="email"
-          render={field => (
+          render={(field) => (
             <div>
               <input
                 value={field.value}
-                onChange={e => (field.markAsDirty().value = e.target.value)}
+                onChange={(e) => (field.markAsDirty().value = e.target.value)}
                 onBlur={() => field.validate()}
                 placeholder="Email"
               />
@@ -289,19 +289,19 @@ storiesOf('Field', module)
         />
         <Field
           schema={{
-            default: "",
+            default: '',
             presence: true,
             not: {
-              const: "admin"
+              const: 'admin'
             },
-            errors: { not: "Should not be admin" }
+            errors: { not: 'Should not be admin' }
           }}
           path="username"
-          render={field => (
+          render={(field) => (
             <div>
               <input
                 value={field.value}
-                onChange={e => (field.markAsDirty().value = e.target.value)}
+                onChange={(e) => (field.markAsDirty().value = e.target.value)}
                 onBlur={() => field.validate()}
                 placeholder="Username"
               />
@@ -314,4 +314,3 @@ storiesOf('Field', module)
     </div>
     )
   })
-

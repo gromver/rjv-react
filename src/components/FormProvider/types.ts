@@ -1,4 +1,5 @@
-import { types } from 'rjv'
+import { types, ValidationMessage } from 'rjv'
+import { BaseEvent } from '../EmitterProvider/events'
 
 export interface IFieldState {
   isValid: boolean,
@@ -9,15 +10,15 @@ export interface IFieldState {
   isDirty: boolean,
   isRequired: boolean,
   isReadonly: boolean,
-  message?: any
+  message?: ValidationMessage
 }
 
-export interface IFieldApi {
-  value: any
-  state: IFieldState
-  ref: types.IRef
-  messageDescription: string | undefined
+export interface IField {
+  schema: types.ISchema,
+  ref (): types.IRef,
+  emit (path: string, Event: BaseEvent): void,
   validate (): Promise<types.IValidationResult>
+  init (): Promise<void>
   focus (): void
 }
 
@@ -26,5 +27,5 @@ export type ValidationErrors = {path: string, message: string}[]
 export type SubmitFormFn = () => Promise<{
   valid: boolean
   data?: any
-  firstErrorField?: IFieldApi
+  firstErrorField?: IField
 }>

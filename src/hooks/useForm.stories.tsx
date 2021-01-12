@@ -69,7 +69,7 @@ storiesOf('useForm', module)
               label="Name"
               validateStatus={getValidationStatus(field)}
               help={field.messageDescription}
-              required={field.isRequired}
+              required={field.state.isRequired}
             >
               <Input
                 ref={inputRef}

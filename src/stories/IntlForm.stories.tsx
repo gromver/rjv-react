@@ -83,7 +83,7 @@ function IntlForm () {
                     label="Field"
                     validateStatus={getValidationStatus(field)}
                     help={field.messageDescription}
-                    required={field.isRequired}
+                    required={field.state.isRequired}
                   >
                     <Input
                       value={field.value}

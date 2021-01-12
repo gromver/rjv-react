@@ -21,7 +21,7 @@ function InputField ({ path }: Props) {
           label={path}
           validateStatus={getValidationStatus(field)}
           help={field.messageDescription}
-          required={field.isRequired}
+          required={field.state.isRequired}
           hasFeedback
         >
           <Input

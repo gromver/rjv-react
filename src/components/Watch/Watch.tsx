@@ -12,14 +12,13 @@ import { types, utils } from 'rjv'
 import { Listener } from 'eventemitter2'
 import { ScopeContext } from '../Scope'
 import { FormContext } from '../FormProvider'
-import { FieldApi } from '../Field'
-import { EmitterContext, events } from '../EmitterProvider'
+import { events } from '../EmitterProvider'
 import { ReadonlyRef } from '../../refs'
 
 const allowedEvents = [
   events.ValueChangedEvent.TYPE,
-  events.InvalidatedEvent.TYPE,
-  events.ValidatedEvent.TYPE,
+  events.FieldInvalidatedEvent.TYPE,
+  events.FieldValidatedEvent.TYPE,
   events.RegisterFieldEvent.TYPE,
   events.UnregisterFieldEvent.TYPE
 ] as const
@@ -27,8 +26,8 @@ const allowedEvents = [
 type EventTypeList = typeof allowedEvents[number][]
 
 type WatchRenderFn = (
-  getRef: (path?: types.Path) => ReadonlyRef,
-  getField: (path?: types.Path) => FieldApi | undefined
+  ...args: any
+  // getValue: (path?: types.Path) => any
 ) => ReactElement | null
 
 type Props = {
@@ -51,44 +50,60 @@ const DEFAULT_EVENT_TYPES: EventTypeList = [events.ValueChangedEvent.TYPE]
 export default function Watch ({ render, props, events = DEFAULT_EVENT_TYPES, debounce = 0 }: Props) {
   const [, update] = useState<events.BaseEvent>()
   const formContext = useContext(FormContext)
-  const emitterContext = useContext(EmitterContext)
+  // const emitterContext = useContext(EmitterContext)
   const scopeContext = useContext(ScopeContext)
 
-  const ref = useMemo(() => {
-    if (formContext) {
-      return new ReadonlyRef(formContext.dataStorage, '/')
-    }
+  if (!formContext) {
+    throw new Error('Watch - FormContext must be provided')
+  }
 
-    throw new Error('formContext doesn\'t exists')
-  }, [formContext])
+  // if (!emitterContext) {
+  //   throw new Error('Watch - EmitterContext must be provided')
+  // }
 
-  const getField = useMemo(() => {
-    if (formContext) {
-      return (fieldPath: types.Path = ''): FieldApi | undefined => {
-        const path = scopeContext
+  const ref = useMemo(() => new ReadonlyRef(formContext.dataStorage, '/'), [formContext.dataStorage])
+
+  // const getField = useMemo(() => {
+  //   if (formContext) {
+  //     return (fieldPath: types.Path = ''): IField | undefined => {
+  //       const path = scopeContext
+  //       ? utils.resolvePath(fieldPath, scopeContext.scope)
+  //       : utils.resolvePath(fieldPath, '/')
+  //
+  //       return formContext.getField(path)
+  //     }
+  //   }
+  //
+  //   throw new Error('formContext doesn\'t exists')
+  // }, [formContext])
+
+  // const getRef = useMemo(() => {
+  //   return (fieldPath: types.Path = ''): ReadonlyRef => {
+  //     const path = scopeContext
+  //     ? utils.resolvePath(fieldPath, scopeContext.scope)
+  //     : utils.resolvePath(fieldPath, '/')
+  //
+  //     return ref.ref(path)
+  //   }
+  // }, [ref])
+
+  const getValue = useMemo(() => {
+    return (fieldPath: types.Path): any => {
+      const path = scopeContext
         ? utils.resolvePath(fieldPath, scopeContext.scope)
         : utils.resolvePath(fieldPath, '/')
 
-        return formContext.getField(path) as FieldApi
-      }
-    }
-
-    throw new Error('formContext doesn\'t exists')
-  }, [formContext])
-
-  const getRef = useMemo(() => {
-    return (fieldPath: types.Path = ''): ReadonlyRef => {
-      const path = scopeContext
-      ? utils.resolvePath(fieldPath, scopeContext.scope)
-      : utils.resolvePath(fieldPath, '/')
-
-      return ref.ref(path)
+      return ref.ref(path).value
     }
   }, [ref])
 
   const watchProps = useMemo(() => {
     return props.map((path) => utils.resolvePath(path, scopeContext?.scope || '/'))
   }, [])
+
+  const watchRefs = useMemo(() => {
+    return watchProps.map((path) => ref.ref(path))
+  }, [ref])
 
   const watchEvents: string[] = useMemo(() => {
     return events
@@ -99,11 +114,11 @@ export default function Watch ({ render, props, events = DEFAULT_EVENT_TYPES, de
   }, [])
 
   useEffect(() => {
-    if (emitterContext?.emitter && watchProps.length) {
+    if (watchProps.length) {
       const listeners: Listener[] = []
 
       watchProps.forEach((path) => {
-        const listener = emitterContext.emitter
+        const listener = formContext.emitter
           .on(path, (event: events.BaseEvent) => {
             if (watchEvents.length) {
               watchEvents.includes(event.type) && handleUpdate(event)
@@ -118,7 +133,9 @@ export default function Watch ({ render, props, events = DEFAULT_EVENT_TYPES, de
         listeners.forEach((listener) => listener.off())
       }
     }
-  }, [emitterContext, watchProps])
+  }, [formContext.emitter, watchProps])
 
-  return render(getRef, getField)
+  const args = watchRefs.map((item) => item.value)
+
+  return render(...args, getValue)
 }

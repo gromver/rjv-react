@@ -4,31 +4,26 @@
  *
  */
 
-import React, { useMemo, memo } from 'react'
+import React, { useMemo, memo, useContext } from 'react'
 import { utils, types } from 'rjv'
-import ScopeContext, { ScopeContextValue } from './ScopeContext'
-import FormContext, { FormContextValue } from '../FormProvider/FormContext'
+import ScopeContext from './ScopeContext'
+import FormContext from '../FormProvider/FormContext'
 
-type PropsPartial = {
+type Props = {
   path: types.Path
   children: React.ReactNode
 }
 
-type Props = PropsPartial & {
-  formContext?: FormContextValue
-  scopeContext?: ScopeContextValue
-}
-
 const Scope = memo<Props>((props: Props) => {
-  const { path, children, scopeContext } = props
+  const { path, children } = props
 
-  const formContext = useMemo(() => {
-    if (!props.formContext) {
-      throw new Error('Received invalid formContext')
-    }
+  const formContext = useContext(FormContext)
 
-    return props.formContext
-  }, [props.formContext])
+  if (!formContext) {
+    throw new Error('Scope - FormContext must be provided')
+  }
+
+  const scopeContext = useContext(ScopeContext)
 
   const context = useMemo(() => {
     if (scopeContext) {
@@ -49,12 +44,4 @@ const Scope = memo<Props>((props: Props) => {
   </ScopeContext.Provider>
 })
 
-export default (props: PropsPartial) => (
-  <FormContext.Consumer>
-    {(formContext) => (
-      <ScopeContext.Consumer>
-        {(scopeContext) => <Scope {...props} formContext={formContext} scopeContext={scopeContext} />}
-      </ScopeContext.Consumer>
-    )}
-  </FormContext.Consumer>
-)
+export default Scope

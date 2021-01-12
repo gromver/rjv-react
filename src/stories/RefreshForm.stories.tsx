@@ -28,7 +28,7 @@ storiesOf('Form', module)
                     label="Name"
                     validateStatus={getValidationStatus(field)}
                     help={field.messageDescription}
-                    required={field.isRequired}
+                    required={field.state.isRequired}
                   >
                     <Input
                       value={field.value}
@@ -53,11 +53,12 @@ storiesOf('Form', module)
                     label="Email"
                     validateStatus={getValidationStatus(field)}
                     help={field.messageDescription}
-                    required={field.isRequired}
+                    required={field.state.isRequired}
                   >
                     <Input
                       value={field.value}
                       onChange={(e) => field.value = e.target.value}
+                      onBlur={() => field.validate()}
                     />
                   </Form.Item>
                 )

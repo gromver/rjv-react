@@ -20,7 +20,7 @@ function InputField ({ path }: Props) {
           label={path}
           validateStatus={getValidationStatus(field)}
           help={field.messageDescription}
-          required={field.isRequired}
+          required={field.state.isRequired}
           hasFeedback
         >
           <Input
@@ -53,16 +53,17 @@ storiesOf('Watch', module)
             <h4>Watch: '/a', '/b', '/obj/*'</h4>
             <Watch
               props={['/a', '/b', '/obj/*']}
-              render={(getRef) => <div>
-                {JSON.stringify(getRef('/').value)}
+              render={(...args) => <div>
+                {JSON.stringify(args)}
               </div>}
             />
             <br />
             <h4>Watch: '/obj/**'</h4>
             <Watch
               props={['/obj/**']}
-              render={(getRef) => <div>
-                {JSON.stringify(getRef('obj').value)}
+              render={(obj, getValue) => <div>
+                {JSON.stringify(obj)}
+                {JSON.stringify(getValue('/obj'))}
               </div>}
             />
             <br />
@@ -70,8 +71,8 @@ storiesOf('Watch', module)
               <h4>Watch from scope /obj: '**', '../a'</h4>
               <Watch
                 props={['**', '../a']}
-                render={(getRef) => <div>
-                  {JSON.stringify(getRef('/').value)}
+                render={(...args) => <div>
+                  {JSON.stringify(args)}
                 </div>}
               />
             </Scope>
@@ -80,34 +81,33 @@ storiesOf('Watch', module)
       </FormProvider>
     </Form>
   })
-  .add('GetField', () => {
-    return <FormProvider data={{}}>
-      <InputField path="foo/bar" />
-
-      <Watch
-        props={['**']}
-        render={(ref, getField) => {
-          const field = getField('foo/bar')
-
-          return <div>Value: {field!.value}</div>
-        }}
-      />
-    </FormProvider>
-  })
-  .add('GetField with scope', () => {
-    return <FormProvider data={{}}>
-      <InputField path="foo/bar" />
-
-      <Scope path="foo">
-        <Watch
-          props={['bar']}
-          render={(ref, getField) => {
-            const field = getField('bar')
-
-            return <div>Value: {field!.value}</div>
-          }}
-        />
-      </Scope>
-    </FormProvider>
-  })
-
+  // .add('GetField', () => {
+  //   return <FormProvider data={{}}>
+  //     <InputField path="foo/bar" />
+  //
+  //     <Watch
+  //       props={['**']}
+  //       render={(ref, getField) => {
+  //         const field = getField('foo/bar')
+  //
+  //         return <div>Value: {field!.value}</div>
+  //       }}
+  //     />
+  //   </FormProvider>
+  // })
+  // .add('GetField with scope', () => {
+  //   return <FormProvider data={{}}>
+  //     <InputField path="foo/bar" />
+  //
+  //     <Scope path="foo">
+  //       <Watch
+  //         props={['bar']}
+  //         render={(ref, getField) => {
+  //           const field = getField('bar')
+  //
+  //           return <div>Value: {field!.value}</div>
+  //         }}
+  //       />
+  //     </Scope>
+  //   </FormProvider>
+  // })

@@ -24,8 +24,7 @@ storiesOf('Visible', module)
                     label={'Select is visible'}
                     validateStatus={getValidationStatus(field)}
                     help={field.messageDescription}
-                    required={field.isRequired}
-                    hasFeedback
+                    required={field.state.isRequired}
                   >
                     <Select
                       ref={inputRef}
@@ -63,8 +62,7 @@ storiesOf('Visible', module)
                     label={'Select is visible'}
                     validateStatus={getValidationStatus(field)}
                     help={field.messageDescription}
-                    required={field.isRequired}
-                    hasFeedback
+                    required={field.state.isRequired}
                   >
                     <Select
                       ref={inputRef}
@@ -103,8 +101,7 @@ storiesOf('Visible', module)
                 label={'Select is visible'}
                 validateStatus={getValidationStatus(field)}
                 help={field.messageDescription}
-                required={field.isRequired}
-                hasFeedback
+                required={field.state.isRequired}
               >
                 <Select
                   ref={inputRef}
@@ -133,8 +130,7 @@ storiesOf('Visible', module)
                   label="Email"
                   validateStatus={getValidationStatus(field)}
                   help={field.messageDescription}
-                  required={field.isRequired}
-                  hasFeedback
+                  required={field.state.isRequired}
                 >
                   <Input
                     ref={inputRef}
@@ -164,8 +160,7 @@ storiesOf('Visible', module)
                 label={'Select is visible'}
                 validateStatus={getValidationStatus(field)}
                 help={field.messageDescription}
-                required={field.isRequired}
-                hasFeedback
+                required={field.state.isRequired}
               >
                 <Select
                   ref={inputRef}
@@ -195,8 +190,7 @@ storiesOf('Visible', module)
                   label="Email"
                   validateStatus={getValidationStatus(field)}
                   help={field.messageDescription}
-                  required={field.isRequired}
-                  hasFeedback
+                  required={field.state.isRequired}
                 >
                   <Input
                     ref={inputRef}

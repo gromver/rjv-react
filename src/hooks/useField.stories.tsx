@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react'
+import React from 'react'
 import { storiesOf } from '@storybook/react'
 import { Form, Input } from 'antd'
 import { FormProvider } from '../components/FormProvider'
@@ -22,7 +22,7 @@ function InputField ({ path }: Props) {
           label={path}
           validateStatus={getValidationStatus(field)}
           help={field.messageDescription}
-          required={field.isRequired}
+          required={field.state.isRequired}
           hasFeedback
         >
           <Input
@@ -48,7 +48,7 @@ storiesOf('useField', module)
         render={() => {
           const field = useField('foo/bar')
 
-          return <div>Value: {field!.value}</div>
+          return <div>Value: {field?.ref().value}</div>
         }}
       />
     </FormProvider>
@@ -63,7 +63,7 @@ storiesOf('useField', module)
           render={() => {
             const field = useField('bar')
 
-            return <div>Value: {field!.value}</div>
+            return <div>Value: {field?.ref().value}</div>
           }}
         />
       </Scope>

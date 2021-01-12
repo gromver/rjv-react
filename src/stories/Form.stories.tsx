@@ -14,7 +14,7 @@ storiesOf('Form', module)
   })
 
 function SimpleForm () {
-  const [counter, setCounter] = useState(false)
+  const [visible, setVisible] = useState(false)
   const providerRef = useRef<FormProviderRef>(null)
 
   return (
@@ -32,10 +32,10 @@ function SimpleForm () {
           render={(field) => {
             return (
               <Form.Item
-                label="Name"
+                label="name"
                 validateStatus={getValidationStatus(field)}
                 help={field.messageDescription}
-                required={field.isRequired}
+                required={field.state.isRequired}
               >
                 <Input
                   value={field.value}
@@ -53,10 +53,10 @@ function SimpleForm () {
           render={(field) => {
             return (
               <Form.Item
-                label="Email"
+                label="email"
                 validateStatus={getValidationStatus(field)}
                 help={field.messageDescription}
-                required={field.isRequired}
+                required={field.state.isRequired}
               >
                 <Input
                   value={field.value}
@@ -68,17 +68,17 @@ function SimpleForm () {
         />
 
         <Field
-          path="test/3/dynamic"
+          path="test/3/nested"
           schema={{
             type: 'string', default: '', minLength: 5, presence: true, format: 'email'
           }}
           render={(field) => {
             return (
               <Form.Item
-                label="Dynamic"
+                label="test/3/nested"
                 validateStatus={getValidationStatus(field)}
                 help={field.messageDescription}
-                required={field.isRequired}
+                required={field.state.isRequired}
               >
                 <Input
                   value={field.value}
@@ -89,18 +89,18 @@ function SimpleForm () {
           }}
         />
 
-        {counter && <Field
-          path="someField"
+        {visible && <Field
+          path="additionalField"
           schema={{
             type: 'string', default: '', minLength: 2, presence: true
           }}
           render={(field) => {
             return (
               <Form.Item
-                label="Some Field"
+                label="additionalField"
                 validateStatus={getValidationStatus(field)}
                 help={field.messageDescription}
-                required={field.isRequired}
+                required={field.state.isRequired}
               >
                 <Input
                   value={field.value}
@@ -119,8 +119,9 @@ function SimpleForm () {
         >
           Submit
         </button>
-        <button onClick={() => setCounter(true)}>Show control</button>
-        <button onClick={() => setCounter(false)}>Hide control</button>
+        &nbsp;
+        {!visible && <button onClick={() => setVisible(true)}>Show additional</button>}
+        {visible && <button onClick={() => setVisible(false)}>Hide additional</button>}
       </FormProvider>
     </Form>
   )
