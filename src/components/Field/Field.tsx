@@ -14,7 +14,7 @@ import React, {
 } from 'react'
 import { utils, types, Validator, ValidationMessage, Ref } from 'rjv'
 import _isPlainObject from 'lodash/isPlainObject'
-import _isEqual from 'lodash/isEqual'
+import _isEqualWith from 'lodash/isEqualWith'
 import {
   FormContext,
   FormContextValue,
@@ -42,6 +42,12 @@ function extractStateFromSchema (schema: types.ISchema): Partial<IFieldState> {
   return { isRequired, isReadonly }
 }
 
+export function schemaEqualCustomizer (s1, s2) {
+  if (typeof s1 === 'function' && typeof s2 === 'function') {
+    return s1.toString() === s2.toString()
+  }
+}
+
 const DONT_UPDATE_ON_EVENTS = [events.RegisterFieldEvent.TYPE, events.UnregisterFieldEvent.TYPE]
 
 export class FieldApi {
@@ -66,7 +72,11 @@ export class FieldApi {
   }
 
   async validate (): Promise<types.IValidationResult> {
-    // todo manage isValidating state
+    this.formContext.setFieldState(this.field, {
+      isValidating: true
+    })
+    this.field.emit(this.field.ref().path, new events.StateChangedEvent())
+
     const res = await this.field.validate()
 
     this.formContext.setFieldState(this.field, {
@@ -171,7 +181,7 @@ export default function Field ({render, path, schema}: FieldProps) {
   const validatorRef = useRef<Validator>(null as any)
 
   const _schema = useMemo(() => {
-    if (!_isEqual(schemaRef.current, schema)) { // todo add compareSchemas fn
+    if (!_isEqualWith(schemaRef.current, schema, schemaEqualCustomizer)) {
       return schemaRef.current = schema
     }
 
