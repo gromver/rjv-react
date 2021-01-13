@@ -98,6 +98,7 @@ function FormProvider (props: Props, elRef: React.Ref<FormProviderRef>) {
   const updaterRef = useRef<FormUpdaterRef>(null)
   const emitterRef = useRef<EventEmitter2>()
   const fieldsRef = useRef<Map<IField, IFieldState>>(new Map())
+  const nextFieldsRef = useRef<Map<IField, IFieldState>>(new Map())
   const optionsRef = useRef<OptionsContextValue>()
 
   const [emitter, setEmitter] = useState(() => createEmitter())
@@ -108,13 +109,12 @@ function FormProvider (props: Props, elRef: React.Ref<FormProviderRef>) {
   }))
 
   const registerFieldHandler = useMemo(() => {
-    const curFieldsMap = fieldsRef.current
-    const fieldsMap = fieldsRef.current = new Map<IField, IFieldState>()
+    nextFieldsRef.current = new Map<IField, IFieldState>()
 
     const registerFieldHandler = (path: string, event: events.BaseEvent) => {
       // fields reconcile phase
       if (event instanceof events.RegisterFieldEvent) {
-        fieldsMap.set(event.field, curFieldsMap.get(event.field) ?? createDefaultStateFromSchema(event.field.schema))
+        nextFieldsRef.current.set(event.field, fieldsRef.current.get(event.field) ?? createDefaultStateFromSchema(event.field.schema()))
       }
     }
 
@@ -140,17 +140,8 @@ function FormProvider (props: Props, elRef: React.Ref<FormProviderRef>) {
         }
       })
 
-      // init registered fields
-      // console.time('initiating')
-      // Promise.all(
-      //   Array
-      //     .from(fieldsRef.current.keys())
-      //     .map((field) => field.init()))
-      //   .then(() => {
-      //     console.timeEnd('initiating')
-      //     updaterRef.current?.updateForm()
-      //   })
-      // updaterRef.current?.updateForm()
+      // apply reconciled fields map
+      fieldsRef.current = nextFieldsRef.current
     }
   }, [emitter, registerFieldHandler])
 
@@ -159,7 +150,7 @@ function FormProvider (props: Props, elRef: React.Ref<FormProviderRef>) {
       dataRef.current = data
 
       fieldsRef.current.forEach((state, field) => {
-        fieldsRef.current.set(field, createDefaultStateFromSchema(field.schema))
+        fieldsRef.current.set(field, createDefaultStateFromSchema(field.schema()))
       })
 
       setDataState({
@@ -179,7 +170,7 @@ function FormProvider (props: Props, elRef: React.Ref<FormProviderRef>) {
   }, [optionsContext])
 
   const getFieldState = useCallback((field: IField) => {
-    return fieldsRef.current.get(field) || createDefaultStateFromSchema(field.schema)
+    return fieldsRef.current.get(field) || createDefaultStateFromSchema(field.schema())
   }, [])
 
   const context = useMemo<FormContextValue>(() => ({

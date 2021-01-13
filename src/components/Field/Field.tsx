@@ -14,6 +14,7 @@ import React, {
 } from 'react'
 import { utils, types, Validator, ValidationMessage, Ref } from 'rjv'
 import _isPlainObject from 'lodash/isPlainObject'
+import _isEqual from 'lodash/isEqual'
 import {
   FormContext,
   FormContextValue,
@@ -41,6 +42,8 @@ function extractStateFromSchema (schema: types.ISchema): Partial<IFieldState> {
   return { isRequired, isReadonly }
 }
 
+const DONT_UPDATE_ON_EVENTS = [events.RegisterFieldEvent.TYPE, events.UnregisterFieldEvent.TYPE]
+
 export class FieldApi {
   constructor (private field: IField, private formContext: FormContextValue) {}
 
@@ -51,7 +54,7 @@ export class FieldApi {
   get value (): any {
     const value = this.field.ref().value
 
-    return value === undefined ? this.field.schema.default : value
+    return value === undefined ? this.field.schema().default : value
   }
 
   get state (): IFieldState {
@@ -63,6 +66,7 @@ export class FieldApi {
   }
 
   async validate (): Promise<types.IValidationResult> {
+    // todo manage isValidating state
     const res = await this.field.validate()
 
     this.formContext.setFieldState(this.field, {
@@ -162,8 +166,17 @@ export default function Field ({render, path, schema}: FieldProps) {
   const isInitiatedRef = useRef(false)
   const emitterRef = useRef<EventEmitter2>(emitterContext.emitter)
   const dataRef = useRef<types.IRef>(null as any)
+  const schemaRef = useRef<types.ISchema>(null as any)
+  const formRef = useRef<FormContextValue>(null as any)
+  const validatorRef = useRef<Validator>(null as any)
 
-  const _schema = useMemo(() => schema, [])
+  const _schema = useMemo(() => {
+    if (!_isEqual(schemaRef.current, schema)) { // todo add compareSchemas fn
+      return schemaRef.current = schema
+    }
+
+    return schemaRef.current
+  }, [schema])
 
   const _path = useMemo(() => {
     if (scopeContext) {
@@ -171,15 +184,15 @@ export default function Field ({render, path, schema}: FieldProps) {
     } else {
       return utils.resolvePath(path, '/')
     }
-  }, [])
+  }, [path])
 
   const _validator = useMemo(() => {
-    return new Validator(_schema, formContext.options.validatorOptions)
-  }, [])
+    return validatorRef.current = new Validator(_schema, formContext.options.validatorOptions)
+  }, [_schema, formContext.options.validatorOptions])
 
-  useMemo(
+  const _ref = useMemo(
     () => dataRef.current = new EmittingRef(formContext.dataStorage, _path, emitterContext.emitter),
-    [formContext.dataStorage, emitterContext.emitter]
+    [formContext.dataStorage, emitterContext.emitter, _path]
   )
 
   // set default value silently using "default" keyword of the schema if it exists
@@ -191,18 +204,24 @@ export default function Field ({render, path, schema}: FieldProps) {
         ref.value = _schema.default
       }
     },
-    [formContext.dataStorage]
+    [formContext.dataStorage, _schema, _path]
   )
 
   useMemo(() => {
     emitterRef.current = emitterContext.emitter
   }, [emitterContext])
 
+  useMemo(() => {
+    formRef.current = formContext
+  }, [formContext])
+
   useLayoutEffect(() => {
     // subscribe to the root emitter
-    const listener = formContext.emitter.on(_path, (/* event: events.BaseEvent */) => {
-      update({})
-    }, {objectify: true}) as Listener
+    const listener = formContext.emitter.on(_path, (event: events.BaseEvent) => {
+      if (!DONT_UPDATE_ON_EVENTS.includes(event.type as any)) {
+        update({})
+      }
+    }, { objectify: true }) as Listener
 
     return () => {
       listener.off()
@@ -211,10 +230,10 @@ export default function Field ({render, path, schema}: FieldProps) {
 
   const field: IField = useMemo(() => {
     return {
-      schema: _schema,
+      schema: () => schemaRef.current,
       ref: () => dataRef.current,
       emit: (path, event) => emitterRef.current.emit(path, event),
-      validate: () => _validator.validateRef(dataRef.current),
+      validate: () => validatorRef.current.validateRef(dataRef.current),
       focus () {
         inputRef.current && inputRef.current.focus && inputRef.current.focus()
       },
@@ -223,10 +242,10 @@ export default function Field ({render, path, schema}: FieldProps) {
           return
         }
 
-        const res = await _validator.validateRef(dataRef.current)
+        const res = await validatorRef.current.validateRef(dataRef.current)
 
         formContext.setFieldState(field, {
-          ...extractStateFromSchema(_schema),
+          ...extractStateFromSchema(schemaRef.current),
           isValid: res.valid,
           message: extractMessageFromResult(res, dataRef.current)
         })
@@ -238,13 +257,30 @@ export default function Field ({render, path, schema}: FieldProps) {
 
   useLayoutEffect(() => {
     emitterContext.emitter.emit(_path, new events.RegisterFieldEvent(field))
-  }, [emitterContext, field])
+  }, [emitterContext.emitter, field])
 
   const fieldApi: FieldApi = useMemo(() => {
     return new FieldApi(field, formContext)
   }, [formContext, field])
 
+  useLayoutEffect(() => {
+    if (isInitiatedRef.current) {
+      const ref = dataRef.current
+      _validator.validateRef(ref).then((res) => {
+        formRef.current.setFieldState(field, {
+          ...extractStateFromSchema(schemaRef.current),
+          isValid: res.valid,
+          message: extractMessageFromResult(res, ref)
+        })
+
+        emitterRef.current.emit(_ref.path, new events.FieldValidatedEvent())
+      })
+    }
+  }, [_path, _validator])
+
   useEffect(() => {
+    isInitiatedRef.current = true
+
     return () => {
       emitterRef.current.emit(_path, new events.UnregisterFieldEvent(field))
     }

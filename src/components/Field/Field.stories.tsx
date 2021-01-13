@@ -5,6 +5,7 @@ import { storiesOf } from '@storybook/react'
 import { FormProvider } from '../FormProvider'
 import { Field } from './index'
 import { getValidationStatus, SubmitBtn } from '../../stories/helpers'
+import { Watch } from '../Watch'
 
 storiesOf('Field', module)
   .add('Simple Field', () => {
@@ -126,7 +127,7 @@ storiesOf('Field', module)
       </FormProvider>
     </Form>
   })
-  .add('ResolveSchema - isRequired', () => {
+  .add('ChangeSchema - isRequired', () => {
     return <Form layout="horizontal" style={{ maxWidth: '400px' }}>
       <FormProvider data={{}}>
         <Field
@@ -155,50 +156,48 @@ storiesOf('Field', module)
             )
           }}
         />
-        <Field
-          path="email"
-          schema={{
-            default: '',
-            type: 'string',
-            resolveSchema: (ref) => {
-              if (ref.ref('../required').value === 'yes') {
-                return { presence: true }
+        <Watch props={['required']} render={(required) => (
+          <Field
+            path="email"
+            schema={required === 'yes'
+              ? {
+                default: '',
+                type: 'string',
+                format: 'email',
+                presence: true
               }
-
-              return {}
-            },
-            if: { presence: true },
-            then: { format: 'email' }
-          }}
-          render={(field, inputRef) => {
-            return (
-              <Form.Item
-                label="Email"
-                validateStatus={getValidationStatus(field)}
-                help={field.messageDescription}
-                required={field.state.isRequired}
-              >
-                <Input
-                  ref={inputRef}
-                  value={field.value}
-                  onFocus={() => field.markAsTouched()}
-                  onChange={(e) => field.value = e.target.value}
-                  onBlur={() => field.validate()}
-                  readOnly={field.state.isReadonly}
-                />
-              </Form.Item>
-            )
-          }}
-        />
+              : { default: '', format: 'email', type: 'string' }
+            }
+            render={(field, inputRef) => {
+              return (
+                <Form.Item
+                  label="Email"
+                  validateStatus={getValidationStatus(field)}
+                  help={field.messageDescription}
+                  required={field.state.isRequired}
+                >
+                  <Input
+                    ref={inputRef}
+                    value={field.value}
+                    onFocus={() => field.markAsTouched()}
+                    onChange={(e) => field.value = e.target.value}
+                    onBlur={() => field.validate()}
+                    readOnly={field.state.isReadonly}
+                  />
+                </Form.Item>
+              )
+            }}
+          />
+        )} />
         <SubmitBtn />
       </FormProvider>
     </Form>
   })
-  .add('ResolveSchema - isReadonly', () => {
+  .add('ChangeSchema - isReadonly', () => {
     return <Form layout="horizontal" style={{ maxWidth: '400px' }}>
       <FormProvider data={{}}>
         <Field
-          path="required"
+          path="readonly"
           schema={{ default: 'no', type: 'string' }}
           render={(field, inputRef) => {
             return (
@@ -223,40 +222,36 @@ storiesOf('Field', module)
             )
           }}
         />
-        <Field
-          path="field"
-          schema={{
-            default: 'abc',
-            type: 'string',
-            resolveSchema: (ref) => {
-              if (ref.ref('../required').value === 'yes') {
-                return { readonly: true }
-              }
-
-              return {}
-            },
-            presence: true
-          }}
-          render={(field, inputRef) => {
-            return (
-              <Form.Item
-                label="Field"
-                validateStatus={getValidationStatus(field)}
-                help={field.messageDescription}
-                required={field.state.isRequired}
-              >
-                <Input
-                  ref={inputRef}
-                  value={field.value}
-                  onFocus={() => field.markAsTouched()}
-                  onChange={(e) => field.value = e.target.value}
-                  onBlur={() => !field.state.isReadonly && field.validate()}
-                  readOnly={field.state.isReadonly}
-                />
-              </Form.Item>
-            )
-          }}
-        />
+        <Watch props={['readonly']} render={(readonly) => (
+          <Field
+            path="field"
+            schema={readonly === 'yes' ? {
+              default: 'abc',
+              type: 'string',
+              readonly: true
+            } : { default: '', type: 'string' }}
+            render={(field, inputRef) => {
+              return (
+                <Form.Item
+                  label="Field"
+                  validateStatus={getValidationStatus(field)}
+                  help={field.messageDescription}
+                  required={field.state.isRequired}
+                >
+                  <Input
+                    ref={inputRef}
+                    value={field.value}
+                    onFocus={() => field.markAsTouched()}
+                    onChange={(e) => field.value = e.target.value}
+                    onBlur={() => !field.state.isReadonly && field.validate()}
+                    readOnly={field.state.isReadonly}
+                    placeholder="Type here"
+                  />
+                </Form.Item>
+              )
+            }}
+          />
+        )} />
         <SubmitBtn />
       </FormProvider>
     </Form>

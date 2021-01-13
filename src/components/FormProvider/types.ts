@@ -14,7 +14,7 @@ export interface IFieldState {
 }
 
 export interface IField {
-  schema: types.ISchema,
+  schema (): types.ISchema,
   ref (): types.IRef,
   emit (path: string, Event: BaseEvent): void,
   validate (): Promise<types.IValidationResult>

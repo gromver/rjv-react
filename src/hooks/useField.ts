@@ -17,6 +17,5 @@ export default function useField (fieldPath: types.Path): IField | undefined {
       : utils.resolvePath(fieldPath, '/')
   }, [fieldPath, scopeContext])
 
-  // return useMemo(() => formContext.getField(path), [formContext, path])
   return formContext.getField(path)
 }
