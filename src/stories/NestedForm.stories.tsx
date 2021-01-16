@@ -10,7 +10,6 @@ import {
   Submit
 } from '../index'
 import { FieldApi } from '../components/Field'
-import { ErrorProvider } from '../components/ErrorProvider'
 
 let nodeId = 1
 const initialData = { __id: nodeId }
@@ -121,13 +120,11 @@ function CreateNodeForm ({ nodesField }: { nodesField: FieldApi }) {
 function NestedSchemaForm () {
   return (
     <FormProvider data={initialData}>
-      <ErrorProvider>
-        <ShowErrors />
+      <ShowErrors />
 
-        <Watch props={[]} render={(getValue) => renderNode('/', getValue('/'))} />
+      <Watch props={[]} render={(getValue) => renderNode('/', getValue('/'))} />
 
-        <SubmitBtn />
-      </ErrorProvider>
+      <SubmitBtn />
     </FormProvider>
   )
 }

@@ -156,7 +156,7 @@ storiesOf('Field', module)
             )
           }}
         />
-        <Watch props={['required']} render={(required) => (
+        <Watch props={['required']} render={(_, required) => (
           <Field
             path="email"
             schema={required === 'yes'
@@ -222,7 +222,7 @@ storiesOf('Field', module)
             )
           }}
         />
-        <Watch props={['readonly']} render={(readonly) => (
+        <Watch props={['readonly']} render={(_, readonly) => (
           <Field
             path="field"
             schema={readonly === 'yes' ? {

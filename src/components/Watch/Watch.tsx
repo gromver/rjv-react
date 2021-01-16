@@ -17,6 +17,7 @@ import { ReadonlyRef } from '../../refs'
 
 const allowedEvents = [
   events.ValueChangedEvent.TYPE,
+  events.StateChangedEvent.TYPE,
   events.FieldInvalidatedEvent.TYPE,
   events.FieldValidatedEvent.TYPE,
   events.RegisterFieldEvent.TYPE,
@@ -26,8 +27,8 @@ const allowedEvents = [
 type EventTypeList = typeof allowedEvents[number][]
 
 type WatchRenderFn = (
-  ...args: any
-  // getValue: (path?: types.Path) => any
+  getValue: (path: types.Path) => any,
+  ...values: any[]
 ) => ReactElement | null
 
 type Props = {
@@ -50,42 +51,13 @@ const DEFAULT_EVENT_TYPES: EventTypeList = [events.ValueChangedEvent.TYPE]
 export default function Watch ({ render, props, events = DEFAULT_EVENT_TYPES, debounce = 0 }: Props) {
   const [, update] = useState<events.BaseEvent>()
   const formContext = useContext(FormContext)
-  // const emitterContext = useContext(EmitterContext)
   const scopeContext = useContext(ScopeContext)
 
   if (!formContext) {
     throw new Error('Watch - FormContext must be provided')
   }
 
-  // if (!emitterContext) {
-  //   throw new Error('Watch - EmitterContext must be provided')
-  // }
-
   const ref = useMemo(() => new ReadonlyRef(formContext.dataStorage, '/'), [formContext.dataStorage])
-
-  // const getField = useMemo(() => {
-  //   if (formContext) {
-  //     return (fieldPath: types.Path = ''): IField | undefined => {
-  //       const path = scopeContext
-  //       ? utils.resolvePath(fieldPath, scopeContext.scope)
-  //       : utils.resolvePath(fieldPath, '/')
-  //
-  //       return formContext.getField(path)
-  //     }
-  //   }
-  //
-  //   throw new Error('formContext doesn\'t exists')
-  // }, [formContext])
-
-  // const getRef = useMemo(() => {
-  //   return (fieldPath: types.Path = ''): ReadonlyRef => {
-  //     const path = scopeContext
-  //     ? utils.resolvePath(fieldPath, scopeContext.scope)
-  //     : utils.resolvePath(fieldPath, '/')
-  //
-  //     return ref.ref(path)
-  //   }
-  // }, [ref])
 
   const getValue = useMemo(() => {
     return (fieldPath: types.Path): any => {
@@ -137,5 +109,5 @@ export default function Watch ({ render, props, events = DEFAULT_EVENT_TYPES, de
 
   const args = watchRefs.map((item) => item.value)
 
-  return render(...args, getValue)
+  return render(getValue, ...args)
 }

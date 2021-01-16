@@ -1,16 +1,26 @@
 import React from 'react'
 import { Form, Input, Row, Col } from 'antd'
 import { storiesOf } from '@storybook/react'
+import { getValidationStatus, SubmitBtn } from '../stories/helpers'
+import { FormProvider } from '../components/FormProvider'
+import { Field } from '../components/Field'
+import { Scope } from '../components/Scope'
+import useWatch from './useWatch'
 
-import { FormProvider } from '../FormProvider'
-import { Watch } from './index'
-import { Field } from '../Field'
-import { getValidationStatus, SubmitBtn } from '../../stories/helpers'
-import { Scope } from '../Scope'
+type WatcherProps = {
+  props: string[]
+  render: (...args: any[]) => React.ReactElement
+}
 
-type Props = { path: string }
+function Watcher ({ props, render }: WatcherProps) {
+  const values = useWatch(...props)
 
-function InputField ({ path }: Props) {
+  return render(...values)
+}
+
+type InputFieldProps = { path: string }
+
+function InputField ({ path }: InputFieldProps) {
   return <Field
     path={path}
     schema={{ default: '', presence: true }}
@@ -36,8 +46,8 @@ function InputField ({ path }: Props) {
   />
 }
 
-storiesOf('Watch', module)
-  .add('Watch', () => {
+storiesOf('useWatch', module)
+  .add('useWatch', () => {
     return <Form style={{ maxWidth: '1000px' }}>
       <FormProvider data={{}}>
         <Row gutter={16}>
@@ -51,7 +61,7 @@ storiesOf('Watch', module)
           </Col>
           <Col sm={12}>
             <h4>Watch: '/a', '/b', '/obj/*'</h4>
-            <Watch
+            <Watcher
               props={['/a', '/b', '/obj/*']}
               render={(getValue, a, b) => <div>
                 /a - {JSON.stringify(a)}
@@ -63,7 +73,7 @@ storiesOf('Watch', module)
             />
             <br />
             <h4>Watch: '/obj/**'</h4>
-            <Watch
+            <Watcher
               props={['/obj/**']}
               render={(getValue) => <div>
                 /obj - {JSON.stringify(getValue('/obj'))}
@@ -72,7 +82,7 @@ storiesOf('Watch', module)
             <br />
             <Scope path="obj">
               <h4>Watch from scope /obj: '**', '../a'</h4>
-              <Watch
+              <Watcher
                 props={['../a', '**']}
                 render={(getValue, a) => <div>
                   /obj - {JSON.stringify(getValue(''))}
