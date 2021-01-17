@@ -1,11 +1,14 @@
 import React from 'react'
-import { Form, Input, Select } from 'antd'
+import { Button, Space, Form, Input, Select } from 'antd'
 import { storiesOf } from '@storybook/react'
 
 import { FormProvider } from '../FormProvider'
 import { Field } from './index'
 import { getValidationStatus, SubmitBtn } from '../../stories/helpers'
+import { Scope } from '../Scope'
 import { Watch } from '../Watch'
+
+let _id = 1
 
 storiesOf('Field', module)
   .add('Simple Field', () => {
@@ -263,13 +266,9 @@ storiesOf('Field', module)
         <Field
           schema={{
             default: '',
-            presence: true,
-            format: 'email',
-            errors: {
-              format: 'Type correct email please!'
-            }
+            presence: true
           }}
-          path="email"
+          path="name"
           render={(field) => (
             <div>
               <input
@@ -285,11 +284,7 @@ storiesOf('Field', module)
         <Field
           schema={{
             default: '',
-            presence: true,
-            not: {
-              const: 'admin'
-            },
-            errors: { not: 'Should not be admin' }
+            presence: true
           }}
           path="username"
           render={(field) => (
@@ -307,5 +302,58 @@ storiesOf('Field', module)
         <SubmitBtn />
       </FormProvider>
     </div>
+    )
+  })
+  .add('Dynamic Fields', () => {
+    return (
+      <FormProvider data={[]}>
+        <Form>
+          <Field path={'/'} schema={{ type: 'array' }} render={(field) => (
+            <>
+              {field.value.map((item, index) => (
+                <Scope key={`k${item._id}`} path={`${index}`}>
+                  <Space style={{ display: 'flex', marginBottom: 8 }} align="baseline">
+                    <Field
+                      path="name"
+                      schema={{ default: '', presence: true }}
+                      render={(field, inputRef) => (
+                        <Form.Item
+                          validateStatus={getValidationStatus(field)}
+                          help={field.messageDescription}
+                          required={field.state.isRequired}
+                        >
+                          <Input
+                            ref={inputRef}
+                            value={field.value}
+                            onFocus={() => field.markAsTouched()}
+                            onChange={(e) => field.value = e.target.value}
+                            onBlur={() => field.validate()}
+                            placeholder="Name"
+                          />
+                        </Form.Item>
+                      )}
+                    />
+                    <Button
+                      onClick={() => {
+                        const newValue = [...field.value]
+                        newValue.splice(index, 1)
+
+                        field.value = newValue
+                      }}
+                    >Remove</Button>
+                  </Space>
+                </Scope>
+              ))}
+
+              <Form.Item>
+                <Button type="dashed" onClick={() => field.value = [...field.value, { _id: _id++ }]}>
+                  Add field
+                </Button>
+              </Form.Item>
+            </>
+          )} />
+        </Form>
+        <SubmitBtn />
+      </FormProvider>
     )
   })

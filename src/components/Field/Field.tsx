@@ -194,7 +194,7 @@ export default function Field ({render, path, schema}: FieldProps) {
     } else {
       return utils.resolvePath(path, '/')
     }
-  }, [path])
+  }, [path, scopeContext?.scope])
 
   const _validator = useMemo(() => {
     return validatorRef.current = new Validator(_schema, formContext.options.validatorOptions)
