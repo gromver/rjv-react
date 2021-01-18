@@ -38,7 +38,7 @@ const META_KEYWORDS = [
   'default', 'filter', 'error', 'warning', 'errors', 'warnings', 'removeAdditional'
 ]
 
-function addPropToPath (path: types.Path, propName: string | number): string {
+export function addPropToPath (path: types.Path, propName: string | number): string {
   return path === '/' ? `/${propName}` : `${path}/${propName}`
 }
 
@@ -112,4 +112,8 @@ export function buildSchema (path: types.Path, schema: types.ISchema): types.ISc
   _assign(leaf, schema)
 
   return resSchema
+}
+
+export function isArrayHasIndex (array: any[], index: number) {
+  return index >= 0 && index < array.length
 }
