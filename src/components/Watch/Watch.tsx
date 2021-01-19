@@ -71,11 +71,11 @@ export default function Watch ({ render, props, events = DEFAULT_EVENT_TYPES, de
 
   const watchProps = useMemo(() => {
     return props.map((path) => utils.resolvePath(path, scopeContext?.scope || '/'))
-  }, [])
+  }, [props, scopeContext?.scope])
 
   const watchRefs = useMemo(() => {
     return watchProps.map((path) => ref.ref(path))
-  }, [ref])
+  }, [ref, watchProps])
 
   const watchEvents: string[] = useMemo(() => {
     return events
@@ -105,7 +105,7 @@ export default function Watch ({ render, props, events = DEFAULT_EVENT_TYPES, de
         listeners.forEach((listener) => listener.off())
       }
     }
-  }, [formContext.emitter, watchProps])
+  }, [formContext.emitter, watchProps, watchEvents])
 
   const args = watchRefs.map((item) => item.value)
 

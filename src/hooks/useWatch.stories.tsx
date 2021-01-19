@@ -1,5 +1,5 @@
-import React from 'react'
-import { Form, Input, Row, Col } from 'antd'
+import React, { useState } from 'react'
+import { Form, Input, Row, Col, Select } from 'antd'
 import { storiesOf } from '@storybook/react'
 import { getValidationStatus, SubmitBtn } from '../stories/helpers'
 import { FormProvider } from '../components/FormProvider'
@@ -47,7 +47,7 @@ function InputField ({ path }: InputFieldProps) {
 }
 
 storiesOf('useWatch', module)
-  .add('useWatch', () => {
+  .add('Overview', () => {
     return <Form style={{ maxWidth: '1000px' }}>
       <FormProvider data={{}}>
         <Row gutter={16}>
@@ -89,6 +89,70 @@ storiesOf('useWatch', module)
                   <br />
                   /a - {JSON.stringify(a)}
                 </div>}
+              />
+            </Scope>
+          </Col>
+        </Row>
+      </FormProvider>
+    </Form>
+  })
+  .add('Change path', () => {
+    const [initialData] = useState({})
+    const [path, setPath] = useState<any>('a')
+
+    return <Form style={{ maxWidth: '1000px' }}>
+      <FormProvider data={initialData}>
+        <Row gutter={16}>
+          <Col sm={12}>
+            <InputField path={'/a'} />
+            <InputField path={'/b'} />
+          </Col>
+          <Col sm={12}>
+            <Form.Item label="Select path">
+              <Select value={path} onChange={setPath}>
+                <Select.Option value={'a'}>/a</Select.Option>
+                <Select.Option value={'b'}>/b</Select.Option>
+              </Select>
+            </Form.Item>
+            <Watcher
+              props={[path]}
+              render={(getValue, value) => (
+                <div>
+                  {JSON.stringify(value)}
+                </div>
+              )}
+            />
+          </Col>
+        </Row>
+      </FormProvider>
+    </Form>
+  })
+  .add('Change scope', () => {
+    const [initialData] = useState({})
+    const [path, setPath] = useState<any>('a')
+
+    return <Form style={{ maxWidth: '1000px' }}>
+      <FormProvider data={initialData}>
+        <Row gutter={16}>
+          <Col sm={12}>
+            <InputField path={'/a'} />
+            <InputField path={'/b'} />
+          </Col>
+          <Col sm={12}>
+            <Form.Item label="Select path">
+              <Select value={path} onChange={setPath}>
+                <Select.Option value={'a'}>/a</Select.Option>
+                <Select.Option value={'b'}>/b</Select.Option>
+              </Select>
+            </Form.Item>
+            <Scope path={path}>
+              <Watcher
+                props={['']}
+                render={(getValue, value) => (
+                  <div>
+                    {JSON.stringify(value)}
+                  </div>
+                )}
               />
             </Scope>
           </Col>

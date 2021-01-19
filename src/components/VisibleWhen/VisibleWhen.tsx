@@ -57,17 +57,24 @@ export default function VisibleWhen (
   const scopeContext = useContext(ScopeContext)
 
   const useMount = useMemo(() => !useVisibilityStyle, [])
-  const normalizedPath = useMemo(() => utils.resolvePath(path || '', scopeContext?.scope || '/'), [])
+
+  const _path = useMemo(
+    () => utils.resolvePath(path || '', scopeContext?.scope || '/'),
+    [path, scopeContext?.scope]
+  )
 
   if (!formContext) {
     throw new Error('VisibleWhen - FormContext must be provided')
   }
 
-  const ref = useMemo(() => new ReadonlyRef(formContext.dataStorage, normalizedPath), [formContext!.dataStorage])
+  const ref = useMemo(
+    () => new ReadonlyRef(formContext.dataStorage, _path),
+    [_path, formContext!.dataStorage]
+  )
 
-  const validator = useMemo(() => new Validator(schema), [])
+  const validator = useMemo(() => new Validator(schema), [schema])
 
-  const watchProps = useMemo(() => getPropsToObserveFromSchema(schema, ref.path), [])
+  const watchProps = useMemo(() => getPropsToObserveFromSchema(schema, _path), [_path])
 
   const innerEmitter = useMemo(() => {
     if (!useMount) {
@@ -106,7 +113,7 @@ export default function VisibleWhen (
         listeners.forEach((listener) => listener.off())
       }
     }
-  }, [emitterContext, innerEmitter, ref])
+  }, [emitterContext, innerEmitter, ref, watchProps, validator])
 
   if (useMount) {
     return visible ? children as any : null

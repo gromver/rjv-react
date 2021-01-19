@@ -29,11 +29,11 @@ export default function useWatch (...props: types.Path[]): [getValue: (path: typ
 
   const watchProps = useMemo(() => {
     return props.map((path) => utils.resolvePath(path, scopeContext?.scope || '/'))
-  }, [])
+  }, [props, scopeContext?.scope])
 
   const watchRefs = useMemo(() => {
     return watchProps.map((path) => ref.ref(path))
-  }, [ref])
+  }, [ref, watchProps])
 
   useEffect(() => {
     if (watchProps.length) {
