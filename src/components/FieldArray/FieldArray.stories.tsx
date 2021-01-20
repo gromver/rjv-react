@@ -68,6 +68,10 @@ storiesOf('FieldArray', module)
                 <Button type="dashed" onClick={() => field.move(0, 2)}>
                   Move 1st field to 3th
                 </Button>
+                &nbsp;
+                <Button type="dashed" onClick={() => field.clear()}>
+                  Clear
+                </Button>
               </Form.Item>
 
               <h4>Using Ref</h4>
@@ -91,6 +95,10 @@ storiesOf('FieldArray', module)
                 &nbsp;
                 <Button type="dashed" onClick={() => fieldsRef.current?.move(0, 2)}>
                   Move 1st field to 3th
+                </Button>
+                &nbsp;
+                <Button type="dashed" onClick={() => fieldsRef.current?.clear()}>
+                  Clear
                 </Button>
               </Form.Item>
             </>

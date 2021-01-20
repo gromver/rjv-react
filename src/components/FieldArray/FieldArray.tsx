@@ -1,6 +1,6 @@
 /**
  *
- * Field - renders field and provides an api to interact with data and state
+ * FieldArray - a component to deal with an array of fields.
  *
  */
 
@@ -12,16 +12,17 @@ import React, {
   forwardRef
 } from 'react'
 import { utils, types } from 'rjv'
-import { ScopeContext } from '../Scope'
 import { FormContext } from '../FormProvider'
 import { EmittingRef } from '../../refs'
 import { EmitterContext } from '../EmitterProvider'
 import { addPropToPath, isArrayHasIndex } from '../../utils'
+import usePath from '../../hooks/usePath'
 
 export type FieldArrayApi = {
   append: (value: any) => void
   prepend: (value: any) => void
   remove: (index: number) => void
+  clear: () => void
   insert: (index: number, value: any) => void
   swap: (indexA: number, indexB: number) => void
   move: (from: number, to: number) => void
@@ -41,7 +42,6 @@ let _id = 1
 function FieldArray ({ render, path }: FieldArrayProps, elRef: React.Ref<FieldArrayRef>) {
   const formContext = useContext(FormContext)
   const emitterContext = useContext(EmitterContext)
-  const scopeContext = useContext(ScopeContext)
 
   if (!formContext) {
     throw new Error('FieldArray - FormContext must be provided')
@@ -51,13 +51,7 @@ function FieldArray ({ render, path }: FieldArrayProps, elRef: React.Ref<FieldAr
     throw new Error('FieldArray - EmitterContext must be provided')
   }
 
-  const _path = useMemo(() => {
-    if (scopeContext) {
-      return utils.resolvePath(path, scopeContext.scope)
-    } else {
-      return utils.resolvePath(path, '/')
-    }
-  }, [path, scopeContext?.scope])
+  const _path = usePath(path)
 
   const ref = useMemo(
     () => new EmittingRef(formContext.dataStorage, _path, emitterContext.emitter),
@@ -111,6 +105,10 @@ function FieldArray ({ render, path }: FieldArrayProps, elRef: React.Ref<FieldAr
 
         setItems(newItems)
       }
+    },
+    clear: () => {
+      ref.value = []
+      setItems([])
     },
     insert: (index, value) => {
       if (isArrayHasIndex(items, index)) {

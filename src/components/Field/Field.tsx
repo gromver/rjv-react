@@ -12,7 +12,7 @@ import React, {
   useRef,
   useState
 } from 'react'
-import { utils, types, Validator, ValidationMessage, Ref } from 'rjv'
+import { types, Validator, ValidationMessage, Ref } from 'rjv'
 import _isPlainObject from 'lodash/isPlainObject'
 import _isEqualWith from 'lodash/isEqualWith'
 import {
@@ -21,11 +21,11 @@ import {
   IField,
   IFieldState
 } from '../FormProvider'
-import { ScopeContext } from '../Scope'
 import { EmitterContext, events } from '../EmitterProvider'
 import { EventEmitter2, Listener } from 'eventemitter2'
 import UpdaterContext from '../FormProvider/UpdaterContext'
 import { EmittingRef } from '../../refs'
+import usePath from '../../hooks/usePath'
 
 function extractMessageFromResult (res: types.IValidationResult, ref: types.IRef): ValidationMessage {
   return res.results[ref.path]
@@ -157,7 +157,6 @@ export default function Field ({render, path, schema}: FieldProps) {
   const [, update] = useState({})
   const formContext = useContext(FormContext)
   const emitterContext = useContext(EmitterContext)
-  const scopeContext = useContext(ScopeContext)
   useContext(UpdaterContext)
 
   if (!emitterContext) {
@@ -188,13 +187,7 @@ export default function Field ({render, path, schema}: FieldProps) {
     return schemaRef.current
   }, [schema])
 
-  const _path = useMemo(() => {
-    if (scopeContext) {
-      return utils.resolvePath(path, scopeContext.scope)
-    } else {
-      return utils.resolvePath(path, '/')
-    }
-  }, [path, scopeContext?.scope])
+  const _path = usePath(path)
 
   const _validator = useMemo(() => {
     return validatorRef.current = new Validator(_schema, formContext.options.validatorOptions)

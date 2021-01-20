@@ -7,13 +7,13 @@
 import React, {
   CSSProperties, ReactNode, useContext, useEffect, useMemo, useState
 } from 'react'
-import { types, utils, Validator } from 'rjv'
+import { types, Validator } from 'rjv'
 import { Listener } from 'eventemitter2'
-import { ScopeContext } from '../Scope'
 import { FormContext } from '../FormProvider'
 import { EmitterProvider, EmitterContext, events } from '../EmitterProvider'
 import { getPropsToObserveFromSchema, createEmitter } from '../../utils'
 import ReadonlyRef from '../../refs/ReadonlyRef'
+import usePath from '../../hooks/usePath'
 
 const HIDDEN_EL_STYLES: CSSProperties = {
   visibility: 'hidden',
@@ -54,14 +54,10 @@ export default function VisibleWhen (
   const [visible, setVisible] = useState(false)
   const formContext = useContext(FormContext)
   const emitterContext = useContext(EmitterContext)
-  const scopeContext = useContext(ScopeContext)
 
   const useMount = useMemo(() => !useVisibilityStyle, [])
 
-  const _path = useMemo(
-    () => utils.resolvePath(path || '', scopeContext?.scope || '/'),
-    [path, scopeContext?.scope]
-  )
+  const _path = usePath(path ?? '')
 
   if (!formContext) {
     throw new Error('VisibleWhen - FormContext must be provided')
