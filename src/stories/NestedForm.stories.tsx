@@ -10,6 +10,7 @@ import {
   Submit
 } from '../index'
 import { FieldApi } from '../components/Field'
+import { useDataRef } from '../hooks'
 
 let nodeId = 1
 const initialData = { __id: nodeId }
@@ -122,8 +123,14 @@ function NestedSchemaForm () {
     <FormProvider data={initialData}>
       <ShowErrors />
 
-      <Watch props={[]} render={(getValue) => renderNode('/', getValue('/'))} />
+      <Watch
+        props={[]}
+        render={() => {
+          const dataRef = useDataRef('/')
 
+          return renderNode('/', dataRef.value)
+        }}
+      />
       <SubmitBtn />
     </FormProvider>
   )

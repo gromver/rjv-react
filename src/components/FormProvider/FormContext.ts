@@ -1,7 +1,7 @@
 import { createContext } from 'react'
 import { types } from 'rjv'
 import { EventEmitter2 } from 'eventemitter2'
-import { SubmitFormFn, ValidationErrors, IFieldState, IField } from './types'
+import { SubmitFormFn, ValidationErrors, FieldState, IField } from './types'
 import { OptionsContextValue } from '../OptionsProvider/OptionsContext'
 
 export type FormContextValue = {
@@ -10,11 +10,12 @@ export type FormContextValue = {
   emitter: EventEmitter2
   options: OptionsContextValue
   submit: SubmitFormFn
-  getData: () => any
+  validate: (path: types.Path | types.Path[]) => Promise<void>
+  getDataRef: (path?: types.Path) => types.IRef
   getField: (path: types.Path) => IField | undefined
   getErrors: () => ValidationErrors
-  getFieldState: (field: IField) => IFieldState
-  setFieldState: (field: IField, state: Partial<IFieldState>) => void
+  getFieldState: (field: IField) => FieldState
+  setFieldState: (field: IField, state: Partial<FieldState>) => void
   getMessageDescription: (field: IField) => string | undefined
 }
 

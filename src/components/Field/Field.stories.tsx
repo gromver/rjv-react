@@ -111,7 +111,7 @@ storiesOf('Field', module)
               <Form.Item
                 label="User name"
                 validateStatus={getValidationStatus(field)}
-                help={field.messageDescription || 'Should not be "admin"'}
+                help={field.messageDescription || 'Must not be "admin"'}
                 required={field.state.isRequired}
                 hasFeedback
               >
@@ -159,7 +159,7 @@ storiesOf('Field', module)
             )
           }}
         />
-        <Watch props={['required']} render={(_, required) => (
+        <Watch props={['required']} render={(required) => (
           <Field
             path="email"
             schema={required === 'yes'
@@ -225,7 +225,7 @@ storiesOf('Field', module)
             )
           }}
         />
-        <Watch props={['readonly']} render={(_, readonly) => (
+        <Watch props={['readonly']} render={(readonly) => (
           <Field
             path="field"
             schema={readonly === 'yes' ? {

@@ -22,9 +22,9 @@ export default function Submit (props: Props) {
 
   const handleSubmit = useCallback(async () => {
     if (formContext) {
-      const { submit, getData } = formContext
+      const { submit, getDataRef } = formContext
 
-      onSubmit && onSubmit(getData())
+      onSubmit && onSubmit(getDataRef().value)
 
       const { valid, data, firstErrorField } = await submit()
 

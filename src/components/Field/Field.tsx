@@ -19,7 +19,7 @@ import {
   FormContext,
   FormContextValue,
   IField,
-  IFieldState
+  FieldState
 } from '../FormProvider'
 import { EmitterContext, events } from '../EmitterProvider'
 import { EventEmitter2, Listener } from 'eventemitter2'
@@ -33,7 +33,7 @@ function extractMessageFromResult (res: types.IValidationResult, ref: types.IRef
     : new ValidationMessage(false, 'react', 'The field has no validation rules, check the schema')
 }
 
-function extractStateFromSchema (schema: types.ISchema): Partial<IFieldState> {
+function extractStateFromSchema (schema: types.ISchema): Partial<FieldState> {
   const isRequired = typeof schema.presence === 'boolean'
     ? schema.presence : false
   const isReadonly = typeof schema.readonly === 'boolean'
@@ -63,7 +63,7 @@ export class FieldApi {
     return value === undefined ? this.field.schema().default : value
   }
 
-  get state (): IFieldState {
+  get state (): FieldState {
     return this.formContext.getFieldState(this.field)
   }
 
@@ -239,21 +239,6 @@ export default function Field ({render, path, schema}: FieldProps) {
       validate: () => validatorRef.current.validateRef(dataRef.current),
       focus () {
         inputRef.current && inputRef.current.focus && inputRef.current.focus()
-      },
-      async init () {
-        if (isInitiatedRef.current) {
-          return
-        }
-
-        const res = await validatorRef.current.validateRef(dataRef.current)
-
-        formContext.setFieldState(field, {
-          ...extractStateFromSchema(schemaRef.current),
-          isValid: res.valid,
-          message: extractMessageFromResult(res, dataRef.current)
-        })
-
-        isInitiatedRef.current = true
       }
     }
   }, [])

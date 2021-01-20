@@ -2,7 +2,7 @@ import React, { useCallback, useRef } from 'react'
 import { Form, Input } from 'antd'
 import { storiesOf } from '@storybook/react'
 
-import { FormProvider, FormProviderRef } from '../FormProvider'
+import { FormProvider, FormApi } from '../FormProvider'
 import Scope from './Scope'
 import { Field } from '../Field'
 import { getValidationStatus } from '../../stories/helpers'
@@ -18,7 +18,7 @@ storiesOf('Scope', module)
   })
 
 function SimpleForm () {
-  const providerRef = useRef<FormProviderRef>(null)
+  const providerRef = useRef<FormApi>(null)
   const handleSubmit = useCallback(async () => {
     if (providerRef.current) {
       const res = await providerRef.current.submit()

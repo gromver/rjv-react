@@ -16,7 +16,7 @@ import ErrorContext, {
 import { EmitterProvider, EmitterContext, events } from '../EmitterProvider'
 import { createEmitter } from '../../utils'
 import FormContext from '../FormProvider/FormContext'
-import { IField, IFieldState, ValidationErrors } from '../FormProvider/types'
+import { IField, FieldState, ValidationErrors } from '../FormProvider/types'
 
 type Props = {
   emitter?: EventEmitter2,
@@ -44,7 +44,7 @@ export default function ErrorProvider ({ emitter, children }: Props) {
       const res: ValidationErrors = []
 
       fields.forEach((field) => {
-        const state = formContext.getFieldState(field) as IFieldState
+        const state = formContext.getFieldState(field) as FieldState
 
         if (state.isValidated && !state.isValid) {
           res.push({path: field.ref().path, message: formContext.getMessageDescription(field) as string})

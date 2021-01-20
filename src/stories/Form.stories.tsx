@@ -3,7 +3,7 @@ import { Form, Input } from 'antd'
 import { storiesOf } from '@storybook/react'
 
 import { getValidationStatus, ShowErrors } from './helpers'
-import { FormProvider, FormProviderRef, Field } from '../index'
+import { FormProvider, FormApi, Field } from '../index'
 
 const initialData = {}
 
@@ -15,7 +15,7 @@ storiesOf('Form', module)
 
 function SimpleForm () {
   const [visible, setVisible] = useState(false)
-  const providerRef = useRef<FormProviderRef>(null)
+  const providerRef = useRef<FormApi>(null)
 
   return (
     <Form style={{ maxWidth: '400px' }}>

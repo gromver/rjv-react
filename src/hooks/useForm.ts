@@ -1,28 +1,17 @@
 import { useContext, useMemo } from 'react'
-import { FormContext, FormProviderRef } from '../components/FormProvider'
-import { ScopeContext } from '../components/Scope'
+import { FormContext, FormApi } from '../components/FormProvider'
 
-type FormApi = {
-  scope: string
-} & FormProviderRef
-
-export default function useForm (): FormApi | undefined {
+export default function useForm (): FormApi {
   const formContext = useContext(FormContext)
-  const scopeContext = useContext(ScopeContext)
 
-  const api: FormApi | undefined = useMemo(() => {
-    if (formContext && scopeContext) {
-      return {
-        scope: scopeContext.scope,
-        submit: formContext.submit,
-        getData: formContext.getData,
-        getField: formContext.getField,
-        getErrors: formContext.getErrors
-      }
-    }
+  if (!formContext) {
+    throw new Error('useForm - FormContext must be provided')
+  }
 
-    return undefined
-  }, [formContext, scopeContext])
-
-  return api
+  return useMemo(() => ({
+    submit: formContext.submit,
+    validate: formContext.validate,
+    getDataRef: formContext.getDataRef,
+    getErrors: formContext.getErrors
+  }), [formContext])
 }
