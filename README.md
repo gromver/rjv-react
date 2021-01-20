@@ -215,19 +215,21 @@ type SubmitFormFn = () => Promise<{
   valid: boolean
   // data
   data?: any
-  // the FieldApi instance of the first error data property
-  firstErrorField?: FieldApi
+  // the FirstErrorField instance of the first error data property
+  firstErrorField?: FirstErrorField
 }>
 ```
+See [FirstErrorField](#firsterrorfield)
+
 The `submit` function can be obtained in two ways:
  - get the ref of the `FormProvider` component
-    ```jsx
+    ```tsx
     import React, { useCallback } from 'react';
-    import { FormProvider, FormProviderRef } from 'rjv-react';
+    import { FormProvider, FormApi } from 'rjv-react';
     import InputField from './InputField.js'
     
     export default function SignInForm() {
-      const formRef = useRef<FormProviderRef>()
+      const formRef = useRef<FormApi>()
     
       const handleSubmit = useCallback(async () => {
         if (formRef.current) {
@@ -267,7 +269,7 @@ The `submit` function can be obtained in two ways:
     ```
 
  - using `useForm` hook
-    ```jsx
+    ```tsx
     import React, { useCallback } from 'react';
     import { FormProvider, useForm } from 'rjv-react';
     import InputField from './InputField.js'
@@ -389,6 +391,7 @@ export default function ProfileForm() {
  - [ErrorProvider](#errorprovider)
  - [ErrorMessages](#errormessages)
  - [Field](#field)
+ - [FieldArray](#fieldarray)
  - [Scope](#scope)
  - [Submit](#submit)
  - [Watch](#watch)
@@ -398,10 +401,9 @@ export default function ProfileForm() {
 Provides default form options. This options will be used as default at the `FormProvider` component level.
 One of the main purposes of the `OptionsProvider` component is setting up localized validation messages of the application.
 
-Properties:
-
 Name | Type | Default | Description
 --- | :---: | :---: | ---
+`children`* | `ReactNode` | undefined | content
 `coerceTypes` | boolean| false | enable coerce types feature
 `removeAdditional` | boolean | false | enable remove additional properties feature
 `errors` | `{ [keywordName: string]: string }` | {} | custom error messages
@@ -409,42 +411,60 @@ Name | Type | Default | Description
 `keywords` | `IKeyword[]` | [] | additional validation keywords
 `descriptionResolver` | `(message: ValidationMessage) => string` | `(message) => message.toString()` | function resolving validation message descriptions
 
+See [ValidationMessage](https://github.com/gromver/rjv#validationmessage)
+
 ### FormProvider
 Provides a form context.
 
-Properties:
-
 Name | Type | Default | Description
 --- | :---: | :---: | ---
+`children`* | `ReactNode` | undefined | content
 `data` | `any` | undefined | the initial form data
-`ref` | `React.RefObject<FormProviderRef>` | undefined | returns an object contains an API to work with the form
+`ref` | `React.RefObject<FormApi>` | undefined | returns an object containing the API to work with the form. Also this api can be obtained using the [useForm](#useform--formapi) hook.
 
-#### FormProviderRef:
+#### FormApi:
 ```typescript
-type FormProviderRef = {
-  // async fn submitting form and returning validation result 
-  submit: () => Promise<{
-    valid: boolean
-    data?: any
-    firstErrorField?: FieldApi
-  }>
-  // get form data
-  getData: () => any
-  // get field api if exists
-  getField: (path: string) => FieldApi | undefined
-  // get errors list in order of appearance in the form
-  getErrors: () => [path: string, message: string][]
+type FormApi = {
+   // async fn submitting form and returning validation result 
+   submit: () => Promise<{
+      valid: boolean
+      data?: any
+      firstErrorField?: FirstErrorField
+   }>
+   // trigger validation process of particular field / fields
+   validate: (path: string | string[]) => Promise<void>
+   // get form data ref, if path isn't provided returns a root ref
+   getDataRef: (path?: string) => any
+   // get errors list in order of appearance in the form
+   getErrors: () => [path: string, message: string][]
 }
 ```
-See [`FieldApi`](#fieldapi)
+
+#### FirstErrorField
+```typescript
+type FirstErrorField = {
+   // path of the field where the first error has been acquired
+   path: string,
+   // focuses the input control if possible
+   focus: () => void,
+   // input control element if it was provided, 
+   // see render function of the Field component
+   inputEl?: React.ReactElement
+}
+```
 
 ### ErrorProvider
+Provides validation errors context. This component collects errors from all fields enclosed within.
+
+> Note that the `FormProvider` component already provides an `ErrorProvider` for the entire form,
+> but you are able to wrap some particular fields with `ErrorProvider` to get errors only for that fields.
 
 Name | Type | Default | Description
 --- | :---: | :---: | ---
-`path`* | `string`| undefined | specifies data property
+`children`* | `ReactNode` | undefined | content
 
 ### ErrorMessages
+Passes errors caught by the closest `ErrorProvider` component to the render function.
 
 Name | Type | Default | Description
 --- | :---: | :---: | ---
@@ -475,8 +495,6 @@ type FieldApi = {
   state: FieldState
   ref: types.IRef
   messageDescription: string | undefined
-  isRequired: boolean
-  isReadonly: boolean
   validate (): Promise<types.IValidationResult>
   focus (): void
   markAsTouched(): this
@@ -485,6 +503,8 @@ type FieldApi = {
   markAsInvalidated(): this
 }
 ```
+
+See [IRef](https://github.com/gromver/rjv#ref), [IValidationResult](https://github.com/gromver/rjv#ivalidationresult)
 
 #### FieldState
 ```typescript
@@ -500,7 +520,47 @@ type FieldState = {
   message?: ValidationMessage
 }
 ```
-See [ValidationMessage](#todo)
+See [ValidationMessage](https://github.com/gromver/rjv#validationmessage)
+
+### FieldArray
+A useful component to deal with an array of fields. It provides an api for adding / removing fields
+and also manages the generation of unique keys for each field.
+
+Name | Type | Default | Description
+--- | :---: | :---: | ---
+`path`* | `string`| undefined | specifies data property
+`render`* | `(items: FieldItem[], fields: FieldArrayApi) => React.ReactElement` | undefined | a function rendering fields of the array.
+`ref` | `React.RefObject<FieldArrayApi>` | undefined | returns an object containing the API to add / remove fields
+
+#### FieldItem
+The description of the field being rendered.
+```typescript
+type FieldItem = {
+  key: string,        // unique key of teh field
+  path: types.Path    // the property path of the field
+}
+```
+
+#### FieldArrayApi
+An API for adding / removing fields
+```typescript
+type FieldArrayApi = {
+  // append data to the end of the array
+  append: (value: any) => void
+  // prepend data to the start of the array
+  prepend: (value: any) => void
+  // remove data at particular position
+  remove: (index: number) => void
+  // clear array
+  clear: () => void
+  // remove data at particular position
+  insert: (index: number, value: any) => void
+  // swap data items
+  swap: (indexA: number, indexB: number) => void
+  // move data item to another position
+  move: (from: number, to: number) => void
+}
+```
 
 ### Scope
 Sets the data scope of the form - all relative paths will be resolved against the nearest scope up the component tree.
@@ -528,7 +588,7 @@ Re-renders content when desired events of the certain field are acquired
 
 Name | Type | Default | Description
 --- | :---: | :---: | ---
-`render`* | `(getRef, getField) => ReactNode` | undefined | a function rendering some UI content when changes occur. todo...
+`render`* | `(...values: any[]) => ReactNode` | undefined | a function rendering some UI content when changes occur. The render function gets a list of data values for each observed property. > Note: values of props with wildcards `*` or `**` cannot be resolved, they will be undefined
 `props` | `Path[]` | [] | a list of properties to watch, each property path can be relative or absolute and contain wildcards `*` or `**`
 `events` | `EventType[]` | "any" | the type of events to subscribe to
 `debounce` | `number` | 0 ms | debounce re-render,
@@ -537,8 +597,9 @@ EventType:
 ```typescript
 type EventType =
   'valueChanged'      // value changing events
-  | 'validated'       // field was validated
-  | 'invalidated'     // field was invalidated
+  | 'stateChanged'    // changed UI state of the field (touched/dirty/pending etc)
+  | 'fieldValidated'       // field was validated
+  | 'fieldInvalidated'     // field was invalidated
   | 'registerField'   // a new field was attached to the form
   | 'unregisterField' // the field was excluded from the form
 ```
@@ -547,41 +608,42 @@ type EventType =
 Shows children content when the data is correct
 Name | Type | Default | Description
 --- | :---: | :---: | ---
-`path` | `string`| '/' | absolute or relative path to data
 `schema`* | `Object<JSON Schema>` | undefined | schema used to check data
 `useVisibilityStyle`* | `boolean` | false | use css visibility style and do not unmount children components
 `visibleStyles`* | `CSSProperties` | undefined | css styles for the visible content
 `hiddenStyles`* | `CSSProperties` | undefined | css styles for the hidden content
+`path` | `string`| '/' | absolute or relative path to data
 
 ## Hooks
  - [useForm](#useform--formapi)
- - [useField](#usefieldpath-string--fieldapi--undefined)
  - [useErrors](#useerrors--validationerrors)
+ - [useWatch](#usewatchpath-string--any)
+ - [usePath](#usepathpath-string--string)
+ - [useDateRef](#usedaterefpath-string--iref)
+ - [useValidate](#usevalidate--path-string--string--promisevoid)
 
 ### `useForm() => FormApi`
-This hook returns a form api related to the closest `FormProvider` component.
-
-#### FormApi
-```typescript
-type FormApi = {
-  submit: SubmitFormFn
-  getData: () => any
-  getField: (path: types.Path) => IFieldApi | undefined
-  getErrors: () => ValidationErrors
-  scope: string
-}
-```
-
-### `useField(path: string) => FieldApi | undefined`
-Returns a field [api](#fieldapi) if it exists. Path can be absolute or relative.
+This hook returns a form [api](#formapi) related to the closest `FormProvider` component.
 
 ### `useErrors() => ValidationErrors`
 Returns a list of errors caught by [ErrorProvider](#errorprovider) component
 
 #### ValidationErrors
 ```typescript
-type ValidationErrors = [path: string, message: string][]
+type ValidationErrors = {path: string, message: string}[]
 ```
+
+### `useWatch(...path: string[]) => any[]`
+Returns an array of values for each observed property. The property path can contain wildcards, but the value of such properties cannot be resolved and will be undefined.
+
+### `usePath(path: string) => string`
+If the given path is relative, returns the resolved path against the closest scope, otherwise returns the path as is.
+
+### `useDateRef(path: string) => IRef`
+Returns an [IRef](https://github.com/gromver/rjv#ref) api object to get and set the value of the property. The path to the property can be absolute or relative.
+
+### `useValidate() => (path: string | string[]) => Promise<void>`
+Returns a function that triggers validation of the desired properties. The path to the properties can be absolute or relative.
 
 ## License
 **rjv-react** is released under the MIT license.
