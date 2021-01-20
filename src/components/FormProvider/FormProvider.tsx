@@ -82,8 +82,8 @@ type DataState = {
 }
 
 type Props = {
-  data?: any,
-  children: React.ReactNode
+  children: React.ReactNode,
+  data?: any
 }
 
 function FormProvider (props: Props, elRef: React.Ref<FormApi>) {
@@ -210,7 +210,11 @@ function FormProvider (props: Props, elRef: React.Ref<FormApi>) {
 
       if (firstErrorField) {
         return {
-          firstErrorField,
+          firstErrorField: {
+            path: firstErrorField.ref().path,
+            focus: firstErrorField.focus,
+            inputEl: firstErrorField.inputEl()
+          },
           valid: false
         }
       }

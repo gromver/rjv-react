@@ -235,6 +235,7 @@ export default function Field ({render, path, schema}: FieldProps) {
     return {
       schema: () => schemaRef.current,
       ref: () => dataRef.current,
+      inputEl: () => inputRef.current,
       emit: (path, event) => emitterRef.current.emit(path, event),
       validate: () => validatorRef.current.validateRef(dataRef.current),
       focus () {

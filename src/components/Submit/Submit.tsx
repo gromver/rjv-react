@@ -5,12 +5,12 @@
  */
 
 import React, { useCallback, useContext } from 'react'
-import { FormContext, IField } from '../FormProvider'
+import { FormContext, FirstErrorField } from '../FormProvider'
 
 type Props = {
   onSubmit?: (data: any) => void
   onSuccess?: (data: any) => void
-  onError?: (firstErrorField: IField) => void
+  onError?: (firstErrorField: FirstErrorField) => void
   focusFirstError?: boolean
   render: (handleSubmit: () => void) => React.ReactElement | null
 }
@@ -36,7 +36,7 @@ export default function Submit (props: Props) {
             firstErrorField.focus()
           }
 
-          onError && onError(firstErrorField as IField)
+          onError && onError(firstErrorField)
         }
       }
     }
