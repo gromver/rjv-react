@@ -6,7 +6,7 @@ import { ScopeContext } from '../components/Scope'
 import { ReadonlyRef } from '../refs'
 import { Listener } from 'eventemitter2'
 
-export default function useWatch (...props: types.Path[]): [getValue: (path: types.Path) => any, ...values: any[]] {
+export default function useWatch (...props: types.Path[]): any[] {
   const [, update] = useState<events.BaseEvent>()
   const formContext = useContext(FormContext)
   const scopeContext = useContext(ScopeContext)
@@ -16,16 +16,6 @@ export default function useWatch (...props: types.Path[]): [getValue: (path: typ
   }
 
   const ref = useMemo(() => new ReadonlyRef(formContext.dataStorage, '/'), [formContext.dataStorage])
-
-  const getValue = useMemo(() => {
-    return (fieldPath: types.Path): any => {
-      const path = scopeContext
-        ? utils.resolvePath(fieldPath, scopeContext.scope)
-        : utils.resolvePath(fieldPath, '/')
-
-      return ref.ref(path).value
-    }
-  }, [ref])
 
   const watchProps = useMemo(() => {
     return props.map((path) => utils.resolvePath(path, scopeContext?.scope || '/'))
@@ -55,5 +45,5 @@ export default function useWatch (...props: types.Path[]): [getValue: (path: typ
     }
   }, [formContext.emitter, watchProps])
 
-  return [getValue, ...watchRefs.map((item) => item.value)]
+  return watchRefs.map((item) => item.value)
 }

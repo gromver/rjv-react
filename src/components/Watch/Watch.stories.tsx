@@ -1,12 +1,12 @@
 import React, { useState } from 'react'
 import { Form, Input, Row, Col, Select } from 'antd'
 import { storiesOf } from '@storybook/react'
-
 import { FormProvider } from '../FormProvider'
 import { Watch } from './index'
 import { Field } from '../Field'
 import { getValidationStatus, SubmitBtn } from '../../stories/helpers'
 import { Scope } from '../Scope'
+import { useDataRef } from '../../hooks'
 
 type Props = { path: string }
 
@@ -53,32 +53,50 @@ storiesOf('Watch', module)
             <h4>Watch: '/a', '/b', '/obj/*'</h4>
             <Watch
               props={['/a', '/b', '/obj/*']}
-              render={(getValue, a, b) => <div>
-                /a - {JSON.stringify(a)}
-                <br />
-                /b - {JSON.stringify(b)}
-                <br />
-                /obj - {JSON.stringify(getValue('obj'))}
-              </div>}
+              render={(a, b) => {
+                const objRef = useDataRef('obj')
+
+                return (
+                  <div>
+                    /a - {JSON.stringify(a)}
+                    <br />
+                    /b - {JSON.stringify(b)}
+                    <br />
+                    /obj - {JSON.stringify(objRef.value)}
+                  </div>
+                )
+              }}
             />
             <br />
             <h4>Watch: '/obj/**'</h4>
             <Watch
               props={['/obj/**']}
-              render={(getValue) => <div>
-                /obj - {JSON.stringify(getValue('/obj'))}
-              </div>}
+              render={() => {
+                const objRef = useDataRef('/obj')
+
+                return (
+                  <div>
+                    /obj - {JSON.stringify(objRef.value)}
+                  </div>
+                )
+              }}
             />
             <br />
             <Scope path="obj">
               <h4>Watch from scope /obj: '**', '../a'</h4>
               <Watch
                 props={['../a', '**']}
-                render={(getValue, a) => <div>
-                  /obj - {JSON.stringify(getValue(''))}
-                  <br />
-                  /a - {JSON.stringify(a)}
-                </div>}
+                render={(a) => {
+                  const objRef = useDataRef('')
+
+                  return (
+                    <div>
+                      /obj - {JSON.stringify(objRef.value)}
+                      <br />
+                      /a - {JSON.stringify(a)}
+                    </div>
+                  )
+                }}
               />
             </Scope>
           </Col>
@@ -106,7 +124,7 @@ storiesOf('Watch', module)
             </Form.Item>
             <Watch
               props={[path]}
-              render={(getValue, value) => (
+              render={(value) => (
                 <div>
                   {JSON.stringify(value)}
                 </div>
@@ -138,7 +156,7 @@ storiesOf('Watch', module)
             <Scope path={path}>
               <Watch
                 props={['']}
-                render={(getValue, value) => (
+                render={(value) => (
                   <div>
                     {JSON.stringify(value)}
                   </div>

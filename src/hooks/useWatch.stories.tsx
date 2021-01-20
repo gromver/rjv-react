@@ -6,6 +6,7 @@ import { FormProvider } from '../components/FormProvider'
 import { Field } from '../components/Field'
 import { Scope } from '../components/Scope'
 import useWatch from './useWatch'
+import useDataRef from './useDataRef'
 
 type WatcherProps = {
   props: string[]
@@ -63,32 +64,50 @@ storiesOf('useWatch', module)
             <h4>Watch: '/a', '/b', '/obj/*'</h4>
             <Watcher
               props={['/a', '/b', '/obj/*']}
-              render={(getValue, a, b) => <div>
-                /a - {JSON.stringify(a)}
-                <br />
-                /b - {JSON.stringify(b)}
-                <br />
-                /obj - {JSON.stringify(getValue('obj'))}
-              </div>}
+              render={(a, b) => {
+                const objRef = useDataRef('obj')
+
+                return (
+                  <div>
+                    /a - {JSON.stringify(a)}
+                    <br />
+                    /b - {JSON.stringify(b)}
+                    <br />
+                    /obj - {JSON.stringify(objRef.value)}
+                  </div>
+                )
+              }}
             />
             <br />
             <h4>Watch: '/obj/**'</h4>
             <Watcher
               props={['/obj/**']}
-              render={(getValue) => <div>
-                /obj - {JSON.stringify(getValue('/obj'))}
-              </div>}
+              render={() => {
+                const objRef = useDataRef('/obj')
+
+                return (
+                  <div>
+                    /obj - {JSON.stringify(objRef.value)}
+                  </div>
+                )
+              }}
             />
             <br />
             <Scope path="obj">
               <h4>Watch from scope /obj: '**', '../a'</h4>
               <Watcher
                 props={['../a', '**']}
-                render={(getValue, a) => <div>
-                  /obj - {JSON.stringify(getValue(''))}
-                  <br />
-                  /a - {JSON.stringify(a)}
-                </div>}
+                render={(a) => {
+                  const objRef = useDataRef('')
+
+                  return (
+                    <div>
+                      /obj - {JSON.stringify(objRef.value)}
+                      <br />
+                      /a - {JSON.stringify(a)}
+                    </div>
+                  )
+                }}
               />
             </Scope>
           </Col>
@@ -116,7 +135,7 @@ storiesOf('useWatch', module)
             </Form.Item>
             <Watcher
               props={[path]}
-              render={(getValue, value) => (
+              render={(value) => (
                 <div>
                   {JSON.stringify(value)}
                 </div>
@@ -148,7 +167,7 @@ storiesOf('useWatch', module)
             <Scope path={path}>
               <Watcher
                 props={['']}
-                render={(getValue, value) => (
+                render={(value) => (
                   <div>
                     {JSON.stringify(value)}
                   </div>

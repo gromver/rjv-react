@@ -26,10 +26,7 @@ const allowedEvents = [
 
 type EventTypeList = typeof allowedEvents[number][]
 
-type WatchRenderFn = (
-  getValue: (path: types.Path) => any,
-  ...values: any[]
-) => ReactElement | null
+type WatchRenderFn = (...values: any[]) => ReactElement | null
 
 type Props = {
   props: types.Path[]     // an empty array do not subscribes to events - just provides a root Ref
@@ -58,16 +55,6 @@ export default function Watch ({ render, props, events = DEFAULT_EVENT_TYPES, de
   }
 
   const ref = useMemo(() => new ReadonlyRef(formContext.dataStorage, '/'), [formContext.dataStorage])
-
-  const getValue = useMemo(() => {
-    return (fieldPath: types.Path): any => {
-      const path = scopeContext
-        ? utils.resolvePath(fieldPath, scopeContext.scope)
-        : utils.resolvePath(fieldPath, '/')
-
-      return ref.ref(path).value
-    }
-  }, [ref])
 
   const watchProps = useMemo(() => {
     return props.map((path) => utils.resolvePath(path, scopeContext?.scope || '/'))
@@ -109,5 +96,5 @@ export default function Watch ({ render, props, events = DEFAULT_EVENT_TYPES, de
 
   const args = watchRefs.map((item) => item.value)
 
-  return render(getValue, ...args)
+  return render(...args)
 }
