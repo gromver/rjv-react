@@ -1,11 +1,11 @@
-import React, { useCallback, useRef } from 'react'
+import React from 'react'
 import { Form, Input } from 'antd'
 import { storiesOf } from '@storybook/react'
 
-import { FormProvider, FormApi } from '../FormProvider'
+import { FormProvider } from '../FormProvider'
 import Scope from './Scope'
 import { Field } from '../Field'
-import { getValidationStatus } from '../../stories/helpers'
+import { getValidationStatus, SubmitBtn } from '../../stories/helpers'
 
 const initialData = {
   auth: {}
@@ -18,22 +18,9 @@ storiesOf('Scope', module)
   })
 
 function SimpleForm () {
-  const providerRef = useRef<FormApi>(null)
-  const handleSubmit = useCallback(async () => {
-    if (providerRef.current) {
-      const res = await providerRef.current.submit()
-
-      if (!res.valid) {
-        res.firstErrorField && res.firstErrorField.focus()
-      } else {
-        console.log('DATA', res.data)
-      }
-    }
-  }, [providerRef.current])
-
   return (
     <Form style={{ maxWidth: '400px' }}>
-      <FormProvider ref={providerRef} data={initialData}>
+      <FormProvider data={initialData}>
         <Scope path="auth">
           <Field
             path="name"
@@ -76,9 +63,7 @@ function SimpleForm () {
           />
         </Scope>
 
-        <button onClick={handleSubmit}>
-          Submit
-        </button>
+        <SubmitBtn />
       </FormProvider>
     </Form>
   )

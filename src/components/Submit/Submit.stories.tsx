@@ -50,14 +50,18 @@ storiesOf('Submit', module)
           onSubmit={(data) => console.log('onSubmit', data)}
           onSuccess={(data) => console.log('onSuccess', data)}
           onError={(firstError) => console.log('onError', firstError)}
-          render={(handleSubmit) => <button onClick={handleSubmit}>submit</button>}
+          render={(handleSubmit, submitting) => (
+            <button onClick={handleSubmit} disabled={submitting}>submit</button>
+          )}
         />
 
         <Submit
           onSubmit={(data) => console.log('onSubmit', data)}
           onSuccess={(data) => console.log('onSuccess', data)}
           onError={(firstError) => console.log('onError', firstError)}
-          render={(handleSubmit) => <Button onClick={handleSubmit}>Ant submit</Button>}
+          render={(handleSubmit, submitting) => (
+            <Button onClick={handleSubmit} loading={submitting}>Ant submit</Button>
+          )}
         />
 
         <br />
@@ -69,7 +73,9 @@ storiesOf('Submit', module)
           onSubmit={(data) => console.log('onSubmit', data)}
           onSuccess={(data) => console.log('onSuccess', data)}
           onError={(firstError) => console.log('onError', firstError)}
-          render={(handleSubmit) => <button onClick={handleSubmit}>submit</button>}
+          render={(handleSubmit, submitting) => (
+            <button onClick={handleSubmit} disabled={submitting}>submit</button>
+          )}
           focusFirstError={false}
         />
 
@@ -77,8 +83,37 @@ storiesOf('Submit', module)
           onSubmit={(data) => console.log('onSubmit', data)}
           onSuccess={(data) => console.log('onSuccess', data)}
           onError={(firstError) => console.log('onError', firstError)}
-          render={(handleSubmit) => <Button onClick={handleSubmit}>Ant submit</Button>}
+          render={(handleSubmit, submitting) => (
+            <Button onClick={handleSubmit} loading={submitting}>Ant submit</Button>
+          )}
           focusFirstError={false}
+        />
+      </Form>
+    </FormProvider>
+  })
+  .add('Test async onSuccess', () => {
+    return <FormProvider data={initialData}>
+      <p>You should open console to see events</p>
+
+      <br />
+
+      <Form style={{ width: 400 }}>
+        <RequiredField />
+
+        <Submit
+          onSubmit={(data) => console.log('onSubmit', data)}
+          onSuccess={(data) => new Promise((res) => {
+            console.log('onSuccess start', data)
+
+            setTimeout(() => {
+              console.log('onSuccess end')
+              res()
+            }, 1000)
+          })}
+          onError={(firstError) => console.log('onError', firstError)}
+          render={(handleSubmit, submitting) => (
+            <Button onClick={handleSubmit} loading={submitting}>Submit</Button>
+          )}
         />
       </Form>
     </FormProvider>
@@ -105,7 +140,9 @@ storiesOf('Submit', module)
           onSubmit={(data) => console.log('onSubmit', data, counter)}
           onSuccess={(data) => console.log('onSuccess', data, counter)}
           onError={(firstError) => console.log('onError', firstError, counter)}
-          render={(handleSubmit) => <button onClick={handleSubmit}>submit</button>}
+          render={(handleSubmit, submitting) => (
+            <Button onClick={handleSubmit} loading={submitting}>Submit</Button>
+          )}
         />
       </Form>
     </FormProvider>

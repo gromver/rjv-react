@@ -19,21 +19,17 @@ function HookTest () {
 function SubmitBtn (props) {
   const formApi = useForm()
 
-  const handleSubmit = useCallback(async () => {
-    if (formApi) {
-      const {submit} = formApi
+  const handleSubmit = useCallback(() => {
+    const {submit} = formApi
 
-      const {valid, data, firstErrorField} = await submit()
-
-      if (valid) {
-        console.log(data)
-      } else {
-        console.log(firstErrorField)
-        if (firstErrorField) {
-          firstErrorField.focus()
-        }
+    submit(
+      (data) => {
+        console.log('SUBMIT RESULT:', data)
+      },
+      (firstErrorField) => {
+        firstErrorField.focus()
       }
-    }
+    )
   }, [formApi])
 
   return <button onClick={handleSubmit}>

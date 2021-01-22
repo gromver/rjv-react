@@ -12,9 +12,9 @@ import React, {
   forwardRef
 } from 'react'
 import { utils, types } from 'rjv'
-import { FormContext } from '../FormProvider'
+import EmitterContext from '../../contexts/EmitterContext'
+import DataContext from '../../contexts/DataContext'
 import { EmittingRef } from '../../refs'
-import { EmitterContext } from '../EmitterProvider'
 import { addPropToPath, isArrayHasIndex } from '../../utils'
 import usePath from '../../hooks/usePath'
 
@@ -40,26 +40,22 @@ type FieldArrayProps = {
 let _id = 1
 
 function FieldArray ({ render, path }: FieldArrayProps, elRef: React.Ref<FieldArrayRef>) {
-  const formContext = useContext(FormContext)
+  const dataContext = useContext(DataContext)
   const emitterContext = useContext(EmitterContext)
 
-  if (!formContext) {
-    throw new Error('FieldArray - FormContext must be provided')
-  }
-
-  if (!emitterContext) {
-    throw new Error('FieldArray - EmitterContext must be provided')
+  if (!dataContext || !emitterContext) {
+    throw new Error('FieldArray - form is not provided')
   }
 
   const _path = usePath(path)
 
   const ref = useMemo(
-    () => new EmittingRef(formContext.dataStorage, _path, emitterContext.emitter),
-    [formContext.dataStorage, emitterContext.emitter, _path]
+    () => new EmittingRef(dataContext.dataStorage, _path, emitterContext.emitter),
+    [dataContext.dataStorage, emitterContext.emitter, _path]
   )
 
   if (ref.value === undefined) {
-    formContext.dataStorage.set(utils.pathToArray(_path), [])
+    dataContext.dataStorage.set(utils.pathToArray(_path), [])
   }
 
   if (!Array.isArray(ref.value)) {

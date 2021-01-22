@@ -46,7 +46,7 @@ storiesOf('useField', module)
       <Watch
         props={['**']}
         render={() => {
-          const field = useField('foo/bar')
+          const field = useField('foo/bar')![0]
 
           return <div>Value: {field?.ref().value}</div>
         }}
@@ -61,7 +61,7 @@ storiesOf('useField', module)
         <Watch
           props={['bar']}
           render={() => {
-            const field = useField('bar')
+            const field = useField('bar')![0]
 
             return <div>Value: {field?.ref().value}</div>
           }}

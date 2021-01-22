@@ -10,7 +10,7 @@ import React, {
   useMemo
 } from 'react'
 import { EventEmitter2 } from 'eventemitter2'
-import EventEmitterContext, { EmitterContextValue } from './EmitterContext'
+import EmitterContext, { EmitterContextValue } from '../../contexts/EmitterContext'
 import { createEmitter } from '../../utils'
 
 export type EmitterProviderRef = {
@@ -34,9 +34,9 @@ function EmitterProvider (props: Props, ref: React.Ref<EmitterProviderRef>) {
   }, [context])
 
   return (
-    <EventEmitterContext.Provider value={context}>
+    <EmitterContext.Provider value={context}>
       {children}
-    </EventEmitterContext.Provider>
+    </EmitterContext.Provider>
   )
 }
 

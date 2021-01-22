@@ -1,8 +1,9 @@
 import React, { useCallback, useContext } from 'react'
 import { Alert, Button } from 'antd'
-import { useErrors } from '../hooks'
-import { FormContext } from '../components/FormProvider'
+import FormContext from '../contexts/FormContext'
+import FormStateContext from '../contexts/FormStateContext'
 import { FieldApi } from '../components/Field'
+import { useErrors } from '../hooks'
 
 /**
  * Extracts validation status for the Antd's Form.Item component
@@ -54,17 +55,20 @@ export function ShowErrors () {
  */
 export function SubmitBtn () {
   const formContext = useContext(FormContext)
+  const formStateContext = useContext(FormStateContext)
+
   const handleSubmit = useCallback(async () => {
     if (formContext) {
-      const res = await formContext.submit()
-
-      console.log('SUBMIT RESULT:', res)
-
-      if (!res.valid) {
-        res.firstErrorField && res.firstErrorField.focus()
-      }
+      formContext.submit(
+        (data) => {
+          console.log('SUBMIT RESULT:', data)
+        },
+        (firstErrorField) => {
+          firstErrorField.focus()
+        }
+      )
     }
   }, [formContext])
 
-  return <Button onClick={handleSubmit}>Submit</Button>
+  return <Button onClick={handleSubmit} loading={formStateContext?.isSubmitting}>Submit</Button>
 }

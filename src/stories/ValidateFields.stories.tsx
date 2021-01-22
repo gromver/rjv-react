@@ -1,19 +1,17 @@
-import React, { useRef } from 'react'
+import React from 'react'
 import { Form, Input } from 'antd'
 import { storiesOf } from '@storybook/react'
 import { getValidationStatus, ShowErrors, SubmitBtn } from './helpers'
-import { FormProvider, FormApi, Field } from '../index'
+import { FormProvider, Field, Form as RjvForm } from '../index'
 import { useValidate } from '../hooks'
 
 const initialData = {}
 
 storiesOf('Form', module)
   .add('Validate fields - using ref', () => {
-    const providerRef = useRef<FormApi>(null)
-
     return (
       <Form style={{ maxWidth: '400px' }}>
-        <FormProvider ref={providerRef} data={initialData}>
+        <FormProvider data={initialData}>
           <ShowErrors />
 
           <br />
@@ -90,11 +88,17 @@ storiesOf('Form', module)
             }}
           />
 
-          <button onClick={() => providerRef.current?.validate('a')}>Validate /a</button>
-          &nbsp;
-          <button onClick={() => providerRef.current?.validate('/b')}>Validate /b</button>
-          &nbsp;
-          <button onClick={() => providerRef.current?.validate(['/a', 'b'])}>Validate /a and /b</button>
+          <RjvForm
+            render={(form) => (
+              <>
+                <button onClick={() => form.validate('a')}>Validate /a</button>
+                &nbsp;
+                <button onClick={() => form.validate('/b')}>Validate /b</button>
+                &nbsp;
+                <button onClick={() => form.validate(['/a', 'b'])}>Validate /a and /b</button>
+              </>
+            )}
+          />
           &nbsp;
           <SubmitBtn />
         </FormProvider>

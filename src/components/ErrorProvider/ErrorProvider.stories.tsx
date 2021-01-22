@@ -3,7 +3,7 @@ import { Form, Input, Card } from 'antd'
 import { storiesOf } from '@storybook/react'
 
 import { FormProvider } from '../FormProvider'
-import { ErrorProvider } from './index'
+import ErrorProvider from './ErrorProvider'
 import { Field } from '../Field'
 import { getValidationStatus, ShowErrors, SubmitBtn } from '../../stories/helpers'
 

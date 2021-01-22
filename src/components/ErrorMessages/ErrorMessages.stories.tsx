@@ -2,9 +2,10 @@ import React from 'react'
 import { storiesOf } from '@storybook/react'
 import { Form, Input } from 'antd'
 import ErrorMessages from './ErrorMessages'
-import { FormProvider, ValidationErrors } from '../FormProvider'
+import { FormProvider } from '../FormProvider'
 import { Field } from '../Field'
 import { ErrorProvider } from '../ErrorProvider'
+import { ValidationErrors } from '../../types'
 import { getValidationStatus } from '../../stories/helpers'
 
 const initialData = {}

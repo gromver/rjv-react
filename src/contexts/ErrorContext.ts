@@ -1,5 +1,5 @@
 import { createContext } from 'react'
-import { ValidationErrors } from '../FormProvider'
+import { ValidationErrors } from '../types'
 
 export type SubscribeHandler = (errors: ValidationErrors) => void
 export type Unsubscribe = () => void

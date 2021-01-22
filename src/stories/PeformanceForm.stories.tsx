@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useLayoutEffect } from 'react'
+import React, { useState, useEffect, useLayoutEffect, useCallback } from 'react'
 import { storiesOf } from '@storybook/react'
-import { FormProvider, Field, Submit, ErrorMessages } from '../index'
-import { Form, Input } from 'antd'
+import { FormProvider, Field, Form as RjvForm, ErrorMessages } from '../index'
+import { Button, Form, Input } from 'antd'
 import { getValidationStatus } from './helpers'
 
 function createArrayWithNumbers (length) {
@@ -14,6 +14,11 @@ const initialData = {}
 
 const emailSchema = {
   default: '',
+  // validate: () => {
+  //   return new Promise((r) => {
+  //     setTimeout(r, 500, undefined)
+  //   }) as any
+  // },
   presence: true,
   format: 'email',
   errors: {
@@ -31,10 +36,6 @@ storiesOf('Form', module)
 function PerformanceForm () {
   const [upd, update] = useState({})
   const [visible, setVisible] = useState(false)
-
-  const onSubmit = (values) => {
-    console.log('submit', values)
-  }
 
   useLayoutEffect(() => {
     console.time('initialRender')
@@ -113,22 +114,35 @@ function PerformanceForm () {
 
       <ErrorMessages render={(errors) => errors.length ? (<div>{errors[0].message}</div>) : null} />
 
-      <Submit
-        onSubmit={(d) => {
+      <RjvForm render={(form) => {
+        const handleSubmit = useCallback(() => {
           console.time('submit')
-          onSubmit(d)
-        }}
-        onError={(firstErrorField) => { console.timeEnd('submit'); firstErrorField.focus() }}
-        render={(handleSubmit) => <button type="submit" onClick={handleSubmit}>Submit</button>}
-      />
 
-      <button onClick={() => {
+          form.submit(
+            (data) => {
+              console.timeEnd('submit')
+              console.log('SUBMIT RESULT:', data)
+            },
+            (firstErrorField) => {
+              console.timeEnd('submit')
+              firstErrorField.focus()
+            }
+          )
+
+        }, [form])
+        return (
+          <Button onClick={handleSubmit} loading={form.state.isSubmitting}>Submit</Button>
+        )
+      }}
+      />
+      &nbsp;
+      <Button onClick={() => {
         console.time('update')
         update({})
-      }}>Update</button>
+      }}>Update</Button>
       &nbsp;
-      {!visible && <button onClick={() => setVisible(true)}>Show additional</button>}
-      {visible && <button onClick={() => setVisible(false)}>Hide additional</button>}
+      {!visible && <Button onClick={() => setVisible(true)}>Show additional</Button>}
+      {visible && <Button onClick={() => setVisible(false)}>Hide additional</Button>}
     </FormProvider>
   )
 }

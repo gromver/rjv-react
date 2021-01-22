@@ -4,7 +4,7 @@
  */
 
 import React from 'react'
-import { ValidationErrors } from '../FormProvider'
+import { ValidationErrors } from '../../types'
 import { useErrors } from '../../hooks'
 
 type Props = {

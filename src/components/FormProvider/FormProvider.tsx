@@ -9,25 +9,32 @@ import React, {
   useEffect,
   useImperativeHandle,
   useMemo,
-  memo,
   useState,
   useRef,
   useContext,
   useCallback
 } from 'react'
 import _cloneDeep from 'lodash/cloneDeep'
-import { types, utils, Storage, ValidationMessage } from 'rjv'
-import FormContext, { FormContextValue } from './FormContext'
-import UpdaterContext from './UpdaterContext'
-import { EmitterProvider, events } from '../EmitterProvider'
+import { types, Storage, ValidationMessage, utils } from 'rjv'
+import { EventEmitter2 } from 'eventemitter2'
 import { createEmitter } from '../../utils'
-import { IField, ValidationErrors, FieldState, FormApi } from './types'
+import {
+  IField,
+  FieldState,
+  SubmitFormFn,
+  ValidateFieldsFn,
+  FormState
+} from '../../types'
+import { DEFAULT_OPTIONS } from './constants'
 import { Scope } from '../Scope'
 import { ErrorProvider } from '../ErrorProvider'
-import { DEFAULT_OPTIONS } from './constants'
-import { OptionsContext, OptionsContextValue } from '../OptionsProvider'
-import { EventEmitter2 } from 'eventemitter2'
-import EmittingRef from '../../refs/EmittingRef'
+import { EmitterProvider, events } from '../EmitterProvider'
+import UpdaterContext from '../../contexts/UpdaterContext'
+import OptionsContext, { OptionsContextValue } from '../../contexts/OptionsContext'
+import DataContext, { DataContextValue } from '../../contexts/DataContext'
+import FieldContext from '../../contexts/FieldContext'
+import FormContext, { FormContextValue } from '../../contexts/FormContext'
+import FormStateContext from '../../contexts/FormStateContext'
 
 function extractMessageFromResult (res: types.IValidationResult, ref: types.IRef): ValidationMessage {
   return res.results[ref.path]
@@ -53,6 +60,16 @@ function createDefaultStateFromSchema (schema: types.ISchema): FieldState {
   }
 }
 
+const INITIAL_FORM_STATE: FormState = {
+  isValid: false,
+  isSubmitting: false,
+  submitted: 0
+  // isValidating: false
+  // isPristine: true
+  // isTouched: false
+  // isDirty: false
+}
+
 // FormUpdater
 type FormUpdaterProps = {
   children: React.ReactNode
@@ -75,32 +92,28 @@ function FormUpdater ({ children }: FormUpdaterProps, elRef: React.Ref<FormUpdat
 const FormUpdaterWithRef = forwardRef<FormUpdaterRef, FormUpdaterProps>(FormUpdater)
 
 // FormProvider
-type DataState = {
-  initialData: any,
-  dataStorage: types.IStorage,
-  initialDataStorage: types.IStorage
-}
-
-type Props = {
+type FormProviderProps = {
   children: React.ReactNode,
   data?: any
 }
 
-function FormProvider (props: Props, elRef: React.Ref<FormApi>) {
-  const { data, children } = props
+export default function FormProvider ({ data, children }: FormProviderProps) {
   const dataRef = useRef<any>(data)
   const updaterRef = useRef<FormUpdaterRef>(null)
   const emitterRef = useRef<EventEmitter2>()
-  const fieldsRef = useRef<Map<IField, FieldState>>(new Map())
   const nextFieldsRef = useRef<Map<IField, FieldState>>(new Map())
   const optionsRef = useRef<OptionsContextValue>()
 
+  const [fields, setFields] = useState<Map<IField, FieldState>>(() => new Map())
   const [emitter, setEmitter] = useState(() => createEmitter())
-  const [dataState, setDataState] = useState<DataState>(() => ({
-    initialData: _cloneDeep(data),
+  const [dataContext, setDataContext] = useState<DataContextValue>(() => ({
     dataStorage: new Storage(_cloneDeep(data)),
     initialDataStorage: new Storage(_cloneDeep(data))
   }))
+  const [formState, setFormState] = useState<FormState>(INITIAL_FORM_STATE)
+  const formStateRef = useRef<FormState>(formState)
+
+  useMemo(() => formStateRef.current = formState, [formState])
 
   const registerFieldHandler = useMemo(() => {
     nextFieldsRef.current = new Map<IField, FieldState>()
@@ -108,7 +121,7 @@ function FormProvider (props: Props, elRef: React.Ref<FormApi>) {
     const registerFieldHandler = (path: string, event: events.BaseEvent) => {
       // fields reconcile phase
       if (event instanceof events.RegisterFieldEvent) {
-        nextFieldsRef.current.set(event.field, fieldsRef.current.get(event.field) ?? createDefaultStateFromSchema(event.field.schema()))
+        nextFieldsRef.current.set(event.field, fields.get(event.field) ?? createDefaultStateFromSchema(event.field.schema()))
       }
     }
 
@@ -135,7 +148,8 @@ function FormProvider (props: Props, elRef: React.Ref<FormApi>) {
       })
 
       // apply reconciled fields map
-      fieldsRef.current = nextFieldsRef.current
+      setFields(nextFieldsRef.current)
+      // fieldsRef.current = nextFieldsRef.current
     }
   }, [emitter, registerFieldHandler])
 
@@ -143,19 +157,20 @@ function FormProvider (props: Props, elRef: React.Ref<FormApi>) {
     if (data !== dataRef.current) {
       dataRef.current = data
 
-      fieldsRef.current.forEach((state, field) => {
-        fieldsRef.current.set(field, createDefaultStateFromSchema(field.schema()))
+      fields.forEach((state, field) => {
+        fields.set(field, createDefaultStateFromSchema(field.schema()))
       })
 
-      setDataState({
-        initialData: _cloneDeep(data),
+      setDataContext({
         dataStorage: new Storage(_cloneDeep(data)),
         initialDataStorage: new Storage(_cloneDeep(data))
       })
 
+      setFormState(INITIAL_FORM_STATE)
+
       updaterRef.current?.updateForm()
     }
-  }, [data])
+  }, [data, fields])
 
   const optionsContext = useContext(OptionsContext)
 
@@ -164,123 +179,110 @@ function FormProvider (props: Props, elRef: React.Ref<FormApi>) {
   }, [optionsContext])
 
   const getFieldState = useCallback((field: IField) => {
-    return fieldsRef.current.get(field) || createDefaultStateFromSchema(field.schema())
-  }, [])
+    return fields.get(field) || createDefaultStateFromSchema(field.schema())
+  }, [fields])
 
   const setFieldState = useCallback((field: IField, state: Partial<FieldState>) => {
     const curState = getFieldState(field)
 
-    fieldsRef.current.set(field, { ...curState, ...state })
-  }, [])
+    fields.set(field, { ...curState, ...state })
+  }, [fields])
 
-  const context = useMemo<FormContextValue>(() => ({
-    options,
+  const getFields = useCallback((path: types.Path): IField[] => {
+    return Array.from(fields.keys()).filter((item) => item.ref().path === path)
+  }, [fields])
+
+  const fieldsContext = useMemo(() => ({
+    fields,
     emitter,
-    getFieldState,
-    setFieldState,
-    dataStorage: dataState.dataStorage,
-    initialDataStorage: dataState.initialDataStorage,
-    submit: async () => {
-      let firstErrorField: IField | undefined
-      await Promise.all(
-        Array
-          .from(fieldsRef.current.keys())
-          .map((field) => {
-            return field.validate()
-              .then((res) => {
-                const curState = fieldsRef.current.get(field)
+    getFields,
+    getState: getFieldState,
+    setState: setFieldState
+  }), [fields, emitter])
 
-                fieldsRef.current.set(field, {
-                  ...curState,
-                  isValid: res.valid,
-                  isTouched: true,
-                  isValidated: true,
-                  isValidating: false,
-                  message: extractMessageFromResult(res, field.ref())
-                } as FieldState)
+  const submit = useCallback<SubmitFormFn>(async (onSuccess, onError) => {
+    let firstErrorField: IField | undefined
+    setFormState({ ...formStateRef.current, isSubmitting: true })
 
-                if (!firstErrorField && !res.valid) {
-                  firstErrorField = field
-                }
-              })
-          }))
+    await new Promise((r) => setTimeout(r)).then(() => Promise.all(
+      Array
+        .from(fields.keys())
+        .map((field) => {
+          return field.validate()
+            .then((res) => {
+              const curState = fields.get(field)
 
-      // update view
-      updaterRef.current?.updateForm()
-
-      if (firstErrorField) {
-        return {
-          firstErrorField: {
-            path: firstErrorField.ref().path,
-            focus: firstErrorField.focus,
-            inputEl: firstErrorField.inputEl()
-          },
-          valid: false
-        }
-      }
-
-      return {
-        valid: true,
-        data: dataState.dataStorage.get([])
-      }
-    },
-    validate: async (path) => {
-      const _path = (Array.isArray(path) ? path : [path])
-        .map((item) => utils.resolvePath(item, '/'))
-
-      await Promise.all(
-        Array
-          .from(fieldsRef.current.keys())
-          .filter((field) => _path.includes(field.ref().path))
-          .map((field) => {
-            const fieldPath = field.ref().path
-
-            setFieldState(field, {
-              isValidating: true
-            })
-
-            field.emit(fieldPath, new events.StateChangedEvent())
-
-            return field.validate().then((res) => {
-              setFieldState(field, {
+              fields.set(field, {
+                ...curState,
                 isValid: res.valid,
                 isTouched: true,
                 isValidated: true,
                 isValidating: false,
                 message: extractMessageFromResult(res, field.ref())
-              })
+              } as FieldState)
 
-              field.emit(fieldPath, new events.FieldValidatedEvent())
+              if (!firstErrorField && !res.valid) {
+                firstErrorField = field
+              }
             })
-          }))
-    },
-    getDataRef: (path = '/') => {
-      const _path = utils.resolvePath(path, '/')
+        })))
 
-      return new EmittingRef(dataState.dataStorage, _path, emitter)
-    },
-    getField: (path) => Array.from(fieldsRef.current.keys()).find((item) => item.ref().path === path),
-    getErrors: () => {
-      const res: ValidationErrors = []
+    // update view
+    updaterRef.current?.updateForm()
 
-      fieldsRef.current.forEach((state, field) => {
-        if (state.isValidated && !state.isValid) {
-          const message = state.message && optionsRef.current?.descriptionResolver(state.message) || ''
-
-          res.push({path: field.ref().path, message})
-        }
+    if (firstErrorField) {
+      onError && await onError({
+        path: firstErrorField.ref().path,
+        focus: firstErrorField.focus,
+        inputEl: firstErrorField.inputEl()
       })
-
-      return res
-    },
-    getMessageDescription: (field) => {
-      const state = fieldsRef.current.get(field)
-
-      const message = state && (state.isValidated ? state.message : undefined)
-
-      return message && optionsRef.current?.descriptionResolver(message)
+    } else {
+      onSuccess && await onSuccess(dataContext.dataStorage.get([]))
     }
-  }), [dataState, options, emitter, getFieldState])
+
+    setFormState({
+      ...formStateRef.current,
+      isValid: !firstErrorField,
+      isSubmitting: false,
+      submitted: formStateRef.current.submitted + 1
+    })
+  }, [fields, dataContext])
+
+  const validate = useCallback<ValidateFieldsFn>(async (path) => {
+    const _path = (Array.isArray(path) ? path : [path])
+      .map((item) => utils.resolvePath(item, '/'))
+
+    await Promise.all(
+      Array
+        .from(fields.keys())
+        .filter((field) => _path.includes(field.ref().path))
+        .map((field) => {
+          const fieldPath = field.ref().path
+
+          setFieldState(field, {
+            isValidating: true
+          })
+
+          field.emit(fieldPath, new events.StateChangedEvent())
+
+          return field.validate().then((res) => {
+            setFieldState(field, {
+              isValid: res.valid,
+              isTouched: true,
+              isValidated: true,
+              isValidating: false,
+              message: extractMessageFromResult(res, field.ref())
+            })
+
+            field.emit(fieldPath, new events.FieldValidatedEvent())
+          })
+        }))
+  }, [fields])
+
+  const formContext = useMemo<FormContextValue>(() => ({
+    submit,
+    validate
+  }), [submit, validate])
 
   useEffect(() => {
     return () => {
@@ -288,30 +290,23 @@ function FormProvider (props: Props, elRef: React.Ref<FormApi>) {
     }
   }, [emitter])
 
-  useImperativeHandle(elRef, () => {
-    return {
-      submit: context.submit,
-      validate: context.validate,
-      getDataRef: context.getDataRef,
-      getErrors: context.getErrors
-    }
-  }, [context])
-
-  return <FormContext.Provider
-    value={context}
-  >
-    <Scope path="/">
-      <EmitterProvider emitter={emitter}>
-        <ErrorProvider emitter={emitter}>
-          <FormUpdaterWithRef ref={updaterRef}>
-            {children}
-          </FormUpdaterWithRef>
-        </ErrorProvider>
-      </EmitterProvider>
-    </Scope>
-  </FormContext.Provider>
+  return <DataContext.Provider value={dataContext}>
+    <FormContext.Provider value={formContext}>
+      <FieldContext.Provider value={fieldsContext}>
+        <OptionsContext.Provider value={options}>
+          <Scope path="/">
+            <EmitterProvider emitter={emitter}>
+              <ErrorProvider emitter={emitter}>
+                <FormStateContext.Provider value={formState}>
+                  <FormUpdaterWithRef ref={updaterRef}>
+                    {children}
+                  </FormUpdaterWithRef>
+                </FormStateContext.Provider>
+              </ErrorProvider>
+            </EmitterProvider>
+          </Scope>
+        </OptionsContext.Provider>
+      </FieldContext.Provider>
+    </FormContext.Provider>
+  </DataContext.Provider>
 }
-
-const forwardedRef = forwardRef<FormApi, Props>(FormProvider)
-
-export default memo<typeof forwardedRef>(forwardedRef)

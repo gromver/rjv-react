@@ -1,6 +1,7 @@
 import { useContext, useState, useEffect } from 'react'
-import { ValidationErrors, UpdaterContext } from '../components/FormProvider'
-import { ErrorContext } from '../components/ErrorProvider'
+import UpdaterContext from '../contexts/UpdaterContext'
+import ErrorContext from '../contexts/ErrorContext'
+import { ValidationErrors } from '../types'
 
 export default function useErrors (): ValidationErrors {
   const [errors, setErrors] = useState<ValidationErrors>([])

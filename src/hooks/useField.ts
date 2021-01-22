@@ -1,16 +1,17 @@
 import { useContext } from 'react'
 import { types } from 'rjv'
-import { FormContext, IField } from '../components/FormProvider'
+import FieldContext from '../contexts/FieldContext'
 import usePath from './usePath'
+import { IField } from '../types'
 
-export default function useField (fieldPath: types.Path): IField | undefined {
-  const formContext = useContext(FormContext)
+export default function useField (fieldPath: types.Path): IField[] | undefined {
+  const fieldContext = useContext(FieldContext)
 
-  if (!formContext) {
-    throw new Error('useField - FormContext must be provided')
+  if (!fieldContext) {
+    throw new Error('useField - form is not provided')
   }
 
   const path = usePath(fieldPath)
 
-  return formContext.getField(path)
+  return fieldContext.getFields(path)
 }

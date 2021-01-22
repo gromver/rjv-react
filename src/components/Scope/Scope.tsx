@@ -6,22 +6,15 @@
 
 import React, { useMemo, memo, useContext } from 'react'
 import { utils, types } from 'rjv'
-import ScopeContext from './ScopeContext'
-import FormContext from '../FormProvider/FormContext'
+import ScopeContext from '../../contexts/ScopeContext'
 
-type Props = {
+type ScopeProps = {
   path: types.Path
   children: React.ReactNode
 }
 
-const Scope = memo<Props>((props: Props) => {
+const Scope = memo<ScopeProps>((props: ScopeProps) => {
   const { path, children } = props
-
-  const formContext = useContext(FormContext)
-
-  if (!formContext) {
-    throw new Error('Scope - FormContext must be provided')
-  }
 
   const scopeContext = useContext(ScopeContext)
 
@@ -35,13 +28,13 @@ const Scope = memo<Props>((props: Props) => {
     return {
       scope: utils.resolvePath(path, '/')
     }
-  }, [path, formContext, scopeContext])
+  }, [path, scopeContext])
 
-  return <ScopeContext.Provider
-    value={context}
-  >
-    {children}
-  </ScopeContext.Provider>
+  return (
+    <ScopeContext.Provider value={context}>
+      {children}
+    </ScopeContext.Provider>
+  )
 })
 
 export default Scope

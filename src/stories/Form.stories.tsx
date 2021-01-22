@@ -1,9 +1,9 @@
-import React, { useRef, useState } from 'react'
+import React, { useState } from 'react'
 import { Form, Input } from 'antd'
 import { storiesOf } from '@storybook/react'
 
-import { getValidationStatus, ShowErrors } from './helpers'
-import { FormProvider, FormApi, Field } from '../index'
+import { getValidationStatus, ShowErrors, SubmitBtn } from './helpers'
+import { FormProvider, Field } from '../index'
 
 const initialData = {}
 
@@ -15,11 +15,10 @@ storiesOf('Form', module)
 
 function SimpleForm () {
   const [visible, setVisible] = useState(false)
-  const providerRef = useRef<FormApi>(null)
 
   return (
     <Form style={{ maxWidth: '400px' }}>
-      <FormProvider ref={providerRef} data={initialData}>
+      <FormProvider data={initialData}>
         <ShowErrors />
 
         <br />
@@ -111,14 +110,7 @@ function SimpleForm () {
           }}
         />}
 
-        <button
-          onClick={() => {
-            providerRef.current && providerRef.current.submit()
-              .then((res) => console.log('RES', res))
-          }}
-        >
-          Submit
-        </button>
+        <SubmitBtn />
         &nbsp;
         {!visible && <button onClick={() => setVisible(true)}>Show additional</button>}
         {visible && <button onClick={() => setVisible(false)}>Hide additional</button>}

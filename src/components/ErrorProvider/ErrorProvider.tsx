@@ -7,47 +7,49 @@
 
 import React, { ReactNode, useContext, useMemo } from 'react'
 import { EventEmitter2, Listener } from 'eventemitter2'
+import { EmitterProvider, events } from '../EmitterProvider'
 import ErrorContext, {
   ErrorContextValue,
   Subscribe,
   SubscribeHandler,
   Unsubscribe
-} from './ErrorContext'
-import { EmitterProvider, EmitterContext, events } from '../EmitterProvider'
+} from '../../contexts/ErrorContext'
+import FieldContext from '../../contexts/FieldContext'
+import OptionsContext from '../../contexts/OptionsContext'
+import EmitterContext from '../../contexts/EmitterContext'
+import { IField, ValidationErrors } from '../../types'
 import { createEmitter } from '../../utils'
-import FormContext from '../FormProvider/FormContext'
-import { IField, FieldState, ValidationErrors } from '../FormProvider/types'
 
-type Props = {
+type ErrorProviderProps = {
   emitter?: EventEmitter2,
   children: ReactNode
 }
 
 const VALIDATION_STATE_CHANGED_EVENTS = [events.FieldValidatedEvent.TYPE, events.FieldInvalidatedEvent.TYPE]
 
-export default function ErrorProvider ({ emitter, children }: Props) {
+export default function ErrorProvider ({ emitter, children }: ErrorProviderProps) {
   const emitterContext = useContext(EmitterContext)
-  const formContext = useContext(FormContext)
+  const fieldsContext = useContext(FieldContext)
+  const optionsContext = useContext(OptionsContext)
 
-  if (!formContext) {
-    throw new Error('ErrorProvider - FormContext must be provided')
+  if (!fieldsContext || !optionsContext || !emitterContext) {
+    throw new Error('ErrorProvider - form is not provided')
   }
 
-  if (!emitterContext) {
-    throw new Error('ErrorProvider - EmitterContext must be provided')
-  }
+  const innerEmitter = useMemo(() => emitter || createEmitter(), [emitter, emitterContext.emitter])
 
-  const { innerEmitter, context, fields } = useMemo(() => {
-    const innerEmitter = emitter || createEmitter()
+  const fields: IField[] = useMemo(() => [], [innerEmitter])
 
+  const context: ErrorContextValue = useMemo(() => {
     const getErrors = () => {
       const res: ValidationErrors = []
 
       fields.forEach((field) => {
-        const state = formContext.getFieldState(field) as FieldState
+        const state = fieldsContext.getState(field)
 
         if (state.isValidated && !state.isValid) {
-          res.push({path: field.ref().path, message: formContext.getMessageDescription(field) as string})
+          // res.push({path: field.ref().path, message: fieldsContext.getMessageDescription(field) as string})
+          res.push({path: field.ref().path, message: optionsContext.descriptionResolver(state.message as any)})
         }
       })
 
@@ -85,17 +87,11 @@ export default function ErrorProvider ({ emitter, children }: Props) {
       })
     }
 
-    const context: ErrorContextValue = {
+    return {
       subscribe,
       getErrors
     }
-
-    return {
-      innerEmitter,
-      context,
-      fields: [] as IField[]
-    }
-  }, [emitterContext, formContext])
+  }, [innerEmitter, emitterContext.emitter, fieldsContext, optionsContext])
 
   if (emitter) {
     return <ErrorContext.Provider value={context}>
@@ -103,9 +99,11 @@ export default function ErrorProvider ({ emitter, children }: Props) {
     </ErrorContext.Provider>
   }
 
-  return <ErrorContext.Provider value={context}>
-    <EmitterProvider emitter={innerEmitter}>
-      {children}
-    </EmitterProvider>
-  </ErrorContext.Provider>
+  return (
+    <ErrorContext.Provider value={context}>
+      <EmitterProvider emitter={innerEmitter}>
+        {children}
+      </EmitterProvider>
+    </ErrorContext.Provider>
+  )
 }

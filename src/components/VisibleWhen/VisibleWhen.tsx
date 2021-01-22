@@ -9,8 +9,9 @@ import React, {
 } from 'react'
 import { types, Validator } from 'rjv'
 import { Listener } from 'eventemitter2'
-import { FormContext } from '../FormProvider'
-import { EmitterProvider, EmitterContext, events } from '../EmitterProvider'
+import { EmitterProvider, events } from '../EmitterProvider'
+import EmitterContext from '../../contexts/EmitterContext'
+import DataContext from '../../contexts/DataContext'
 import { getPropsToObserveFromSchema, createEmitter } from '../../utils'
 import ReadonlyRef from '../../refs/ReadonlyRef'
 import usePath from '../../hooks/usePath'
@@ -52,20 +53,20 @@ export default function VisibleWhen (
   }: Props
 ) {
   const [visible, setVisible] = useState(false)
-  const formContext = useContext(FormContext)
+  const dataContext = useContext(DataContext)
   const emitterContext = useContext(EmitterContext)
 
   const useMount = useMemo(() => !useVisibilityStyle, [])
 
   const _path = usePath(path ?? '')
 
-  if (!formContext) {
-    throw new Error('VisibleWhen - FormContext must be provided')
+  if (!dataContext) {
+    throw new Error('VisibleWhen - form is not provided')
   }
 
   const ref = useMemo(
-    () => new ReadonlyRef(formContext.dataStorage, _path),
-    [_path, formContext!.dataStorage]
+    () => new ReadonlyRef(dataContext.dataStorage, _path),
+    [_path, dataContext!.dataStorage]
   )
 
   const validator = useMemo(() => new Validator(schema), [schema])

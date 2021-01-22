@@ -4,43 +4,44 @@
  *
  */
 
-import React, { useCallback, useContext } from 'react'
-import { FormContext, FirstErrorField } from '../FormProvider'
+import React, { useCallback, useState } from 'react'
+import { useForm } from '../../hooks'
+import { FirstErrorField } from '../../types'
 
 type Props = {
   onSubmit?: (data: any) => void
-  onSuccess?: (data: any) => void
+  onSuccess?: (data: any) => void | Promise<void>
   onError?: (firstErrorField: FirstErrorField) => void
   focusFirstError?: boolean
-  render: (handleSubmit: () => void) => React.ReactElement | null
+  render: (handleSubmit: () => void, submitting: boolean) => React.ReactElement | null
 }
 
 export default function Submit (props: Props) {
+  const [submitting, setSubmitting] = useState(false)
   const { onSubmit, onError, onSuccess, render, focusFirstError = true } = props
 
-  const formContext = useContext(FormContext)
+  const formApi = useForm()
 
   const handleSubmit = useCallback(async () => {
-    if (formContext) {
-      const { submit, getDataRef } = formContext
+    setSubmitting(true)
 
-      onSubmit && onSubmit(getDataRef().value)
+    const { submit, getDataRef } = formApi
 
-      const { valid, data, firstErrorField } = await submit()
+    onSubmit && onSubmit(getDataRef().value)
 
-      if (valid) {
-        onSuccess && onSuccess(data)
-      } else {
-        if (firstErrorField) {
-          if (focusFirstError) {
-            firstErrorField.focus()
-          }
-
-          onError && onError(firstErrorField)
+    submit(
+      onSuccess,
+      (firstErrorField) => {
+        if (focusFirstError) {
+          firstErrorField.focus()
         }
-      }
-    }
-  }, [formContext, onSubmit, onSuccess, onError, focusFirstError])
 
-  return render(handleSubmit)
+        onError && onError(firstErrorField)
+      }
+    )
+
+    setSubmitting(false)
+  }, [formApi, onSubmit, onSuccess, onError, focusFirstError])
+
+  return render(handleSubmit, submitting)
 }

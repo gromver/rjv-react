@@ -6,8 +6,8 @@
 
 import React, { useMemo } from 'react'
 import { types } from 'rjv'
-import OptionsContext, { OptionsContextValue } from './OptionsContext'
-import { DescriptionResolverFn } from './types'
+import OptionsContext, { OptionsContextValue } from '../../contexts/OptionsContext'
+import { DescriptionResolverFn } from '../../types'
 
 export const DEFAULT_VALIDATOR_OPTIONS: Partial<types.IValidatorOptions> = {
   coerceTypes: false,
@@ -16,7 +16,7 @@ export const DEFAULT_VALIDATOR_OPTIONS: Partial<types.IValidatorOptions> = {
 
 export const DEFAULT_DESCRIPTION_RESOLVER: DescriptionResolverFn = (message) => message.toString()
 
-type Props = {
+type OptionsProviderProps = {
   coerceTypes?: boolean;
   removeAdditional?: boolean;
   errors?: {
@@ -30,10 +30,8 @@ type Props = {
   children: React.ReactNode
 }
 
-export default function OptionsProvider (props: Props) {
-  const {
-    descriptionResolver, children, ...restProps
-  } = props
+export default function OptionsProvider (props: OptionsProviderProps) {
+  const { descriptionResolver, children, ...restProps } = props
 
   const validatorOptions = useMemo(
     (): Partial<types.IValidatorOptions> => {
@@ -49,7 +47,9 @@ export default function OptionsProvider (props: Props) {
     descriptionResolver: descriptionResolver || DEFAULT_DESCRIPTION_RESOLVER
   }), [validatorOptions, descriptionResolver])
 
-  return <OptionsContext.Provider value={context}>
-    {children}
-  </OptionsContext.Provider>
+  return (
+    <OptionsContext.Provider value={context}>
+      {children}
+    </OptionsContext.Provider>
+  )
 }

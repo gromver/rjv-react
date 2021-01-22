@@ -1,7 +1,7 @@
 import { useCallback, useContext } from 'react'
 import { types, utils } from 'rjv'
-import { FormContext } from '../components/FormProvider'
-import { ScopeContext } from '../components/Scope'
+import FormContext from '../contexts/FormContext'
+import ScopeContext from '../contexts/ScopeContext'
 
 export default function useValidate (): (path: types.Path | types.Path[]) => Promise<void> {
   const scopeContext = useContext(ScopeContext)

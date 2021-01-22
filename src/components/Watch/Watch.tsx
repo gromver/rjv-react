@@ -10,9 +10,10 @@ import {
 import _debounce from 'lodash/debounce'
 import { types, utils } from 'rjv'
 import { Listener } from 'eventemitter2'
-import { ScopeContext } from '../Scope'
-import { FormContext } from '../FormProvider'
 import { events } from '../EmitterProvider'
+import ScopeContext from '../../contexts/ScopeContext'
+import FieldContext from '../../contexts/FieldContext'
+import DataContext from '../../contexts/DataContext'
 import { ReadonlyRef } from '../../refs'
 
 const allowedEvents = [
@@ -47,14 +48,18 @@ const DEFAULT_EVENT_TYPES: EventTypeList = [events.ValueChangedEvent.TYPE]
  */
 export default function Watch ({ render, props, events = DEFAULT_EVENT_TYPES, debounce = 0 }: Props) {
   const [, update] = useState<events.BaseEvent>()
-  const formContext = useContext(FormContext)
+  const dataContext = useContext(DataContext)
+  const fieldsContext = useContext(FieldContext)
   const scopeContext = useContext(ScopeContext)
 
-  if (!formContext) {
-    throw new Error('Watch - FormContext must be provided')
+  if (!fieldsContext || !dataContext) {
+    throw new Error('Watch - form is not provided')
   }
 
-  const ref = useMemo(() => new ReadonlyRef(formContext.dataStorage, '/'), [formContext.dataStorage])
+  const ref = useMemo(
+    () => new ReadonlyRef(dataContext.dataStorage, '/'),
+    [dataContext.dataStorage]
+  )
 
   const watchProps = useMemo(() => {
     return props.map((path) => utils.resolvePath(path, scopeContext?.scope || '/'))
@@ -77,7 +82,7 @@ export default function Watch ({ render, props, events = DEFAULT_EVENT_TYPES, de
       const listeners: Listener[] = []
 
       watchProps.forEach((path) => {
-        const listener = formContext.emitter
+        const listener = fieldsContext.emitter
           .on(path, (event: events.BaseEvent) => {
             if (watchEvents.length) {
               watchEvents.includes(event.type) && handleUpdate(event)
@@ -92,7 +97,7 @@ export default function Watch ({ render, props, events = DEFAULT_EVENT_TYPES, de
         listeners.forEach((listener) => listener.off())
       }
     }
-  }, [formContext.emitter, watchProps, watchEvents])
+  }, [fieldsContext.emitter, watchProps, watchEvents])
 
   const args = watchRefs.map((item) => item.value)
 

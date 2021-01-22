@@ -1,4 +1,4 @@
-import { OptionsContextValue } from '../OptionsProvider'
+import { OptionsContextValue } from '../../contexts/OptionsContext'
 import {
   DEFAULT_DESCRIPTION_RESOLVER,
   DEFAULT_VALIDATOR_OPTIONS
