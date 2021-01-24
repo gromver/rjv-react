@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react'
 import { storiesOf } from '@storybook/react'
-import { Form, Input } from 'antd'
+import { Form, Button, Input } from 'antd'
 import { FormProvider } from '../components/FormProvider'
 import { Field } from '../components/Field'
 import { getValidationStatus } from '../stories/helpers'
@@ -17,10 +17,10 @@ function HookTest () {
 }
 
 function SubmitBtn (props) {
-  const formApi = useForm()
+  const { state, form } = useForm()
 
   const handleSubmit = useCallback(() => {
-    const {submit} = formApi
+    const { submit } = form
 
     submit(
       (data) => {
@@ -30,11 +30,11 @@ function SubmitBtn (props) {
         firstErrorField.focus()
       }
     )
-  }, [formApi])
+  }, [form])
 
-  return <button onClick={handleSubmit}>
+  return <Button onClick={handleSubmit} loading={state.isSubmitting}>
     {props.children}
-  </button>
+  </Button>
 }
 
 storiesOf('useForm', module)
@@ -59,13 +59,13 @@ storiesOf('useForm', module)
         schema={{
           type: 'string', default: '', minLength: 5, presence: true
         }}
-        render={(field, inputRef) => {
+        render={({ field, state, inputRef }) => {
           return (
             <Form.Item
               label="Name"
-              validateStatus={getValidationStatus(field)}
+              validateStatus={getValidationStatus(state)}
               help={field.messageDescription}
-              required={field.state.isRequired}
+              required={state.isRequired}
             >
               <Input
                 ref={inputRef}

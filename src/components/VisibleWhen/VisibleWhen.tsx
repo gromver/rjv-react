@@ -93,7 +93,7 @@ export default function VisibleWhen (
       watchProps.forEach((path) => {
         const listener = emitterContext.emitter
           .on(path, async (event) => {
-            if (event instanceof events.ValueChangedEvent) {
+            if (event instanceof events.FieldValueChangedEvent) {
               const res = await validator.validateRef(ref)
 
               setVisible(res.valid)

@@ -1,36 +1,37 @@
 import React, { useRef } from 'react'
 import { Button, Space, Form, Input } from 'antd'
 import { storiesOf } from '@storybook/react'
-import { getValidationStatus, SubmitBtn } from '../../stories/helpers'
+import FieldArray from './FieldArray'
 import { FormProvider } from '../FormProvider'
-import { FieldArray, FieldArrayRef } from './index'
 import { Field } from '../Field'
 import { Scope } from '../Scope'
+import { getValidationStatus, SubmitBtn } from '../../stories/helpers'
+import { FieldArrayInfo } from '../../hooks/useFieldArray'
 
 storiesOf('FieldArray', module)
   .add('Dynamic Fields', () => {
-    const fieldsRef = useRef<FieldArrayRef>(null)
+    const fieldsRef = useRef<FieldArrayInfo>(null)
     return (
       <FormProvider data={[]}>
         <Form>
-          <FieldArray ref={fieldsRef} path={'/'} render={(items, field) => (
+          <FieldArray ref={fieldsRef} path={'/'} render={({ items, fields }) => (
             <>
               {items.map(({ key, path }, index) => (
                 <Scope key={key} path={path}>
                   <Space style={{ display: 'flex', marginBottom: 8 }} align="baseline">
                     <Field
                       path="name"
-                      schema={{ default: '', presence: true }}
-                      render={(field, inputRef) => (
+                      schema={{ default: '', presence: true, minLength: 2 }}
+                      render={({ field, state, inputRef }) => (
                         <Form.Item
-                          validateStatus={getValidationStatus(field)}
+                          validateStatus={getValidationStatus(state)}
                           help={field.messageDescription}
-                          required={field.state.isRequired}
+                          required={state.isRequired}
                         >
                           <Input
                             ref={inputRef}
                             value={field.value}
-                            onFocus={() => field.markAsTouched()}
+                            onFocus={() => field.touched()}
                             onChange={(e) => field.value = e.target.value}
                             onBlur={() => field.validate()}
                             placeholder="Name"
@@ -40,7 +41,7 @@ storiesOf('FieldArray', module)
                       )}
                     />
                     <Button
-                      onClick={() => field.remove(index)}
+                      onClick={() => fields.remove(index)}
                     >Remove</Button>
                   </Space>
                 </Scope>
@@ -49,27 +50,27 @@ storiesOf('FieldArray', module)
               <h4>Using Api</h4>
 
               <Form.Item>
-                <Button type="dashed" onClick={() => field.prepend({})}>
+                <Button type="dashed" onClick={() => fields.prepend({})}>
                   Prepend field
                 </Button>
                 &nbsp;
-                <Button type="dashed" onClick={() => field.append({})}>
+                <Button type="dashed" onClick={() => fields.append({})}>
                   Append field
                 </Button>
                 &nbsp;
-                <Button type="dashed" onClick={() => field.insert(1, {})}>
+                <Button type="dashed" onClick={() => fields.insert(1, {})}>
                   Insert field at index = 1
                 </Button>
                 &nbsp;
-                <Button type="dashed" onClick={() => field.swap(0, 2)}>
+                <Button type="dashed" onClick={() => fields.swap(0, 2)}>
                   Swap 1st and 3th fields
                 </Button>
                 &nbsp;
-                <Button type="dashed" onClick={() => field.move(0, 2)}>
+                <Button type="dashed" onClick={() => fields.move(0, 2)}>
                   Move 1st field to 3th
                 </Button>
                 &nbsp;
-                <Button type="dashed" onClick={() => field.clear()}>
+                <Button type="dashed" onClick={() => fields.clear()}>
                   Clear
                 </Button>
               </Form.Item>
@@ -77,27 +78,27 @@ storiesOf('FieldArray', module)
               <h4>Using Ref</h4>
 
               <Form.Item>
-                <Button type="dashed" onClick={() => fieldsRef.current?.prepend({})}>
+                <Button type="dashed" onClick={() => fieldsRef.current?.fields.prepend({})}>
                   Prepend field
                 </Button>
                 &nbsp;
-                <Button type="dashed" onClick={() => fieldsRef.current?.append({})}>
+                <Button type="dashed" onClick={() => fieldsRef.current?.fields.append({})}>
                   Append field
                 </Button>
                 &nbsp;
-                <Button type="dashed" onClick={() => fieldsRef.current?.insert(1, {})}>
+                <Button type="dashed" onClick={() => fieldsRef.current?.fields.insert(1, {})}>
                   Insert field at index = 1
                 </Button>
                 &nbsp;
-                <Button type="dashed" onClick={() => fieldsRef.current?.swap(0, 2)}>
+                <Button type="dashed" onClick={() => fieldsRef.current?.fields.swap(0, 2)}>
                   Swap 1st and 3th fields
                 </Button>
                 &nbsp;
-                <Button type="dashed" onClick={() => fieldsRef.current?.move(0, 2)}>
+                <Button type="dashed" onClick={() => fieldsRef.current?.fields.move(0, 2)}>
                   Move 1st field to 3th
                 </Button>
                 &nbsp;
-                <Button type="dashed" onClick={() => fieldsRef.current?.clear()}>
+                <Button type="dashed" onClick={() => fieldsRef.current?.fields.clear()}>
                   Clear
                 </Button>
               </Form.Item>

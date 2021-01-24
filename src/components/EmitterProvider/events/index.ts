@@ -1,6 +1,8 @@
 export { default as BaseEvent } from './BaseEvent'
 
-export { default as ValueChangedEvent } from './ValueChangedEvent'
+export { default as FieldValueChangedEvent } from './FieldValueChangedEvent'
+
+export { default as FieldStateChangedEvent } from './FieldStateChangedEvent'
 
 export { default as FieldValidatedEvent } from './FieldValidatedEvent'
 
@@ -10,4 +12,4 @@ export { default as RegisterFieldEvent } from './RegisterFieldEvent'
 
 export { default as UnregisterFieldEvent } from './UnregisterFieldEvent'
 
-export { default as StateChangedEvent } from './StateChangedEvent'
+export { default as ReconcileFieldsEvent } from './ReconcileFieldsEvent'

@@ -15,13 +15,13 @@ function RequiredField () {
     schema={{
       type: 'string', default: '', minLength: 2, presence: true
     }}
-    render={(field, inputRef) => {
+    render={({ field, state, inputRef }) => {
       return (
         <Form.Item
           label="Name"
-          validateStatus={getValidationStatus(field)}
+          validateStatus={getValidationStatus(state)}
           help={field.messageDescription}
-          required={field.state.isRequired}
+          required={state.isRequired}
         >
           <Input
             ref={inputRef}
@@ -50,8 +50,8 @@ storiesOf('Submit', module)
           onSubmit={(data) => console.log('onSubmit', data)}
           onSuccess={(data) => console.log('onSuccess', data)}
           onError={(firstError) => console.log('onError', firstError)}
-          render={(handleSubmit, submitting) => (
-            <button onClick={handleSubmit} disabled={submitting}>submit</button>
+          render={(handleSubmit, formState) => (
+            <button onClick={handleSubmit} disabled={formState.isSubmitting}>submit</button>
           )}
         />
 
@@ -59,8 +59,8 @@ storiesOf('Submit', module)
           onSubmit={(data) => console.log('onSubmit', data)}
           onSuccess={(data) => console.log('onSuccess', data)}
           onError={(firstError) => console.log('onError', firstError)}
-          render={(handleSubmit, submitting) => (
-            <Button onClick={handleSubmit} loading={submitting}>Ant submit</Button>
+          render={(handleSubmit, formState) => (
+            <Button onClick={handleSubmit} loading={formState.isSubmitting}>Ant submit</Button>
           )}
         />
 
@@ -73,8 +73,8 @@ storiesOf('Submit', module)
           onSubmit={(data) => console.log('onSubmit', data)}
           onSuccess={(data) => console.log('onSuccess', data)}
           onError={(firstError) => console.log('onError', firstError)}
-          render={(handleSubmit, submitting) => (
-            <button onClick={handleSubmit} disabled={submitting}>submit</button>
+          render={(handleSubmit, formState) => (
+            <button onClick={handleSubmit} disabled={formState.isSubmitting}>submit</button>
           )}
           focusFirstError={false}
         />
@@ -83,8 +83,8 @@ storiesOf('Submit', module)
           onSubmit={(data) => console.log('onSubmit', data)}
           onSuccess={(data) => console.log('onSuccess', data)}
           onError={(firstError) => console.log('onError', firstError)}
-          render={(handleSubmit, submitting) => (
-            <Button onClick={handleSubmit} loading={submitting}>Ant submit</Button>
+          render={(handleSubmit, formState) => (
+            <Button onClick={handleSubmit} loading={formState.isSubmitting}>Ant submit</Button>
           )}
           focusFirstError={false}
         />
@@ -111,8 +111,8 @@ storiesOf('Submit', module)
             }, 1000)
           })}
           onError={(firstError) => console.log('onError', firstError)}
-          render={(handleSubmit, submitting) => (
-            <Button onClick={handleSubmit} loading={submitting}>Submit</Button>
+          render={(handleSubmit, formState) => (
+            <Button onClick={handleSubmit} loading={formState.isSubmitting}>Submit</Button>
           )}
         />
       </Form>
@@ -140,8 +140,8 @@ storiesOf('Submit', module)
           onSubmit={(data) => console.log('onSubmit', data, counter)}
           onSuccess={(data) => console.log('onSuccess', data, counter)}
           onError={(firstError) => console.log('onError', firstError, counter)}
-          render={(handleSubmit, submitting) => (
-            <Button onClick={handleSubmit} loading={submitting}>Submit</Button>
+          render={(handleSubmit, formState) => (
+            <Button onClick={handleSubmit} loading={formState.isSubmitting}>Submit</Button>
           )}
         />
       </Form>

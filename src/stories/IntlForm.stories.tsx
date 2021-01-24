@@ -77,13 +77,13 @@ function IntlForm () {
                   format: 'error.format'
                 }
               }}
-              render={(field) => {
+              render={({ field, state }) => {
                 return (
                   <Form.Item
                     label="Field"
-                    validateStatus={getValidationStatus(field)}
+                    validateStatus={getValidationStatus(state)}
                     help={field.messageDescription}
-                    required={field.state.isRequired}
+                    required={state.isRequired}
                   >
                     <Input
                       value={field.value}

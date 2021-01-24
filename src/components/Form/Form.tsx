@@ -5,14 +5,14 @@
  */
 
 import React from 'react'
-import { FormApi, useForm } from '../../hooks'
+import useForm, { FormInfo } from '../../hooks/useForm'
 
 type FieldProps = {
-  render: (form: FormApi) => React.ReactElement
+  render: (form: FormInfo) => React.ReactElement
 }
 
 export default function Form ({ render }: FieldProps) {
-  const formApi = useForm()
+  const formInfo = useForm()
 
-  return render(formApi)
+  return render(formInfo)
 }

@@ -15,6 +15,7 @@ import React, {
   useCallback
 } from 'react'
 import _cloneDeep from 'lodash/cloneDeep'
+import _isEqual from 'lodash/isEqual'
 import { types, Storage, ValidationMessage, utils } from 'rjv'
 import { EventEmitter2 } from 'eventemitter2'
 import { createEmitter } from '../../utils'
@@ -56,18 +57,18 @@ function createDefaultStateFromSchema (schema: types.ISchema): FieldState {
     isValidated: false,
     isPristine: true,
     isTouched: false,
-    isDirty: false
+    isDirty: false,
+    isChanged: false
   }
 }
 
 const INITIAL_FORM_STATE: FormState = {
   isValid: false,
   isSubmitting: false,
-  submitted: 0
-  // isValidating: false
-  // isPristine: true
-  // isTouched: false
-  // isDirty: false
+  submitted: 0,
+  isTouched: false,
+  isDirty: false,
+  isChanged: false
 }
 
 // FormUpdater
@@ -103,6 +104,7 @@ export default function FormProvider ({ data, children }: FormProviderProps) {
   const emitterRef = useRef<EventEmitter2>()
   const nextFieldsRef = useRef<Map<IField, FieldState>>(new Map())
   const optionsRef = useRef<OptionsContextValue>()
+  const normalizeFormStateRef = useRef<() => void>()
 
   const [fields, setFields] = useState<Map<IField, FieldState>>(() => new Map())
   const [emitter, setEmitter] = useState(() => createEmitter())
@@ -138,7 +140,11 @@ export default function FormProvider ({ data, children }: FormProviderProps) {
       emitter.offAny(registerFieldHandler)
 
       emitter.on('**', (event: events.BaseEvent) => {
-        if (event instanceof events.RegisterFieldEvent || event instanceof events.UnregisterFieldEvent) {
+        if (
+          event instanceof events.RegisterFieldEvent
+          || event instanceof events.UnregisterFieldEvent
+          || event instanceof events.ReconcileFieldsEvent
+        ) {
           // a new field registered/unregistered after the fields have been reconciled
           // have to change emitter and reconcile fields again
           emitter.removeAllListeners()
@@ -149,7 +155,6 @@ export default function FormProvider ({ data, children }: FormProviderProps) {
 
       // apply reconciled fields map
       setFields(nextFieldsRef.current)
-      // fieldsRef.current = nextFieldsRef.current
     }
   }, [emitter, registerFieldHandler])
 
@@ -191,6 +196,19 @@ export default function FormProvider ({ data, children }: FormProviderProps) {
   const getFields = useCallback((path: types.Path): IField[] => {
     return Array.from(fields.keys()).filter((item) => item.ref().path === path)
   }, [fields])
+
+  normalizeFormStateRef.current = useCallback(() => {
+    const fieldStates = Array.from(fields.values())
+    const isTouched = fieldStates.some((fieldState) => fieldState.isTouched)
+    const isDirty = fieldStates.some((fieldState) => fieldState.isDirty)
+    const isChanged = fieldStates.some((fieldState) => fieldState.isChanged)
+
+    const _formState = { ...formState, ...{ isTouched, isDirty, isChanged } }
+
+    if (!_isEqual(formState, _formState)) {
+      setFormState(_formState)
+    }
+  }, [fields, dataContext, formState])
 
   const fieldsContext = useMemo(() => ({
     fields,
@@ -263,7 +281,7 @@ export default function FormProvider ({ data, children }: FormProviderProps) {
             isValidating: true
           })
 
-          field.emit(fieldPath, new events.StateChangedEvent())
+          field.emit(fieldPath, new events.FieldStateChangedEvent())
 
           return field.validate().then((res) => {
             setFieldState(field, {
@@ -285,6 +303,12 @@ export default function FormProvider ({ data, children }: FormProviderProps) {
   }), [submit, validate])
 
   useEffect(() => {
+    emitter.onAny((path, event: events.BaseEvent) => {
+      if (event instanceof events.FieldStateChangedEvent) {
+        normalizeFormStateRef.current && normalizeFormStateRef.current()
+      }
+    })
+
     return () => {
       emitter.removeAllListeners()
     }

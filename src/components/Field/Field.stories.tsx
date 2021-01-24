@@ -3,10 +3,10 @@ import { Button, Space, Form, Input, Select } from 'antd'
 import { storiesOf } from '@storybook/react'
 
 import { FormProvider } from '../FormProvider'
-import { Field } from './index'
-import { getValidationStatus, SubmitBtn } from '../../stories/helpers'
+import Field from './Field'
 import { Scope } from '../Scope'
 import { Watch } from '../Watch'
+import { getValidationStatus, SubmitBtn } from '../../stories/helpers'
 
 let _id = 1
 
@@ -17,19 +17,19 @@ storiesOf('Field', module)
         <Field
           path="/"
           schema={{ default: 'wrong email', format: 'email' }}
-          render={(field, inputRef) => {
+          render={({ field, state, inputRef }) => {
             return (
               <Form.Item
                 label="Value"
-                validateStatus={getValidationStatus(field)}
+                validateStatus={getValidationStatus(state)}
                 help={field.messageDescription}
-                required={field.state.isRequired}
+                required={state.isRequired}
                 hasFeedback
               >
                 <Input
                   ref={inputRef}
                   value={field.value}
-                  onFocus={() => field.markAsTouched()}
+                  onFocus={() => field.touched()}
                   onChange={(e) => field.value = e.target.value}
                   onBlur={() => field.validate()}
                 />
@@ -47,18 +47,18 @@ storiesOf('Field', module)
         <Field
           path="/"
           schema={{ default: '', presence: true }}
-          render={(field, inputRef) => {
+          render={({ field, state, inputRef }) => {
             return (
               <Form.Item
                 label="Value #1 (presence)"
-                validateStatus={getValidationStatus(field)}
+                validateStatus={getValidationStatus(state)}
                 help={field.messageDescription}
-                required={field.state.isRequired}
+                required={state.isRequired}
               >
                 <Input
                   ref={inputRef}
                   value={field.value}
-                  onFocus={() => field.markAsTouched()}
+                  onFocus={() => field.touched()}
                   onChange={(e) => field.value = e.target.value}
                   onBlur={() => field.validate()}
                 />
@@ -69,18 +69,18 @@ storiesOf('Field', module)
         <Field
           path="/"
           schema={{ default: '', if: { presence: true }, then: { format: 'email' } }}
-          render={(field, inputRef) => {
+          render={({ field, state, inputRef }) => {
             return (
               <Form.Item
                 label="Value #2 (email)"
-                validateStatus={getValidationStatus(field)}
+                validateStatus={getValidationStatus(state)}
                 help={field.messageDescription}
-                required={field.state.isRequired}
+                required={state.isRequired}
               >
                 <Input
                   ref={inputRef}
                   value={field.value}
-                  onFocus={() => field.markAsTouched()}
+                  onFocus={() => field.touched()}
                   onChange={(e) => field.value = e.target.value}
                   onBlur={() => field.validate()}
                 />
@@ -106,19 +106,19 @@ storiesOf('Field', module)
               return new Promise((res) => setTimeout(res, 1000, value !== 'admin'))
             }
           }}
-          render={(field, inputRef) => {
+          render={({ field, state, inputRef }) => {
             return (
               <Form.Item
                 label="User name"
-                validateStatus={getValidationStatus(field)}
+                validateStatus={getValidationStatus(state)}
                 help={field.messageDescription || 'Must not be "admin"'}
-                required={field.state.isRequired}
+                required={state.isRequired}
                 hasFeedback
               >
                 <Input
                   ref={inputRef}
                   value={field.value}
-                  onFocus={() => field.markAsTouched()}
+                  onFocus={() => field.touched()}
                   onChange={(e) => field.value = e.target.value}
                   onBlur={() => field.validate()}
                 />
@@ -136,18 +136,18 @@ storiesOf('Field', module)
         <Field
           path="required"
           schema={{ default: 'no', type: 'string' }}
-          render={(field, inputRef) => {
+          render={({ field, state, inputRef }) => {
             return (
               <Form.Item
                 label="Email required?"
-                validateStatus={getValidationStatus(field)}
+                validateStatus={getValidationStatus(state)}
                 help={field.messageDescription}
-                required={field.state.isRequired}
+                required={state.isRequired}
               >
                 <Select
                   ref={inputRef}
                   value={field.value}
-                  onFocus={() => field.markAsTouched()}
+                  onFocus={() => field.touched()}
                   onChange={(value) => field.value = value}
                   onBlur={() => field.validate()}
                 >
@@ -171,21 +171,21 @@ storiesOf('Field', module)
               }
               : { default: '', format: 'email', type: 'string' }
             }
-            render={(field, inputRef) => {
+            render={({ field, state, inputRef }) => {
               return (
                 <Form.Item
                   label="Email"
-                  validateStatus={getValidationStatus(field)}
+                  validateStatus={getValidationStatus(state)}
                   help={field.messageDescription}
-                  required={field.state.isRequired}
+                  required={state.isRequired}
                 >
                   <Input
                     ref={inputRef}
                     value={field.value}
-                    onFocus={() => field.markAsTouched()}
+                    onFocus={() => field.touched()}
                     onChange={(e) => field.value = e.target.value}
                     onBlur={() => field.validate()}
-                    readOnly={field.state.isReadonly}
+                    readOnly={state.isReadonly}
                   />
                 </Form.Item>
               )
@@ -202,18 +202,18 @@ storiesOf('Field', module)
         <Field
           path="readonly"
           schema={{ default: 'no', type: 'string' }}
-          render={(field, inputRef) => {
+          render={({ field, state, inputRef }) => {
             return (
               <Form.Item
                 label="Field readonly?"
-                validateStatus={getValidationStatus(field)}
+                validateStatus={getValidationStatus(state)}
                 help={field.messageDescription}
-                required={field.state.isRequired}
+                required={state.isRequired}
               >
                 <Select
                   ref={inputRef}
                   value={field.value}
-                  onFocus={() => field.markAsTouched()}
+                  onFocus={() => field.touched()}
                   onChange={(value) => field.value = value}
                   onBlur={() => field.validate()}
                 >
@@ -233,21 +233,21 @@ storiesOf('Field', module)
               type: 'string',
               readonly: true
             } : { default: '', type: 'string' }}
-            render={(field, inputRef) => {
+            render={({ field, state, inputRef }) => {
               return (
                 <Form.Item
                   label="Field"
-                  validateStatus={getValidationStatus(field)}
+                  validateStatus={getValidationStatus(state)}
                   help={field.messageDescription}
-                  required={field.state.isRequired}
+                  required={state.isRequired}
                 >
                   <Input
                     ref={inputRef}
                     value={field.value}
-                    onFocus={() => field.markAsTouched()}
+                    onFocus={() => field.touched()}
                     onChange={(e) => field.value = e.target.value}
-                    onBlur={() => !field.state.isReadonly && field.validate()}
-                    readOnly={field.state.isReadonly}
+                    onBlur={() => !state.isReadonly && field.validate()}
+                    readOnly={state.isReadonly}
                     placeholder="Type here"
                   />
                 </Form.Item>
@@ -269,15 +269,15 @@ storiesOf('Field', module)
             presence: true
           }}
           path="name"
-          render={(field) => (
+          render={({ field, state }) => (
             <div>
               <input
                 value={field.value}
-                onChange={(e) => (field.markAsDirty().value = e.target.value)}
+                onChange={(e) => (field.dirty().value = e.target.value)}
                 onBlur={() => field.validate()}
                 placeholder="Email"
               />
-              {field.state.isValidated && !field.state.isValid && field.messageDescription}
+              {state.isValidated && !state.isValid && field.messageDescription}
             </div>
           )}
         />
@@ -287,15 +287,15 @@ storiesOf('Field', module)
             presence: true
           }}
           path="username"
-          render={(field) => (
+          render={({ field, state }) => (
             <div>
               <input
                 value={field.value}
-                onChange={(e) => (field.markAsDirty().value = e.target.value)}
+                onChange={(e) => (field.dirty().value = e.target.value)}
                 onBlur={() => field.validate()}
                 placeholder="Username"
               />
-              {field.state.isValidated && !field.state.isValid && field.messageDescription}
+              {state.isValidated && !state.isValid && field.messageDescription}
             </div>
           )}
         />
@@ -308,7 +308,7 @@ storiesOf('Field', module)
     return (
       <FormProvider data={[]}>
         <Form>
-          <Field path={'/'} schema={{ type: 'array' }} render={(field) => (
+          <Field path={'/'} schema={{ type: 'array' }} render={({ field }) => (
             <>
               {field.value.map((item, index) => (
                 <Scope key={`k${item._id}`} path={`${index}`}>
@@ -316,16 +316,16 @@ storiesOf('Field', module)
                     <Field
                       path="name"
                       schema={{ default: '', presence: true }}
-                      render={(field, inputRef) => (
+                      render={({ field, state, inputRef }) => (
                         <Form.Item
-                          validateStatus={getValidationStatus(field)}
+                          validateStatus={getValidationStatus(state)}
                           help={field.messageDescription}
-                          required={field.state.isRequired}
+                          required={state.isRequired}
                         >
                           <Input
                             ref={inputRef}
                             value={field.value}
-                            onFocus={() => field.markAsTouched()}
+                            onFocus={() => field.touched()}
                             onChange={(e) => field.value = e.target.value}
                             onBlur={() => field.validate()}
                             placeholder="Name"

@@ -1,5 +1,6 @@
-export { default as useForm, FormApi } from './useForm'
-export { default as useField } from './useField'
+export { default as useForm, FormInfo } from './useForm'
+export { default as useField, FieldInfo } from './useField'
+export { default as useFieldArray, FieldArrayInfo } from './useFieldArray'
 export { default as useErrors } from './useErrors'
 export { default as useWatch } from './useWatch'
 export { default as usePath } from './usePath'

@@ -54,14 +54,14 @@ function PerformanceForm () {
           key={key}
           path={`email${key}`}
           schema={emailSchema}
-          render={(field, inputRef) => {
+          render={({ field, state, inputRef }) => {
             return (
               <input
                 ref={inputRef}
                 key={key}
                 value={field.value || ''}
                 onChange={(e) => field.value = e.target.value}
-                style={field.state.isValidated && !field.state.isValid ? {borderColor: 'red'} : undefined}
+                style={state.isValidated && !state.isValid ? {borderColor: 'red'} : undefined}
               />
             )
           }}
@@ -74,7 +74,7 @@ function PerformanceForm () {
           default: '',
           validate: (ref) => (ref.value === 'admin' ? true : 'Nice try!')
         }}
-        render={(field, inputRef) => {
+        render={({ field, state, inputRef }) => {
           console.log('render username')
           return (
             <>
@@ -84,7 +84,7 @@ function PerformanceForm () {
                 value={field.value || ''}
                 onChange={(e) => field.value = e.target.value}
               />
-              {field.state.isValidated && !field.state.isValid && <div>{field.messageDescription}</div>}
+              {state.isValidated && !state.isValid && <div>{field.messageDescription}</div>}
             </>
           )
         }}
@@ -95,13 +95,13 @@ function PerformanceForm () {
         schema={{
           type: 'string', default: '', minLength: 2, presence: true
         }}
-        render={(field) => {
+        render={({ field, state }) => {
           return (
             <Form.Item
               label="additionalField"
-              validateStatus={getValidationStatus(field)}
+              validateStatus={getValidationStatus(state)}
               help={field.messageDescription}
-              required={field.state.isRequired}
+              required={state.isRequired}
             >
               <Input
                 value={field.value}
@@ -114,7 +114,7 @@ function PerformanceForm () {
 
       <ErrorMessages render={(errors) => errors.length ? (<div>{errors[0].message}</div>) : null} />
 
-      <RjvForm render={(form) => {
+      <RjvForm render={({ state, form }) => {
         const handleSubmit = useCallback(() => {
           console.time('submit')
 
@@ -131,7 +131,7 @@ function PerformanceForm () {
 
         }, [form])
         return (
-          <Button onClick={handleSubmit} loading={form.state.isSubmitting}>Submit</Button>
+          <Button onClick={handleSubmit} loading={state.isSubmitting}>Submit</Button>
         )
       }}
       />

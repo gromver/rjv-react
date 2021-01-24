@@ -28,13 +28,13 @@ function SimpleForm () {
           schema={{
             type: 'string', default: '', minLength: 5, presence: true
           }}
-          render={(field) => {
+          render={({ field, state }) => {
             return (
               <Form.Item
                 label="name"
-                validateStatus={getValidationStatus(field)}
+                validateStatus={getValidationStatus(state)}
                 help={field.messageDescription}
-                required={field.state.isRequired}
+                required={state.isRequired}
               >
                 <Input
                   value={field.value}
@@ -49,13 +49,13 @@ function SimpleForm () {
         <Field
           path="email"
           schema={{ type: 'string', presence: true, format: 'email' }}
-          render={(field) => {
+          render={({ field, state }) => {
             return (
               <Form.Item
                 label="email"
-                validateStatus={getValidationStatus(field)}
+                validateStatus={getValidationStatus(state)}
                 help={field.messageDescription}
-                required={field.state.isRequired}
+                required={state.isRequired}
               >
                 <Input
                   value={field.value}
@@ -71,13 +71,13 @@ function SimpleForm () {
           schema={{
             type: 'string', default: '', minLength: 5, presence: true, format: 'email'
           }}
-          render={(field) => {
+          render={({ field, state }) => {
             return (
               <Form.Item
                 label="test/3/nested"
-                validateStatus={getValidationStatus(field)}
+                validateStatus={getValidationStatus(state)}
                 help={field.messageDescription}
-                required={field.state.isRequired}
+                required={state.isRequired}
               >
                 <Input
                   value={field.value}
@@ -93,13 +93,13 @@ function SimpleForm () {
           schema={{
             type: 'string', default: '', minLength: 2, presence: true
           }}
-          render={(field) => {
+          render={({ field, state }) => {
             return (
               <Form.Item
                 label="additionalField"
-                validateStatus={getValidationStatus(field)}
+                validateStatus={getValidationStatus(state)}
                 help={field.messageDescription}
-                required={field.state.isRequired}
+                required={state.isRequired}
               >
                 <Input
                   value={field.value}

@@ -22,13 +22,13 @@ storiesOf('Form', module)
               schema={{
                 type: 'string', default: '', presence: true
               }}
-              render={(field) => {
+              render={({ field, state }) => {
                 return (
                   <Form.Item
                     label="Name"
-                    validateStatus={getValidationStatus(field)}
+                    validateStatus={getValidationStatus(state)}
                     help={field.messageDescription}
-                    required={field.state.isRequired}
+                    required={state.isRequired}
                   >
                     <Input
                       value={field.value}
@@ -47,13 +47,13 @@ storiesOf('Form', module)
                 format: 'email',
                 resolveSchema: (ref) => ref.ref('/name').value ? { presence: true } : {}
               }}
-              render={(field) => {
+              render={({ field, state }) => {
                 return (
                   <Form.Item
                     label="Email"
-                    validateStatus={getValidationStatus(field)}
+                    validateStatus={getValidationStatus(state)}
                     help={field.messageDescription}
-                    required={field.state.isRequired}
+                    required={state.isRequired}
                   >
                     <Input
                       value={field.value}

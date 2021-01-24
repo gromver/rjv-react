@@ -16,20 +16,20 @@ function InputField ({ path }: Props) {
   return <Field
     path={path}
     schema={{ default: '', presence: true, format: 'email' }}
-    render={(field, inputRef) => {
+    render={({ field, state, inputRef }) => {
       return (
         <Form.Item
           label={path}
-          validateStatus={getValidationStatus(field)}
+          validateStatus={getValidationStatus(state)}
           help={field.messageDescription}
-          required={field.state.isRequired}
+          required={state.isRequired}
           hasFeedback
         >
           <Input
             ref={inputRef}
             value={field.value}
-            onFocus={() => field.markAsTouched()}
-            onChange={(e) => field.markAsPristine().value = e.target.value}
+            onFocus={() => field.touched()}
+            onChange={(e) => field.pristine().value = e.target.value}
             onBlur={() => field.validate()}
           />
         </Form.Item>

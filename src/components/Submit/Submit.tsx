@@ -4,28 +4,25 @@
  *
  */
 
-import React, { useCallback, useState } from 'react'
+import React, { useCallback } from 'react'
 import { useForm } from '../../hooks'
-import { FirstErrorField } from '../../types'
+import { FirstErrorField, FormState } from '../../types'
 
 type Props = {
   onSubmit?: (data: any) => void
   onSuccess?: (data: any) => void | Promise<void>
   onError?: (firstErrorField: FirstErrorField) => void
   focusFirstError?: boolean
-  render: (handleSubmit: () => void, submitting: boolean) => React.ReactElement | null
+  render: (handleSubmit: () => void, formState: FormState) => React.ReactElement | null
 }
 
 export default function Submit (props: Props) {
-  const [submitting, setSubmitting] = useState(false)
   const { onSubmit, onError, onSuccess, render, focusFirstError = true } = props
 
-  const formApi = useForm()
+  const { form, state } = useForm()
 
   const handleSubmit = useCallback(async () => {
-    setSubmitting(true)
-
-    const { submit, getDataRef } = formApi
+    const { submit, getDataRef } = form
 
     onSubmit && onSubmit(getDataRef().value)
 
@@ -40,8 +37,7 @@ export default function Submit (props: Props) {
       }
     )
 
-    setSubmitting(false)
-  }, [formApi, onSubmit, onSuccess, onError, focusFirstError])
+  }, [form, onSubmit, onSuccess, onError, focusFirstError])
 
-  return render(handleSubmit, submitting)
+  return render(handleSubmit, state)
 }

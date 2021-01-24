@@ -1,1 +1,1 @@
-export { default as FieldArray, FieldArrayApi, FieldArrayRef } from './FieldArray'
+export { default as FieldArray } from './FieldArray'

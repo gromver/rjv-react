@@ -21,9 +21,36 @@ export type FieldState = {
   isDirty: boolean
   isRequired: boolean
   isReadonly: boolean
+  isChanged: boolean
   message?: ValidationMessage
 }
 
+export type FieldApi = {
+  value: any
+  ref: types.IRef
+  validate: () => Promise<types.IValidationResult>
+  focus: () => void
+  dirty: () => FieldApi
+  touched: () => FieldApi
+  pristine: () => FieldApi
+  invalidated: () => FieldApi
+  messageDescription: string | undefined
+}
+
+// FieldArray
+export type FieldArrayApi = {
+  append: (value: any) => void
+  prepend: (value: any) => void
+  remove: (index: number) => void
+  clear: () => void
+  insert: (index: number, value: any) => void
+  swap: (indexA: number, indexB: number) => void
+  move: (from: number, to: number) => void
+}
+
+export type FieldArrayItem = { key: string, path: types.Path }
+
+// Form
 export type ValidationErrors = {path: string, message: string}[]
 
 export type FirstErrorField = {
@@ -39,15 +66,20 @@ export type SubmitFormFn = (
 
 export type ValidateFieldsFn = (path: types.Path | types.Path[]) => Promise<void>
 
-// Form
 export type FormState = {
   isValid: boolean
   isSubmitting: boolean
   submitted: number
-  // isValidating: boolean
-  // isPristine: boolean
-  // isTouched: boolean
-  // isDirty: boolean
+  isTouched: boolean
+  isDirty: boolean
+  isChanged: boolean
+}
+
+export type FormApi = {
+  submit: SubmitFormFn
+  validate: ValidateFieldsFn
+  getDataRef: (path?: types.Path) => types.IRef
+  getErrors: () => ValidationErrors
 }
 
 // Options

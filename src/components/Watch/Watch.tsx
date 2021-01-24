@@ -17,8 +17,8 @@ import DataContext from '../../contexts/DataContext'
 import { ReadonlyRef } from '../../refs'
 
 const allowedEvents = [
-  events.ValueChangedEvent.TYPE,
-  events.StateChangedEvent.TYPE,
+  events.FieldValueChangedEvent.TYPE,
+  events.FieldStateChangedEvent.TYPE,
   events.FieldInvalidatedEvent.TYPE,
   events.FieldValidatedEvent.TYPE,
   events.RegisterFieldEvent.TYPE,
@@ -36,7 +36,7 @@ type Props = {
   render: WatchRenderFn
 }
 
-const DEFAULT_EVENT_TYPES: EventTypeList = [events.ValueChangedEvent.TYPE]
+const DEFAULT_EVENT_TYPES: EventTypeList = [events.FieldValueChangedEvent.TYPE]
 
 /**
  * Watch

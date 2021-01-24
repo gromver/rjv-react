@@ -1,6 +1,6 @@
 import { utils, types, Ref } from 'rjv'
 import { EventEmitter2 } from 'eventemitter2'
-import { ValueChangedEvent } from '../components/EmitterProvider/events'
+import { FieldValueChangedEvent } from '../components/EmitterProvider/events'
 
 /**
  * EmittingRef - a ref that emits ValueChangedEvent on the value changes
@@ -23,7 +23,7 @@ export default class EmittingRef extends Ref {
   setValue (value: any) {
     super.setValue(value)
 
-    this.emitter.emit(this.path, new ValueChangedEvent())
+    this.emitter.emit(this.path, new FieldValueChangedEvent())
   }
 
   ref (relPath: types.Path): EmittingRef {

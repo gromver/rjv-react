@@ -19,13 +19,13 @@ storiesOf('Form', module)
           <Field
             path="a"
             schema={{ default: '', presence: true }}
-            render={(field) => {
+            render={({ field, state }) => {
               return (
                 <Form.Item
                   label="/a"
-                  validateStatus={getValidationStatus(field)}
+                  validateStatus={getValidationStatus(state)}
                   help={field.messageDescription}
-                  required={field.state.isRequired}
+                  required={state.isRequired}
                 >
                   <Input
                     value={field.value}
@@ -50,13 +50,13 @@ storiesOf('Form', module)
                 })
               }
             }}
-            render={(field) => {
+            render={({ field, state }) => {
               return (
                 <Form.Item
                   label="/b"
-                  validateStatus={getValidationStatus(field)}
+                  validateStatus={getValidationStatus(state)}
                   help={field.messageDescription || 'Must not be "admin"'}
-                  required={field.state.isRequired}
+                  required={state.isRequired}
                   hasFeedback
                 >
                   <Input
@@ -71,13 +71,13 @@ storiesOf('Form', module)
           <Field
             path="c"
             schema={{ default: '', presence: true }}
-            render={(field) => {
+            render={({ field, state }) => {
               return (
                 <Form.Item
                   label="/c"
-                  validateStatus={getValidationStatus(field)}
+                  validateStatus={getValidationStatus(state)}
                   help={field.messageDescription}
-                  required={field.state.isRequired}
+                  required={state.isRequired}
                 >
                   <Input
                     value={field.value}
@@ -89,7 +89,7 @@ storiesOf('Form', module)
           />
 
           <RjvForm
-            render={(form) => (
+            render={({ form }) => (
               <>
                 <button onClick={() => form.validate('a')}>Validate /a</button>
                 &nbsp;
@@ -116,13 +116,13 @@ storiesOf('Form', module)
           <Field
             path="a"
             schema={{ default: '', presence: true }}
-            render={(field) => {
+            render={({ field, state }) => {
               return (
                 <Form.Item
                   label="/a"
-                  validateStatus={getValidationStatus(field)}
+                  validateStatus={getValidationStatus(state)}
                   help={field.messageDescription}
-                  required={field.state.isRequired}
+                  required={state.isRequired}
                 >
                   <Input
                     value={field.value}
@@ -147,13 +147,13 @@ storiesOf('Form', module)
                 })
               }
             }}
-            render={(field) => {
+            render={({ field, state }) => {
               return (
                 <Form.Item
                   label="/b"
-                  validateStatus={getValidationStatus(field)}
+                  validateStatus={getValidationStatus(state)}
                   help={field.messageDescription || 'Must not be "admin"'}
-                  required={field.state.isRequired}
+                  required={state.isRequired}
                   hasFeedback
                 >
                   <Input
@@ -168,13 +168,13 @@ storiesOf('Form', module)
           <Field
             path="c"
             schema={{ default: '', presence: true }}
-            render={(field) => {
+            render={({ field, state }) => {
               return (
                 <Form.Item
                   label="/c"
-                  validateStatus={getValidationStatus(field)}
+                  validateStatus={getValidationStatus(state)}
                   help={field.messageDescription}
-                  required={field.state.isRequired}
+                  required={state.isRequired}
                 >
                   <Input
                     value={field.value}

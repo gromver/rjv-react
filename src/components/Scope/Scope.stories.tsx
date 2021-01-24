@@ -25,13 +25,13 @@ function SimpleForm () {
           <Field
             path="name"
             schema={{ type: 'string', default: '', presence: true }}
-            render={(field) => {
+            render={({ field, state }) => {
               return (
                 <Form.Item
                   label="Name"
-                  validateStatus={getValidationStatus(field)}
+                  validateStatus={getValidationStatus(state)}
                   help={field.messageDescription}
-                  required={field.state.isRequired}
+                  required={state.isRequired}
                 >
                   <Input
                     value={field.value}
@@ -45,13 +45,13 @@ function SimpleForm () {
           <Field
             path="email"
             schema={{ type: 'string', default: '', presence: true, format: 'email' }}
-            render={(field) => {
+            render={({ field, state }) => {
               return (
                 <Form.Item
                   label="Email"
-                  validateStatus={getValidationStatus(field)}
+                  validateStatus={getValidationStatus(state)}
                   help={field.messageDescription}
-                  required={field.state.isRequired}
+                  required={state.isRequired}
                 >
                   <Input
                     value={field.value}

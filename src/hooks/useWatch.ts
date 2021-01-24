@@ -37,7 +37,7 @@ export default function useWatch (...props: types.Path[]): any[] {
       watchProps.forEach((path) => {
         const listener = fieldContext.emitter
           .on(path, (event: events.BaseEvent) => {
-            if (event instanceof events.ValueChangedEvent) {
+            if (event instanceof events.FieldValueChangedEvent) {
               update(event)
             }
           }, { objectify: true }) as Listener

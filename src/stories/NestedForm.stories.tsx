@@ -9,7 +9,7 @@ import {
   Scope,
   Submit
 } from '../index'
-import { FieldApi } from '../components/Field'
+import { FieldApi } from '../types'
 import { useDataRef } from '../hooks'
 
 let nodeId = 1
@@ -33,13 +33,13 @@ function renderNode (path: string, value: any) {
     <NodeWrapper>
       <Field
         path="name"
-        render={(field, inputRef) => {
+        render={({ field, state, inputRef }) => {
           return (
             <Form.Item
               label="Name"
-              validateStatus={getValidationStatus(field)}
+              validateStatus={getValidationStatus(state)}
               help={field.messageDescription}
-              required={field.state.isRequired}
+              required={state.isRequired}
             >
               <Input
                 ref={inputRef}
@@ -60,7 +60,7 @@ function renderNode (path: string, value: any) {
       <Field
         path="nodes"
         schema={{ default: [], type: 'array' }}
-        render={(field) => {
+        render={({ field, state }) => {
           const nodesValues = field.value
 
           return <>
@@ -84,13 +84,13 @@ function CreateNodeForm ({ nodesField }: { nodesField: FieldApi }) {
         schema={{
           type: 'string', default: '', presence: true, minLength: 2
         }}
-        render={(field, inputRef) => {
+        render={({ field, state, inputRef }) => {
           return (
             <Form.Item
               label="New node name"
-              validateStatus={getValidationStatus(field)}
+              validateStatus={getValidationStatus(state)}
               help={field.messageDescription}
-              required={field.state.isRequired}
+              required={state.isRequired}
             >
               <Input
                 ref={inputRef}

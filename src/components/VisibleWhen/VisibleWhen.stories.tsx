@@ -18,18 +18,18 @@ storiesOf('Visible', module)
             <Field
               path={'selector'}
               schema={{ default: 'yes', presence: true }}
-              render={(field, inputRef) => {
+              render={({ field, state, inputRef }) => {
                 return (
                   <Form.Item
                     label={'Select is visible'}
-                    validateStatus={getValidationStatus(field)}
+                    validateStatus={getValidationStatus(state)}
                     help={field.messageDescription}
-                    required={field.state.isRequired}
+                    required={state.isRequired}
                   >
                     <Select
                       ref={inputRef}
                       value={field.value}
-                      onFocus={() => field.markAsTouched()}
+                      onFocus={() => field.touched()}
                       onChange={(value) => field.value = value}
                       onBlur={() => field.validate()}
                     >
@@ -56,18 +56,18 @@ storiesOf('Visible', module)
             <Field
               path={'selector'}
               schema={{ default: 'yes', presence: true }}
-              render={(field, inputRef) => {
+              render={({ field, state, inputRef }) => {
                 return (
                   <Form.Item
                     label={'Select is visible'}
-                    validateStatus={getValidationStatus(field)}
+                    validateStatus={getValidationStatus(state)}
                     help={field.messageDescription}
-                    required={field.state.isRequired}
+                    required={state.isRequired}
                   >
                     <Select
                       ref={inputRef}
                       value={field.value}
-                      onFocus={() => field.markAsTouched()}
+                      onFocus={() => field.touched()}
                       onChange={(value) => field.value = value}
                       onBlur={() => field.validate()}
                     >
@@ -95,18 +95,18 @@ storiesOf('Visible', module)
         <Field
           path={'selector'}
           schema={{ presence: true }}
-          render={(field, inputRef) => {
+          render={({ field, state, inputRef }) => {
             return (
               <Form.Item
                 label={'Select is visible'}
-                validateStatus={getValidationStatus(field)}
+                validateStatus={getValidationStatus(state)}
                 help={field.messageDescription}
-                required={field.state.isRequired}
+                required={state.isRequired}
               >
                 <Select
                   ref={inputRef}
                   value={field.value}
-                  onFocus={() => field.markAsTouched()}
+                  onFocus={() => field.touched()}
                   onChange={(value) => field.value = value}
                   onBlur={() => field.validate()}
                 >
@@ -124,18 +124,18 @@ storiesOf('Visible', module)
           <Field
             path="email"
             schema={{ default: '', format: 'email', presence: true }}
-            render={(field, inputRef) => {
+            render={({ field, state, inputRef }) => {
               return (
                 <Form.Item
                   label="Email"
-                  validateStatus={getValidationStatus(field)}
+                  validateStatus={getValidationStatus(state)}
                   help={field.messageDescription}
-                  required={field.state.isRequired}
+                  required={state.isRequired}
                 >
                   <Input
                     ref={inputRef}
                     value={field.value}
-                    onFocus={() => field.markAsTouched()}
+                    onFocus={() => field.touched()}
                     onChange={(e) => field.value = e.target.value}
                     onBlur={() => field.validate()}
                   />
@@ -154,18 +154,18 @@ storiesOf('Visible', module)
         <Field
           path={'selector'}
           schema={{ presence: true }}
-          render={(field, inputRef) => {
+          render={({ field, state, inputRef }) => {
             return (
               <Form.Item
                 label={'Select is visible'}
-                validateStatus={getValidationStatus(field)}
+                validateStatus={getValidationStatus(state)}
                 help={field.messageDescription}
-                required={field.state.isRequired}
+                required={state.isRequired}
               >
                 <Select
                   ref={inputRef}
                   value={field.value}
-                  onFocus={() => field.markAsTouched()}
+                  onFocus={() => field.touched()}
                   onChange={(value) => field.value = value}
                   onBlur={() => field.validate()}
                 >
@@ -184,18 +184,18 @@ storiesOf('Visible', module)
           <Field
             path="email"
             schema={{ default: '', format: 'email', presence: true }}
-            render={(field, inputRef) => {
+            render={({ field, state, inputRef }) => {
               return (
                 <Form.Item
                   label="Email"
-                  validateStatus={getValidationStatus(field)}
+                  validateStatus={getValidationStatus(state)}
                   help={field.messageDescription}
-                  required={field.state.isRequired}
+                  required={state.isRequired}
                 >
                   <Input
                     ref={inputRef}
                     value={field.value}
-                    onFocus={() => field.markAsTouched()}
+                    onFocus={() => field.touched()}
                     onChange={(e) => field.value = e.target.value}
                     onBlur={() => field.validate()}
                   />

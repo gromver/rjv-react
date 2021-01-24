@@ -1,5 +1,5 @@
 import _isEqualWith from 'lodash/isEqualWith'
-import { schemaEqualCustomizer } from './Field'
+import { schemaEqualCustomizer } from './useField'
 
 describe('schemaEqualCustomizer tests', () => {
   it ('Should be true #1', () => {
