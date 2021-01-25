@@ -1,105 +1,26 @@
 /**
  *
- * Watch - re-renders content when desired events of the certain field are acquired
+ * Watch - re-renders content when the certain fields are changed
  *
  */
 
-import {
-  ReactElement, useContext, useEffect, useMemo, useState
-} from 'react'
-import _debounce from 'lodash/debounce'
-import { types, utils } from 'rjv'
-import { Listener } from 'eventemitter2'
-import { events } from '../EmitterProvider'
-import ScopeContext from '../../contexts/ScopeContext'
-import FieldContext from '../../contexts/FieldContext'
-import DataContext from '../../contexts/DataContext'
-import { ReadonlyRef } from '../../refs'
-
-const allowedEvents = [
-  events.FieldValueChangedEvent.TYPE,
-  events.FieldStateChangedEvent.TYPE,
-  events.FieldInvalidatedEvent.TYPE,
-  events.FieldValidatedEvent.TYPE,
-  events.RegisterFieldEvent.TYPE,
-  events.UnregisterFieldEvent.TYPE
-] as const
-
-type EventTypeList = typeof allowedEvents[number][]
-
-type WatchRenderFn = (...values: any[]) => ReactElement | null
+import { ReactElement } from 'react'
+import { types } from 'rjv'
+import useWatch from '../../hooks/useWatch'
 
 type Props = {
-  props: types.Path[]     // an empty array do not subscribes to events - just provides a root Ref
-  events?: EventTypeList  // an empty array allows tracking all types of events
-  debounce?: number
-  render: WatchRenderFn
+  props: types.Path[]
+  render: (...values: any[]) => ReactElement | null
 }
-
-const DEFAULT_EVENT_TYPES: EventTypeList = [events.FieldValueChangedEvent.TYPE]
 
 /**
  * Watch
  * @param render
  * @param props
- * @param events
- * @param debounce
  * @constructor
  */
-export default function Watch ({ render, props, events = DEFAULT_EVENT_TYPES, debounce = 0 }: Props) {
-  const [, update] = useState<events.BaseEvent>()
-  const dataContext = useContext(DataContext)
-  const fieldsContext = useContext(FieldContext)
-  const scopeContext = useContext(ScopeContext)
-
-  if (!fieldsContext || !dataContext) {
-    throw new Error('Watch - form is not provided')
-  }
-
-  const ref = useMemo(
-    () => new ReadonlyRef(dataContext.dataStorage, '/'),
-    [dataContext.dataStorage]
-  )
-
-  const watchProps = useMemo(() => {
-    return props.map((path) => utils.resolvePath(path, scopeContext?.scope || '/'))
-  }, [props, scopeContext?.scope])
-
-  const watchRefs = useMemo(() => {
-    return watchProps.map((path) => ref.ref(path))
-  }, [ref, watchProps])
-
-  const watchEvents: string[] = useMemo(() => {
-    return events
-  }, [])
-
-  const handleUpdate = useMemo(() => {
-    return debounce > 0 ? _debounce(update, debounce) : update
-  }, [])
-
-  useEffect(() => {
-    if (watchProps.length) {
-      const listeners: Listener[] = []
-
-      watchProps.forEach((path) => {
-        const listener = fieldsContext.emitter
-          .on(path, (event: events.BaseEvent) => {
-            if (watchEvents.length) {
-              watchEvents.includes(event.type) && handleUpdate(event)
-            } else {
-              handleUpdate(event)
-            }
-          }, { objectify: true }) as Listener
-        listeners.push(listener)
-      })
-
-      return () => {
-        listeners.forEach((listener) => listener.off())
-      }
-    }
-  }, [fieldsContext.emitter, watchProps, watchEvents])
-
-  const args = watchRefs.map((item) => item.value)
+export default function Watch ({ render, props }: Props) {
+  const args = useWatch(...props)
 
   return render(...args)
 }
