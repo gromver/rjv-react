@@ -6,6 +6,7 @@ import Submit from './Submit'
 import { FormProvider } from '../FormProvider'
 import { Field } from '../Field'
 import { getValidationStatus } from '../../stories/helpers'
+import { FormStateUpdater } from '../FormStateUpdater'
 
 const initialData = {}
 
@@ -55,6 +56,8 @@ storiesOf('Submit', module)
           )}
         />
 
+        &nbsp;
+
         <Submit
           onSubmit={(data) => console.log('onSubmit', data)}
           onSuccess={(data) => console.log('onSuccess', data)}
@@ -78,6 +81,8 @@ storiesOf('Submit', module)
           )}
           focusFirstError={false}
         />
+
+        &nbsp;
 
         <Submit
           onSubmit={(data) => console.log('onSubmit', data)}
@@ -142,6 +147,34 @@ storiesOf('Submit', module)
           onError={(firstError) => console.log('onError', firstError, counter)}
           render={(handleSubmit, formState) => (
             <Button onClick={handleSubmit} loading={formState.isSubmitting}>Submit</Button>
+          )}
+        />
+      </Form>
+    </FormProvider>
+  })
+  .add('Test form state', () => {
+    return <FormProvider data={initialData}>
+      <p>You should open console to see events</p>
+
+      <br />
+
+      <Form style={{ width: 400 }}>
+        <RequiredField />
+
+        <FormStateUpdater />
+
+        <Submit
+          onSubmit={(data) => console.log('onSubmit', data)}
+          onSuccess={(data) => console.log('onSuccess', data)}
+          onError={(firstError) => console.log('onError', firstError)}
+          render={(handleSubmit, formState) => (
+            <Button
+              onClick={handleSubmit}
+              loading={formState.isSubmitting}
+              disabled={!formState.isValid}
+            >
+              Submit
+            </Button>
           )}
         />
       </Form>

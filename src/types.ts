@@ -64,6 +64,8 @@ export type SubmitFormFn = (
   onError?: (firstErrorField: FirstErrorField) => void | Promise<void>
 ) => void
 
+export type CalcValidationStateFn = () => Promise<void>
+
 export type ValidateFieldsFn = (path: types.Path | types.Path[]) => Promise<void>
 
 export type FormState = {

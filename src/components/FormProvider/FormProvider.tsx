@@ -24,7 +24,7 @@ import {
   FieldState,
   SubmitFormFn,
   ValidateFieldsFn,
-  FormState
+  FormState, CalcValidationStateFn
 } from '../../types'
 import { DEFAULT_OPTIONS } from './constants'
 import { Scope } from '../Scope'
@@ -297,10 +297,33 @@ export default function FormProvider ({ data, children }: FormProviderProps) {
         }))
   }, [fields])
 
+  const calcValidationState = useCallback<CalcValidationStateFn>(async () => {
+    const fieldsArr = Array.from(fields.keys())
+    let isValid = !!fieldsArr.length
+
+    await Promise.all(
+      fieldsArr.map((field) => {
+        return field.validate()
+          .then((res) => {
+            if (!res.valid) {
+              isValid = false
+            }
+          })
+      }))
+
+    if (formStateRef.current.isValid !== isValid) {
+      setFormState({
+        ...formStateRef.current,
+        isValid
+      })
+    }
+  }, [fields])
+
   const formContext = useMemo<FormContextValue>(() => ({
     submit,
-    validate
-  }), [submit, validate])
+    validate,
+    calcValidationState
+  }), [submit, validate, calcValidationState])
 
   useEffect(() => {
     emitter.onAny((path, event: events.BaseEvent) => {

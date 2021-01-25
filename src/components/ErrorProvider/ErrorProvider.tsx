@@ -48,7 +48,6 @@ export default function ErrorProvider ({ emitter, children }: ErrorProviderProps
         const state = fieldsContext.getState(field)
 
         if (state.isValidated && !state.isValid) {
-          // res.push({path: field.ref().path, message: fieldsContext.getMessageDescription(field) as string})
           res.push({path: field.ref().path, message: optionsContext.descriptionResolver(state.message as any)})
         }
       })

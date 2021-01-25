@@ -1,14 +1,13 @@
-import React from 'react'
-import { Form, Input, Row, Col } from 'antd'
+import React, { useState } from 'react'
+import { Form, Input, Row, Col, Button } from 'antd'
 import { storiesOf } from '@storybook/react'
 
-import { getValidationStatus, SubmitBtn } from './helpers'
-import { FormProvider, Field, Form as RjvForm } from '../index'
-
-const initialData = {}
+import { getValidationStatus } from './helpers'
+import { FormProvider, Field, Form as RjvForm, FormStateUpdater, Submit } from '../index'
 
 storiesOf('Form', module)
   .add('Test states', () => {
+    const [initialData, setInitialData] = useState({})
 
     return (
       <FormProvider data={initialData}>
@@ -31,11 +30,9 @@ storiesOf('Form', module)
                       value={field.value}
                       onFocus={() => field.touched()}
                       onChange={(e) => {
-                        field.value = e.target.value
+                        field.dirty().value = e.target.value
                         return field.validate()
                       }}
-                      // onChange={(e) => field.dirty().value = e.target.value}
-                      // onBlur={() => field.validate()}
                     />
                   </Form.Item>
                 )
@@ -66,7 +63,14 @@ storiesOf('Form', module)
               }}
             />
 
-            <SubmitBtn />
+            <FormStateUpdater />
+
+            <Submit
+              onSuccess={(data) => console.log('SUBMIT RESULT', data)}
+              render={(handleSubmit, formState) => (
+                <Button onClick={handleSubmit} disabled={!formState.isValid}>Submit</Button>
+              )}
+            />
           </Col>
           <Col sm={12}>
             <h3>Form state</h3>
@@ -78,6 +82,18 @@ storiesOf('Form', module)
                 )
               }}
             />
+            <div>
+              <Button onClick={() => setInitialData({})}>Set invalid initial data</Button>
+              &nbsp;
+              <Button
+                onClick={() => setInitialData({
+                  name: 'marcus',
+                  email: 'example@mail.com'
+                })}
+              >
+                Set valid initial data
+              </Button>
+            </div>
           </Col>
         </Row>
       </FormProvider>
