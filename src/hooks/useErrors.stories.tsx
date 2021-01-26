@@ -5,7 +5,7 @@ import { FormProvider } from '../components/FormProvider'
 import { Field } from '../components/Field'
 import { getValidationStatus } from '../stories/helpers'
 import useErrors from './useErrors'
-import { ErrorProvider } from '../components/ErrorProvider'
+import { CatchErrors } from '../components/CatchErrors'
 
 const initialData = {}
 
@@ -46,14 +46,14 @@ function ShowErrors () {
 storiesOf('useErrors', module)
   .add('useErrors', () => {
     return <FormProvider data={initialData}>
-      <ErrorProvider>
+      <CatchErrors>
         <InputField path="a" />
-        <ErrorProvider>
+        <CatchErrors>
           <InputField path="b/c" />
           <ShowErrors />
-        </ErrorProvider>
+        </CatchErrors>
         <br />
         <ShowErrors />
-      </ErrorProvider>
+      </CatchErrors>
     </FormProvider>
   })

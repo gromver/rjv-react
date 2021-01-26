@@ -4,7 +4,7 @@ import { Form, Input } from 'antd'
 import ErrorMessages from './ErrorMessages'
 import { FormProvider } from '../FormProvider'
 import { Field } from '../Field'
-import { ErrorProvider } from '../ErrorProvider'
+import { CatchErrors } from '../CatchErrors'
 import { ValidationErrors } from '../../types'
 import { getValidationStatus } from '../../stories/helpers'
 
@@ -45,14 +45,14 @@ function renderErrors (errors: ValidationErrors) {
 storiesOf('ErrorMessages', module)
   .add('ErrorMessages', () => {
     return <FormProvider data={initialData}>
-      <ErrorProvider>
+      <CatchErrors>
         <InputField path="a" />
-        <ErrorProvider>
+        <CatchErrors>
           <InputField path="b/c" />
           <ErrorMessages render={renderErrors} />
-        </ErrorProvider>
+        </CatchErrors>
         <br />
         <ErrorMessages render={renderErrors} />
-      </ErrorProvider>
+      </CatchErrors>
     </FormProvider>
   })

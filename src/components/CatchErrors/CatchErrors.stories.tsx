@@ -3,7 +3,7 @@ import { Form, Input, Card } from 'antd'
 import { storiesOf } from '@storybook/react'
 
 import { FormProvider } from '../FormProvider'
-import ErrorProvider from './ErrorProvider'
+import CatchErrors from './CatchErrors'
 import { Field } from '../Field'
 import { getValidationStatus, ShowErrors, SubmitBtn } from '../../stories/helpers'
 
@@ -35,7 +35,7 @@ function InputField ({ path }: Props) {
   />
 }
 
-storiesOf('ErrorProvider', module)
+storiesOf('CatchErrors', module)
   .add('Example', () => {
     return <Form style={{ maxWidth: '800px' }}>
       <FormProvider data={{}}>
@@ -45,13 +45,13 @@ storiesOf('ErrorProvider', module)
         <InputField path="name" />
 
         <Card>
-          <ErrorProvider>
+          <CatchErrors>
             <p>Local error provider:</p>
             <ShowErrors />
             <br />
             <InputField path="foo" />
             <InputField path="a/b/c" />
-          </ErrorProvider>
+          </CatchErrors>
         </Card>
 
         <br />

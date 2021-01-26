@@ -28,7 +28,7 @@ export function getValidationStatus (state: FieldState) {
 }
 
 /**
- * A react component - shows errors caught by ErrorProvider
+ * A react component - shows errors caught by CatchErrors
  * @constructor
  */
 export function ShowErrors () {

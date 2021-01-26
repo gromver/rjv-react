@@ -1,6 +1,6 @@
 /**
  *
- * ErrorProvider - collects errors of the inner fields and provides a subscribe fn to the
+ * CatchErrors - collects errors of the inner fields and provides a subscribe fn to the
  * validation state changes
  *
  */
@@ -20,20 +20,20 @@ import EmitterContext from '../../contexts/EmitterContext'
 import { IField, ValidationErrors } from '../../types'
 import { createEmitter } from '../../utils'
 
-type ErrorProviderProps = {
+type CatchErrorsProps = {
   emitter?: EventEmitter2,
   children: ReactNode
 }
 
 const VALIDATION_STATE_CHANGED_EVENTS = [events.FieldValidatedEvent.TYPE, events.FieldInvalidatedEvent.TYPE]
 
-export default function ErrorProvider ({ emitter, children }: ErrorProviderProps) {
+export default function CatchErrors ({ emitter, children }: CatchErrorsProps) {
   const emitterContext = useContext(EmitterContext)
   const fieldsContext = useContext(FieldContext)
   const optionsContext = useContext(OptionsContext)
 
   if (!fieldsContext || !optionsContext || !emitterContext) {
-    throw new Error('ErrorProvider - form is not provided')
+    throw new Error('CatchErrors - form is not provided')
   }
 
   const innerEmitter = useMemo(() => emitter || createEmitter(), [emitter, emitterContext.emitter])

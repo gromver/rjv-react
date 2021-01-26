@@ -4,7 +4,7 @@ import { IntlProvider, useIntl } from 'react-intl'
 import { storiesOf } from '@storybook/react'
 
 import { getValidationStatus, ShowErrors, SubmitBtn } from './helpers'
-import { FormProvider, Field, ErrorProvider } from '../index'
+import { FormProvider, Field, CatchErrors } from '../index'
 import { OptionsProvider } from '../components/OptionsProvider'
 
 const messages = {
@@ -60,7 +60,7 @@ function IntlForm () {
     <Form style={{ maxWidth: '400px' }}>
       <OptionsProvider descriptionResolver={descriptionResolver}>
         <FormProvider data={initialData}>
-          <ErrorProvider>
+          <CatchErrors>
             <ShowErrors />
 
             <br />
@@ -96,7 +96,7 @@ function IntlForm () {
             />
 
             <SubmitBtn />
-          </ErrorProvider>
+          </CatchErrors>
         </FormProvider>
       </OptionsProvider>
     </Form>

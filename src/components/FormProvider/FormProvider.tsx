@@ -28,7 +28,7 @@ import {
 } from '../../types'
 import { DEFAULT_OPTIONS } from './constants'
 import { Scope } from '../Scope'
-import { ErrorProvider } from '../ErrorProvider'
+import { CatchErrors } from '../CatchErrors'
 import { EmitterProvider, events } from '../EmitterProvider'
 import UpdaterContext from '../../contexts/UpdaterContext'
 import OptionsContext, { OptionsContextValue } from '../../contexts/OptionsContext'
@@ -343,13 +343,13 @@ export default function FormProvider ({ data, children }: FormProviderProps) {
         <OptionsContext.Provider value={options}>
           <Scope path="/">
             <EmitterProvider emitter={emitter}>
-              <ErrorProvider emitter={emitter}>
+              <CatchErrors emitter={emitter}>
                 <FormStateContext.Provider value={formState}>
                   <FormUpdaterWithRef ref={updaterRef}>
                     {children}
                   </FormUpdaterWithRef>
                 </FormStateContext.Provider>
-              </ErrorProvider>
+              </CatchErrors>
             </EmitterProvider>
           </Scope>
         </OptionsContext.Provider>

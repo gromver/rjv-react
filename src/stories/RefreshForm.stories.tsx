@@ -3,7 +3,7 @@ import { Form, Input } from 'antd'
 import { storiesOf } from '@storybook/react'
 
 import { getValidationStatus, ShowErrors, SubmitBtn } from './helpers'
-import { FormProvider, Field, ErrorProvider } from '../index'
+import { FormProvider, Field, CatchErrors } from '../index'
 
 storiesOf('Form', module)
   .add('Refresh Data', () => {
@@ -12,7 +12,7 @@ storiesOf('Form', module)
     return (
       <Form style={{ maxWidth: '400px' }}>
         <FormProvider data={data}>
-          <ErrorProvider>
+          <CatchErrors>
             <ShowErrors />
 
             <br />
@@ -69,7 +69,7 @@ storiesOf('Form', module)
             <button onClick={() => setData({})}>
               Refresh Form
             </button>
-          </ErrorProvider>
+          </CatchErrors>
         </FormProvider>
       </Form>
     )
