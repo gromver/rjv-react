@@ -5,7 +5,7 @@
  */
 
 import React, { useCallback } from 'react'
-import { useForm } from '../../hooks'
+import { useDataRef, useForm } from '../../hooks'
 import { FirstErrorField, FormState } from '../../types'
 
 type Props = {
@@ -20,11 +20,12 @@ export default function Submit (props: Props) {
   const { onSubmit, onError, onSuccess, render, focusFirstError = true } = props
 
   const { form, state } = useForm()
+  const rootDataRef = useDataRef('/')
 
   const handleSubmit = useCallback(async () => {
-    const { submit, getDataRef } = form
+    const { submit } = form
 
-    onSubmit && onSubmit(getDataRef().value)
+    onSubmit && onSubmit(rootDataRef.value)
 
     submit(
       onSuccess,

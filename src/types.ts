@@ -80,8 +80,7 @@ export type FormState = {
 export type FormApi = {
   submit: SubmitFormFn
   validate: ValidateFieldsFn
-  getDataRef: (path?: types.Path) => types.IRef
-  getErrors: () => ValidationErrors
+  sync: CalcValidationStateFn
 }
 
 // Options
