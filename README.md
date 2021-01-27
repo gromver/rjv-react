@@ -10,7 +10,7 @@ React components for creating forms powered by [Rjv](https://github.com/gromver/
 
 #### Contents
  - [Install](#install)
- - [Why?](#why)
+ - [Motivation](#motivation)
  - [Guide](#guide)
  - [Components](#components)
  - [Hooks](#hooks)
@@ -20,34 +20,33 @@ React components for creating forms powered by [Rjv](https://github.com/gromver/
 yarn add rjv rjv-react
 ```
 
-## Why?
-As you probably know, JSON schema is a powerful and well-known approach for data validation, widely used in the back-end of applications. Thus, this library is an attempt to port JSON Schemas to create simple or complex forms in React JS applications. The [rjv](https://github.com/gromver/rjv) library is used as the JSON validator, it provides simplified standard JSON schema [keywords](https://github.com/gromver/rjv#keywords) adopted for the front-end needs, as well as some additional keywords like `validate` or `resolveSchema` that allow you to create validation rules at runtime.
+## Motivation
+This library is an attempt to port JSON Schemas to create simple or complex forms in React JS applications.
+The [rjv](https://github.com/gromver/rjv) library is used as the JSON validator,
+it provides simplified standard JSON schema [keywords](https://github.com/gromver/rjv#keywords) adopted for the front-end needs,
+as well as some additional keywords like `validate` or `resolveSchema` that allow you to create validation rules at runtime.
 
 ## Guide
- - [First form](#first-form)
+ - [Raw sign up form](#raw-sign-up-form)
  - [Higher-Order Fields (HOF)](#higher-order-fields-hof)
- - [Submitting form](#submitting-form)
- - [Errors](#errors)
- - [Scopes](#scopes)
- - [Default settings](#default-settings)
 
+### Raw sign up form
+For example, let's create a user registration form from scratch.
+Each form begins with the `FormProvider` component which creates form and provides the form data.
+```typescript jsx
+import React, { useState } from 'react';
+import { FormProvider, Field, Submit, ErrorMessages } from 'rjv-react';
 
-### First form
-Lets make our first form. To validate data of each field, we have to use JSON schema.
-JSON schema is a simple object with a set of keywords that describe how the data should be validated.
-```jsx
-import { FormProvider, Field, Submit } from 'rjv-react';
+function SignUpForm() {
+  const [initialData] = useState({})
 
-const initialData = {}
-
-function SignInForm() {
   return <FormProvider data={initialData}>
     <Field
-      path="login"
+      path="email"
       schema={{
-        default: '', type: 'string', presence: true, format: 'email'
+        default: '', presence: true, format: 'email'
       }}
-      render={(ref, inputRef) => {
+      render={({ state, field, inputRef }) => {
         return <input
           ref={inputRef}
           placeholder="Login"
@@ -60,9 +59,9 @@ function SignInForm() {
     <Field
       path="password"
       schema={{
-        default: '', type: 'string', presence: true
+        default: '', presence: true
       }}
-      render={(ref, inputRef) => {
+      render={({ state, field, inputRef }) => {
         return <input
           ref={inputRef}
           placeholder="Password"
@@ -73,314 +72,158 @@ function SignInForm() {
         />
       }}
     />
+     <Field
+       path="confirmPassword"
+       schema={{
+          default: '',
+          const: (propRef) => propRef.ref('/password').value
+       }}
+       render={({ state, field, inputRef }) => {
+          return <input
+            ref={inputRef}
+            placeholder="Confirm password"
+            type="password"
+            value={ref.value}
+            onChange={(e) => ref.value = e.target.value}
+            onBlur={() => ref.validate()}
+          />
+       }}
+     />
+
     <Submit
       onSuccess={(data) => console.log(data)}
       render={(handleSubmit) => <button onClick={handleSubmit}>Sign In</button>}
     />
+
+    <ErrorMessages
+      render={(messages) => messages.map(item => <div key={}>{item.path} - {item.message}</div>)}
+    />
   </FormProvider>
 }
 ```
-This form is extremely simple, it is able only to check the data and log it if it valid. There is no any feedback about errors. But it is not problem - it will be fixed further.
 
 ### Higher-Order Fields (HOF)
 As the `rjv-react` library works in any environment (web/native) and with any 3d party UI
-components framework, it would be better to create a set of higher-order field components to simplify form development. Now we gonna create a smart input field.
+components framework, it would be better to create a set of higher-order field components to simplify form development.
+For example, we can create a couple of the higher order components like `Form` and `InputField` for a web application.
+
+`components/Form.js`
+```typescript jsx
+import React from 'react';
+import { FormProvider, useFormApi } from 'rjv-react';
+
+type FormProps = {
+  data: any
+  onSuccess: (data) => void | Promise<void>
+  children: React.ReactNode
+  focusFirstError?: boolean
+}
+
+export default function Form (props) {
+  const { data, onSuccess, focusFirstError = true, ...restProps} = props
+  const { submit } = useFormApi()
+
+  const handleSubmit = useCallback(() => {
+     submit(
+       onSuccess,
+       (firstErrorField) => {
+          if (focusFirstError) {
+             firstErrorField.focus()
+          }
+       }
+     )
+  }, [submit, onSucces])
+
+   return (
+     <FormProvider data={props.data}>
+        <form {...restProps} onSubmit={handleSubmit} />
+     </FormProvider>
+   )
+}
+``` 
 
 `components/InputField.js`
 ```typescript jsx
 import React from 'react';
 import { types } from 'rjv';
-import { Field } from 'rjv-react';
+import { useField } from 'rjv-react';
 
 type InputFieldProps = {
   path: string;
   label: React.ReactNode;
-  schema?: types.ISchema;
+  schema: types.ISchema;
   placeholder?: string;
   inputProps?: {} // other input control props
 }
 
 export default function InputField (props) {
-  return 
-    <Field
-      path={path}
-      schema={schema}
-      render={(field, inputRef) => {
-        const fieldClassName = ['field-row'];
-        if (field.state.isTouched) fieldClassName.push('touched');
-        if (field.state.isDirty) fieldClassName.push('dirty');
+  const { path, label, schema, placeholder, inputProps } = props
 
-        return (
-          <div className={fieldClassName.join(' ')}>
-            <label className="field-label">
-              {label}
-            </label>
-            <div className="field-control">
-              <Input
-                ref={inputRef}  // bind input control to a "name" property
-                value={field.value} // display actual value
-                onFocus={() => field.markAsTouched()} // change UI state
-                onChange={(e) => field.markAsDirty().value = e.target.value}  // change value and UI state
-                onBlur={() => field.state.isDirty && field.validate()}  // validate value when "onBlur" event occurs
-                disabled={field.state.isReadOnly} // disable input if property marked as readonly
-                placeholder={placeholder}
-              />
-            </div>
-            {/* show error if needed */}
-            {field.state.isValidated && !field.state.isValid
-              && <div className="field-error">{field.messageDescription}</div>}
-          </div>
-        );
-      }}
-    />
+  const { field, state, inputRef } = useField(path, schema)
+
+  const fieldClassName = ['field-row'];
+  if (state.isTouched) fieldClassName.push('touched');
+  if (state.isDirty) fieldClassName.push('dirty');
+
+  return (
+    <div className={fieldClassName.join(' ')}>
+      <label className="field-label">
+        {label}
+      </label>
+      <div className="field-control">
+        <Input
+          {...inputProps}
+          ref={inputRef}  // bind input control to a "name" property
+          value={field.value} // display actual value
+          onFocus={() => field.touched()} // change UI state
+          onChange={(e) => field.dirty().value = e.target.value}  // change value and UI state
+          onBlur={() => state.isDirty && field.validate()}  // validate value when "onBlur" event occurs
+          disabled={state.isReadOnly} // disable input if property marked as readonly
+          placeholder={placeholder}
+        />
+      </div>
+      {/* show error if needed */}
+      {state.isValidated && !state.isValid
+      && <div className="field-error">{field.messageDescription}</div>}
+    </div>
+  );
 }
 ``` 
-Now the "Sign In" form might look like:
+Now the "Sign Up" form might look like:
 
-`components/SignInForm.js`
-```jsx
-import { FormProvider, Submit } from 'rjv-react';
-import InputField from './InputField.js'
-
-const initialData = {}
-
-export default function SignInForm() {
-  return <FormProvider data={initialData}>
-    <InputField
-      path="login"
-      label="Login"
-      schema={{ default: '', type: 'string', presence: true, format: 'email' }}
-    />
-    <InputField
-      path="password"
-      label="Password"
-      schema={{ default: '', type: 'string', presence: true }}
-      inputProps={{ type: 'password' }}
-    />
-    <Submit
-      onSuccess={(data) => console.log(data)}
-      render={(handleSubmit) => <button onClick={handleSubmit}>Sign In</button>}
-    />
-  </FormProvider>
-}
-```
-This is very rough and simple example, in practice HOF components could be more functional and flexible.
-> Further, the HOF components will be used to simplify form examples
-
-### Submitting form
-There are two ways to submit a form:
- - `Submit` component
- - Using `submit` function
-
-#### `Submit` component
-It is the easiest approach. You need to wrap your submit button with the `Submit` component.
-```jsx
-import { FormProvider, Submit } from 'rjv-react';
-import InputField from './InputField.js'
-
-export default function SignInForm() {
-  return <FormProvider data={{}}>
-    <InputField
-      path="login"
-      label="Login"
-      schema={{
-        default: '', type: 'string', presence: true, format: 'email'
-      }}
-    />
-    <InputField
-      path="password"
-      label="Password"
-      schema={{
-        default: '', type: 'string', presence: true
-      }}
-      inputProps={{ type: 'password' }}
-    />
-    {/* Submitting form */}
-    <Submit
-      onSubmit={(data) => console.log('Validating data:', data)}
-      onError={(firstErrorField) => console.log('The first error field:', firstErrorField)}
-      onSuccess={(data) => console.log('Data is valid:', data)}
-      render={(handleSubmit) => <button onClick={handleSubmit}>Sign In</button>}
-      focusFirstError // autofocus first error component
-    />
-  </FormProvider>
-}
-```
-#### Using `submit` function
-The `submit` function is a simple async function launching the validation process of the entire model,
-it returns a data validation result.
-```typescript
-type SubmitFormFn = () => Promise<{
-  // is data valid?
-  valid: boolean
-  // data
-  data?: any
-  // the FirstErrorField instance of the first error data property
-  firstErrorField?: FirstErrorField
-}>
-```
-See [FirstErrorField](#firsterrorfield)
-
-The `submit` function can be obtained in two ways:
- - get the ref of the `FormProvider` component
-    ```tsx
-    import React, { useCallback } from 'react';
-    import { FormProvider, FormApi } from 'rjv-react';
-    import InputField from './InputField.js'
-    
-    export default function SignInForm() {
-      const formRef = useRef<FormApi>()
-    
-      const handleSubmit = useCallback(async () => {
-        if (formRef.current) {
-          const { submit } = formRef.current
-    
-          const { valid, data, firstErrorField } = await submit()
-    
-          if (valid) {
-            console.log(model.data)
-          } else {
-            // focus first error control
-            firstErrorField.focus()
-          }
-        }
-      }, [formRef])
-    
-      return <FormProvider ref={formRef} data={{}}>
-        <InputField
-          path="login"
-          label="Login"
-          schema={{
-            default: '', type: 'string', presence: true, format: 'email'
-          }}
-        />
-        <InputField
-          path="password"
-          label="Password"
-          schema={{
-            default: '', type: 'string', presence: true
-          }}
-          inputProps={{ type: 'password' }}
-        />
-        {/* Submitting form */}
-        <button onClick={handleSubmit}>Sign In</button>
-      </FormProvider>
-    }
-    ```
-
- - using `useForm` hook
-    ```tsx
-    import React, { useCallback } from 'react';
-    import { FormProvider, useForm } from 'rjv-react';
-    import InputField from './InputField.js'
-    
-    function SubmitBtn(props) {
-      const form = useForm()
-    
-      const handleSubmit = useCallback(async () => {
-        if (form) {
-          const { submit } = form
-    
-          const { valid, data, firstErrorField } = await submit()
-    
-          if (valid) {
-            console.log(model.data)
-          } else {
-            // focus first error control
-            firstErrorField.focus()
-          }
-        }
-      }, [form])
-    
-      return <button
-          className="submit-btn"
-          onClick={handleSubmit}
-        >
-          {props.children}
-        </button>
-    }
-    
-    export default function SignInForm() {
-      return <FormProvider data={{}}>
-        <InputField
-          path="login"
-          label="Login"
-          schema={{
-            default: '', type: 'string', presence: true, format: 'email'
-          }}
-        />
-        <InputField
-          path="password"
-          label="Password"
-          schema={{
-            default: '', type: 'string', presence: true
-          }}
-          inputProps={{ type: 'password' }}
-        />
-        {/* Submitting form */}
-        <SubmitBtn>Sign In</SubmitBtn>
-      </FormProvider>
-    }
-    ```
-
-### Scopes
-The `Scope` component define the path to the data property against which the nested components will resolve their relative paths.
-> By default, the `FormProvider` component sets scope to the root path `/`.
-
-`components/ProfileForm.js`
-```jsx
-import { FormProvider, Submit, Scope } from 'rjv-react';
-import InputField from './InputField.js'
-
-export default function ProfileForm() {
-  return <FormProvider data={{}}>
-    <InputField
-      path="name"
-      label="Name"
-      schema={{ default: '', type: 'string', presence: true }}
-    />
-    {/* without scope point to "placement/country" prop */}
-    <InputField
-      path="placement/country"
-      label="Country"
-      schema={{ default: '', type: 'string', presence: true }}
-    />
-    {/* use scope to point to "placement/city" prop */}
-    <Scope path="placement">
-      <InputField
-        path="city"
-        label="City"
-        schema={{ default: '', type: 'string', presence: true }}
-      />
-    </Scope>
-
-    <Submit
-      // { name: 'John', placement: { country: 'UK', city: 'London' } }
-      onSuccess={(data) => console.log(data)}
-      render={(handleSubmit) => <button onClick={handleSubmit}>Sign In</button>}
-    />
-  </FormProvider>
-}
-```
-
-### Default settings
-The `OptionsProvider` component allows customizing default form options.
-Typically, `OptionsProvider` is applied once at the top-level of the application, but it can be used in certain parts of the application to provide different default settings.
+`components/SignUpForm.js`
 ```typescript jsx
-import { types } from 'rjv'
-import { OptionsProvider } from 'rjv-react'
+import React, { useState } from 'react';
+import Form from './Form.js'
+import InputField from './InputField.js'
 
-const DEFAULT_FORM_OPTIONS = {
-  errors: {
-    minLength: 'The value must be at least {limit} characters.',
-    // customize other error messages...
-  }
-}
+export default function SignUpForm() {
+  const [initialData] = useState({})
 
-export default function ProfileForm() {
-  return <OptionsProvider {DEFAULT_FORM_OPTIONS}>
-    {/* the rest of application */}
-  </OptionsProvider>
+  return <Form data={initialData} onSuccess={(data) => console.log(data)}>
+    <InputField
+      path="login"
+      label="Login"
+      schema={{ default: '', presence: true, format: 'email' }}
+    />
+    <InputField
+      path="password"
+      label="Password"
+      schema={{ default: '', presence: true }}
+      inputProps={{ type: 'password' }}
+    />
+     <InputField
+       path="confirmPassword"
+       label="Confirm password"
+       schema={{
+         default: '',
+         const: (propRef) => propRef.ref('/password').value
+       }}
+       inputProps={{ type: 'password' }}
+     />
+
+     <button type="submit" onClick={handleSubmit}>Sign In</button>
+  </Form>
 }
 ```
 
@@ -388,18 +231,22 @@ export default function ProfileForm() {
 
  - [OptionsProvider](#optionsprovider)
  - [FormProvider](#formprovider)
- - [ErrorProvider](#errorprovider)
+ - [CatchErrors](#catcherrors)
  - [ErrorMessages](#errormessages)
+ - [Form](#form)
  - [Field](#field)
  - [FieldArray](#fieldarray)
  - [Scope](#scope)
  - [Submit](#submit)
  - [Watch](#watch)
+ - [Property](#property)
  - [VisibleWhen](#visiblewhen)
 
 ### OptionsProvider
 Provides default form options. This options will be used as default at the `FormProvider` component level.
 One of the main purposes of the `OptionsProvider` component is setting up localized validation messages of the application.
+
+Properties:
 
 Name | Type | Default | Description
 --- | :---: | :---: | ---
@@ -414,7 +261,9 @@ Name | Type | Default | Description
 See [ValidationMessage](https://github.com/gromver/rjv#validationmessage)
 
 ### FormProvider
-Provides a form context.
+Creates form and provides a form data.
+
+Properties:
 
 Name | Type | Default | Description
 --- | :---: | :---: | ---
@@ -422,21 +271,58 @@ Name | Type | Default | Description
 `data` | `any` | undefined | the initial form data
 `ref` | `React.RefObject<FormApi>` | undefined | returns an object containing the API to work with the form. Also this api can be obtained using the [useForm](#useform--formapi) hook.
 
-#### FormApi:
+### CatchErrors
+Provides validation errors context. This component collects errors from all fields enclosed within.
+
+> Note that the `FormProvider` component already provides an `CatchErrors` for the entire form,
+> but you are able to wrap some particular fields with `CatchErrors` to get errors only for that fields.
+
+Properties:
+
+Name | Type | Default | Description
+--- | :---: | :---: | ---
+`children`* | `ReactNode` | undefined | content
+
+### ErrorMessages
+Passes errors caught by the closest `CatchErrors` component to the render function.
+
+Properties:
+
+Name | Type | Default | Description
+--- | :---: | :---: | ---
+`render`* | `(errors: ValidationErrors) => ReactNode` | undefined | a function rendering errors. See [ValidationErrors](#validationerrors)
+
+### Form
+Passes `FormInfo` object to the render function.
+
+Properties:
+
+Name | Type | Default | Description
+--- | :---: | :---: | ---
+`render`* | `(formInfo: FormInfo) => ReactElement` | undefined | a function rendering a form related UI.
+
+#### FormInfo
 ```typescript
-type FormApi = {
-   // async fn submitting form and returning validation result 
-   submit: () => Promise<{
-      valid: boolean
-      data?: any
-      firstErrorField?: FirstErrorField
-   }>
-   // trigger validation process of particular field / fields
-   validate: (path: string | string[]) => Promise<void>
-   // get form data ref, if path isn't provided returns a root ref
-   getDataRef: (path?: string) => any
-   // get errors list in order of appearance in the form
-   getErrors: () => [path: string, message: string][]
+type FormInfo = {
+   form: FormApi
+   state: FormState
+}
+```
+
+#### FormApi
+```typescript
+type FormInfo = {
+   // submits form
+   submit: (
+     onSuccess?: (data: any) => void | Promise<void>,
+     onError?: (firstErrorField: FirstErrorField) => void | Promise<void>
+   ) => void
+   // validates specified field / fields
+   validate: (path: types.Path | types.Path[]) => Promise<void>
+   // returns data ref to the property
+   getDataRef: (path?: types.Path) => types.IRef
+   // returns a list of errors catched by the closest CatchErrors component
+   getErrors: () => ValidationErrors
 }
 ```
 
@@ -453,28 +339,22 @@ type FirstErrorField = {
 }
 ```
 
-### ErrorProvider
-Provides validation errors context. This component collects errors from all fields enclosed within.
-
-> Note that the `FormProvider` component already provides an `ErrorProvider` for the entire form,
-> but you are able to wrap some particular fields with `ErrorProvider` to get errors only for that fields.
-
-Name | Type | Default | Description
---- | :---: | :---: | ---
-`children`* | `ReactNode` | undefined | content
-
-### ErrorMessages
-Passes errors caught by the closest `ErrorProvider` component to the render function.
-
-Name | Type | Default | Description
---- | :---: | :---: | ---
-`render`* | `(errors: ValidationErrors) => ReactNode` | undefined | a function rendering errors. See [ValidationErrors](#validationerrors)
-
+#### FormState
+```typescript
+type FormState = {
+   isValid: boolean
+   isSubmitting: boolean
+   submitted: number
+   isTouched: boolean
+   isDirty: boolean
+   isChanged: boolean
+}
+```
 
 ### Field
 The `Field` component is responsible for rendering the specific data property.
 It takes the render function of the field control and invokes it each time the value or validation/UI state of the data property changed.
-The field control render function gets a [field](#fieldapi) api object, using this api it is able to handle these issues:
+The field control render function gets a [fieldInfo](#fieldinfo) object, using this object it is able to handle these issues:
  - Changing value
  - Getting/Setting UI state (pristine/touched/dirty/valid etc)
  - Validating value
@@ -485,39 +365,59 @@ Properties:
 Name | Type | Default | Description
 --- | :---: | :---: | ---
 `path`* | `string`| undefined | specifies data property
-`schema`* | `Object<JSON Schema>` | undefined | schema is used to validate field, only works in forms with [composed schema](#composed schema)
-`render`* | `(field, inputRef) => ReactNode` | undefined | a function rendering the UI of the field, it gets arguments: `field` is a [FieldApi](#fieldapi) instance of the data property, `inputRef` should be a `React.RefObject` object that can be used to store the reference to the input component, later this ref can be used to focus an invalid input component.
+`schema`* | `Object<JSON Schema>` | undefined | schema is used to validate field
+`render`* | `(fieldInfo: FieldInfo) => ReactNode` | undefined | a function rendering the UI of the field. See [FieldInfo](#fieldinfo).
+
+#### FieldInfo
+```typescript
+type FieldInfo = {
+  // the current state of the field
+  state: FieldState
+  // an API to interact with field
+  field: FieldApi
+  // a reference to the input component, later this ref can be used to focus an invalid input component 
+  inputRef: React.RefObject
+}
+```
 
 #### FieldApi
 ```typescript
 type FieldApi = {
-  value: any
-  state: FieldState
-  ref: types.IRef
-  messageDescription: string | undefined
-  validate (): Promise<types.IValidationResult>
-  focus (): void
-  markAsTouched(): this
-  markAsPristine(): this
-  markAsDirty(): this
-  markAsInvalidated(): this
+   // get / set value of the field
+   value: any
+   // get data ref to the property
+   ref: types.IRef
+   // normalized message of the FieldState.message
+   messageDescription: string | undefined
+   // validate field
+   validate: () => Promise<types.IValidationResult>
+   // focus input element if it was provided
+   focus: () => void
+   // mark field as dirty
+   dirty: () => this
+   // mark field as touched
+   touched: () => this
+   // mark field as pristine
+   pristine: () => this
+   // mark field as invalidated
+   invalidated: () => this
 }
 ```
-
 See [IRef](https://github.com/gromver/rjv#ref), [IValidationResult](https://github.com/gromver/rjv#ivalidationresult)
 
 #### FieldState
 ```typescript
 type FieldState = {
-  isValid: boolean,
-  isValidating: boolean,
-  isValidated: boolean,
-  isPristine: boolean,
-  isTouched: boolean,
-  isDirty: boolean,
-  isRequired: boolean,
-  isReadonly: boolean,
-  message?: ValidationMessage
+   isValid: boolean
+   isValidating: boolean
+   isValidated: boolean
+   isPristine: boolean
+   isTouched: boolean
+   isDirty: boolean
+   isChanged: boolean
+   isRequired: boolean
+   isReadonly: boolean
+   message?: ValidationMessage
 }
 ```
 See [ValidationMessage](https://github.com/gromver/rjv#validationmessage)
@@ -526,11 +426,23 @@ See [ValidationMessage](https://github.com/gromver/rjv#validationmessage)
 A useful component to deal with an array of fields. It provides an api for adding / removing fields
 and also manages the generation of unique keys for each field.
 
+> This component works with arrays of any types - strings, numbers, objects, arrays.
+
+Properties:
+
 Name | Type | Default | Description
 --- | :---: | :---: | ---
 `path`* | `string`| undefined | specifies data property
-`render`* | `(items: FieldItem[], fields: FieldArrayApi) => React.ReactElement` | undefined | a function rendering fields of the array.
+`render`* | `(fieldsInfo: FieldArrayInfo) => React.ReactElement` | undefined | a function rendering fields of the array. See [FieldArrayInfo](#fieldarrayinfo).
 `ref` | `React.RefObject<FieldArrayApi>` | undefined | returns an object containing the API to add / remove fields
+
+#### FieldArrayInfo
+```typescript
+type FieldArrayInfo = {
+   items: FieldItem[]
+   fields: FieldArrayApi
+}
+```
 
 #### FieldItem
 The description of the field being rendered.
@@ -564,7 +476,9 @@ type FieldArrayApi = {
 
 ### Scope
 Sets the data scope of the form - all relative paths will be resolved against the nearest scope up the component tree.
-By default `FormProvider` component sets the scope to the root `/` path.
+> By default `FormProvider` component sets the scope to the root `/` path.
+
+Properties:
 
 Name | Type | Default | Description
 --- | :---: | :---: | ---
@@ -586,26 +500,28 @@ Name | Type | Default | Description
 ### Watch
 Re-renders content when desired events of the certain field are acquired
 
+Properties:
+
 Name | Type | Default | Description
 --- | :---: | :---: | ---
 `render`* | `(...values: any[]) => ReactNode` | undefined | a function rendering some UI content when changes occur. The render function gets a list of data values for each observed property. > Note: values of props with wildcards `*` or `**` cannot be resolved, they will be undefined
 `props` | `Path[]` | [] | a list of properties to watch, each property path can be relative or absolute and contain wildcards `*` or `**`
-`events` | `EventType[]` | "any" | the type of events to subscribe to
 `debounce` | `number` | 0 ms | debounce re-render,
 
-EventType:
-```typescript
-type EventType =
-  'valueChanged'      // value changing events
-  | 'stateChanged'    // changed UI state of the field (touched/dirty/pending etc)
-  | 'fieldValidated'       // field was validated
-  | 'fieldInvalidated'     // field was invalidated
-  | 'registerField'   // a new field was attached to the form
-  | 'unregisterField' // the field was excluded from the form
-```
+### Property
+Subscribes to a property changes and passes the property value and setter function to the render function.
+
+Properties:
+
+Name | Type | Default | Description
+--- | :---: | :---: | ---
+`render`* | `(value: any, setValue: (value: any) => void) => ReactElement` | undefined | a function rendering a property related UI.
 
 ### VisibleWhen
 Shows children content when the data is correct
+
+Properties:
+
 Name | Type | Default | Description
 --- | :---: | :---: | ---
 `schema`* | `Object<JSON Schema>` | undefined | schema used to check data
@@ -615,22 +531,42 @@ Name | Type | Default | Description
 `path` | `string`| '/' | absolute or relative path to data
 
 ## Hooks
- - [useForm](#useform--formapi)
+ - [useForm](#useform--forminfo)
+ - [useFormApi](#useformapi--formapi)
+ - [useFormState](#useformstate--formstate)
+ - [useField](#usefieldpath-string-schema-ischema--fieldinfo)
+ - [useFieldArray](#usefieldarraypath-string--fieldarrayinfo)
+ - [useProperty](#usepropertypath-string--any-value-any--void)
  - [useErrors](#useerrors--validationerrors)
  - [useWatch](#usewatchpath-string--any)
  - [usePath](#usepathpath-string--string)
  - [useDateRef](#usedaterefpath-string--iref)
  - [useValidate](#usevalidate--path-string--string--promisevoid)
 
-### `useForm() => FormApi`
-This hook returns a form [api](#formapi) related to the closest `FormProvider` component.
+### `useForm() => FormInfo`
+This hook combines `useFormApi` and `useFormState` hooks together and returns a form [info](#forminfo) object.
+
+### `useFormApi() => FormApi`
+Returns a form [api](#formapi) object.
+
+### `useFormState() => FormState`
+Returns a form [state](#formstate) object.
+
+### `useField(path: string, schema: ISchema) => FieldInfo`
+Creates a field with provided schema and returns a field [info](#fieldinfo) object.
+
+### `useFieldArray(path: string) => FieldArrayInfo`
+Returns a field array [info](#fieldarrayinfo) object.
+
+### `useProperty(path: string) => [any, (value: any) => void]`
+Subscribes to the property changes. Behaves like the `useState` hook.
 
 ### `useErrors() => ValidationErrors`
-Returns a list of errors caught by [ErrorProvider](#errorprovider) component
+Returns a list of errors caught by [CatchErrors](#catcherrors) component
 
 #### ValidationErrors
 ```typescript
-type ValidationErrors = {path: string, message: string}[]
+type ValidationErrors = { path: string, message: string }[]
 ```
 
 ### `useWatch(...path: string[]) => any[]`
