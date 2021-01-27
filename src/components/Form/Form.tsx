@@ -7,11 +7,11 @@
 import React from 'react'
 import useForm, { FormInfo } from '../../hooks/useForm'
 
-type FieldProps = {
+type FormProps = {
   render: (form: FormInfo) => React.ReactElement
 }
 
-export default function Form ({ render }: FieldProps) {
+export default function Form ({ render }: FormProps) {
   const formInfo = useForm()
 
   return render(formInfo)
