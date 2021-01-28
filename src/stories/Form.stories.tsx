@@ -1,61 +1,45 @@
-import React, { useRef, useState } from 'react'
-import { Model } from 'rjv'
-import { Form, Input, Alert } from 'antd'
+import React, { useState } from 'react'
+import { Form, Input } from 'antd'
 import { storiesOf } from '@storybook/react'
 
-import { ModelProvider, ModelProviderRef } from '../components/ModelProvider'
-import { Subscribe } from '../components/Subscribe'
-import { Field } from '../components/Field'
-import { getMessage, getValidationStatus } from './utils'
+import { getValidationStatus, ShowErrors, SubmitBtn } from './helpers'
+import { FormProvider, Field } from '../index'
 
 const initialData = {}
 
 storiesOf('Form', module)
-  .add('Misc', () => {
+  .add('Example', () => {
 
     return <SimpleForm />
   })
 
 function SimpleForm () {
-  const [counter, setCounter] = useState(false)
-  const formRef = useRef<ModelProviderRef>()
+  const [visible, setVisible] = useState(false)
 
   return (
     <Form style={{ maxWidth: '400px' }}>
-      <ModelProvider ref={formRef} data={initialData} /* schema={schema} */>
-        <Subscribe
-          render={(model: Model) => {
-            const ref = model.ref()
-            const errors = ref.errors.map((err, index) => (
-              <p key={`err-${index}`}>
-                {err.path || '..'}: {err.message && err.message.description}
-              </p>
-            ))
+      <FormProvider data={initialData}>
+        <ShowErrors />
 
-            return errors.length && ref.isValidated
-              ? <Alert type="error" message={errors} />
-              : (ref.isValidated ? <Alert type="success" message="Success" /> : null)
-          }}
-        />
+        <br />
 
         <Field
           path="name"
           schema={{
             type: 'string', default: '', minLength: 5, presence: true
           }}
-          render={(ref) => {
-            const message = getMessage(ref)
-
+          render={({ field, state }) => {
             return (
               <Form.Item
-                label="Name"
-                validateStatus={getValidationStatus(ref)}
-                help={message}
-                required={ref.isShouldNotBeBlank}
+                label="name"
+                validateStatus={getValidationStatus(state)}
+                help={field.messageDescription}
+                required={state.isRequired}
               >
                 <Input
-                  value={ref.getValue()}
-                  onChange={(e) => ref.setValue(e.target.value)}
+                  value={field.value}
+                  onChange={(e) => field.value = e.target.value}
+                  onBlur={() => field.validate()}
                 />
               </Form.Item>
             )
@@ -64,19 +48,18 @@ function SimpleForm () {
 
         <Field
           path="email"
-          render={(ref) => {
-            const message = getMessage(ref)
-
+          schema={{ type: 'string', presence: true, format: 'email' }}
+          render={({ field, state }) => {
             return (
               <Form.Item
-                label="Email"
-                validateStatus={getValidationStatus(ref)}
-                help={message}
-                required={ref.isShouldNotBeBlank}
+                label="email"
+                validateStatus={getValidationStatus(state)}
+                help={field.messageDescription}
+                required={state.isRequired}
               >
                 <Input
-                  value={ref.getValue()}
-                  onChange={(e) => ref.setValue(e.target.value)}
+                  value={field.value}
+                  onChange={(e) => field.value = e.target.value}
                 />
               </Form.Item>
             )
@@ -84,64 +67,54 @@ function SimpleForm () {
         />
 
         <Field
-          path="test/3/dynamic"
+          path="test/3/nested"
           schema={{
             type: 'string', default: '', minLength: 5, presence: true, format: 'email'
           }}
-          render={(ref) => {
-            const message = getMessage(ref)
-
+          render={({ field, state }) => {
             return (
               <Form.Item
-                label="Dynamic"
-                validateStatus={getValidationStatus(ref)}
-                help={message}
-                required={ref.isShouldNotBeBlank}
+                label="test/3/nested"
+                validateStatus={getValidationStatus(state)}
+                help={field.messageDescription}
+                required={state.isRequired}
               >
                 <Input
-                  value={ref.getValue()}
-                  onChange={(e) => ref.setValue(e.target.value)}
-                  onBlur={() => ref.ref('../..').validate()}
+                  value={field.value}
+                  onChange={(e) => field.value = e.target.value}
                 />
               </Form.Item>
             )
           }}
         />
 
-        {counter && <Field
-          path="someField"
+        {visible && <Field
+          path="additionalField"
           schema={{
             type: 'string', default: '', minLength: 2, presence: true
           }}
-          render={(ref) => {
-            const message = getMessage(ref)
-
+          render={({ field, state }) => {
             return (
               <Form.Item
-                label="Some Field"
-                validateStatus={getValidationStatus(ref)}
-                help={message}
-                required={ref.isShouldNotBeBlank}
+                label="additionalField"
+                validateStatus={getValidationStatus(state)}
+                help={field.messageDescription}
+                required={state.isRequired}
               >
                 <Input
-                  value={ref.getValue()}
-                  onChange={(e) => ref.setValue(e.target.value)}
+                  value={field.value}
+                  onChange={(e) => field.value = e.target.value}
                 />
               </Form.Item>
             )
           }}
         />}
 
-        <button
-          onClick={() => {
-            formRef.current && formRef.current.submit()
-          }}
-        >
-          Submit
-        </button>
-        <button onClick={() => setCounter(true)}>Show control</button>
-        <button onClick={() => setCounter(false)}>Hide control</button>
-      </ModelProvider>
+        <SubmitBtn />
+        &nbsp;
+        {!visible && <button onClick={() => setVisible(true)}>Show additional</button>}
+        {visible && <button onClick={() => setVisible(false)}>Hide additional</button>}
+      </FormProvider>
     </Form>
   )
 }
