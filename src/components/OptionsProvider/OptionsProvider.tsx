@@ -1,24 +1,55 @@
 /**
  *
- * Provider
+ * OptionsProvider - an options provider
  *
  */
 
-import React, { memo } from 'react'
+import React, { useMemo } from 'react'
 import { types } from 'rjv'
-import OptionsProviderContext from './OptionsProviderContext'
+import OptionsContext, { OptionsContextValue } from '../../contexts/OptionsContext'
+import { DescriptionResolverFn } from '../../types'
 
-type Props = {
-  options?: types.IModelOptionsPartial,
+export const DEFAULT_VALIDATOR_OPTIONS: Partial<types.IValidatorOptions> = {
+  coerceTypes: false,
+  removeAdditional: false
+}
+
+export const DEFAULT_DESCRIPTION_RESOLVER: DescriptionResolverFn = (message) => message.toString()
+
+type OptionsProviderProps = {
+  coerceTypes?: boolean;
+  removeAdditional?: boolean;
+  errors?: {
+    [keywordName: string]: string;
+  };
+  warnings?: {
+    [keywordName: string]: string;
+  };
+  keywords?: types.IKeyword[];
+  descriptionResolver?: DescriptionResolverFn
   children: React.ReactNode
 }
 
-function OptionsProvider (props: Props) {
-  const { options = {}, children } = props
+export default function OptionsProvider (props: OptionsProviderProps) {
+  const { descriptionResolver, children, ...restProps } = props
 
-  return <OptionsProviderContext.Provider value={options}>
-    {children}
-  </OptionsProviderContext.Provider>
+  const validatorOptions = useMemo(
+    (): Partial<types.IValidatorOptions> => {
+      return { ...DEFAULT_VALIDATOR_OPTIONS, ...restProps }
+    },
+    [
+      restProps.coerceTypes, restProps.removeAdditional, restProps.errors, restProps.warnings, restProps.keywords
+    ]
+  )
+
+  const context = useMemo<OptionsContextValue>(() => ({
+    validatorOptions,
+    descriptionResolver: descriptionResolver || DEFAULT_DESCRIPTION_RESOLVER
+  }), [validatorOptions, descriptionResolver])
+
+  return (
+    <OptionsContext.Provider value={context}>
+      {children}
+    </OptionsContext.Provider>
+  )
 }
-
-export default memo<Props>(OptionsProvider)

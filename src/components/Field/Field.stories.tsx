@@ -1,385 +1,359 @@
-import React, { useRef } from 'react'
-import { Model, types } from 'rjv'
-import { Form, Input, Alert, Select } from 'antd'
+import React from 'react'
+import { Button, Space, Form, Input, Select } from 'antd'
 import { storiesOf } from '@storybook/react'
 
-import { ModelProvider, ModelProviderRef } from '../ModelProvider'
-import { Subscribe } from '../Subscribe'
-import { Field } from '../Field'
-import { Submit } from '../Submit'
-import { getMessage, getValidationStatus } from '../stories/utils'
+import { FormProvider } from '../FormProvider'
+import Field from './Field'
+import { Scope } from '../Scope'
+import { Watch } from '../Watch'
+import { getValidationStatus, SubmitBtn } from '../../stories/helpers'
 
-const schema: types.ISchema = {
-  properties: {
-    condition: {
-      type: 'string',
-      default: 'empty',
-      presence: true,
-      dependencies: ['../foo', '../bar']
-    }
-  },
-  applySchemas: [
-    {
-      if: { properties: { condition: { const: 'foo' } } },
-      then: {
-        properties: {
-          foo: { type: 'string', default: '', presence: true }
-        }
-      }
-    },
-    {
-      if: { properties: { condition: { const: 'bar' } } },
-      then: {
-        properties: {
-          bar: { type: 'string', default: '', presence: true }
-        }
-      }
-    }
-  ]
-}
-
-const initialData = {}
+let _id = 1
 
 storiesOf('Field', module)
   .add('Simple Field', () => {
-
     return <Form style={{ maxWidth: '400px' }}>
-      <ModelProvider data={''} schema={{ presence: true }}>
+      <FormProvider data={undefined}>
         <Field
           path="/"
-          render={(ref) => {
-            const message = getMessage(ref)
-
+          schema={{ default: 'wrong email', format: 'email' }}
+          render={({ field, state, inputRef }) => {
             return (
               <Form.Item
                 label="Value"
-                validateStatus={getValidationStatus(ref)}
-                help={message}
-                required={ref.isShouldNotBeBlank}
+                validateStatus={getValidationStatus(state)}
+                help={field.messageDescription}
+                required={state.isRequired}
+                hasFeedback
               >
                 <Input
-                  value={ref.getValue()}
-                  onFocus={() => ref.markAsTouched()}
-                  onChange={(e) => ref.markAsDirty().markAsChanged().setValue(e.target.value)}
-                  onBlur={() => ref.validate()}
+                  ref={inputRef}
+                  value={field.value}
+                  onFocus={() => field.touched()}
+                  onChange={(e) => field.value = e.target.value}
+                  onBlur={() => field.validate()}
                 />
               </Form.Item>
             )
           }}
         />
-      </ModelProvider>
+        <SubmitBtn />
+      </FormProvider>
     </Form>
   })
-  .add('Safe Field - Schema driven', () => {
-    return <Form style={{ maxWidth: '400px' }}>
-      <ModelProvider
-        data={{}}
-        schema={
-          {
-            properties: {
-              foo: {
-                default: '',
-                presence: true,
-                validate: () => new Promise((res) => setTimeout(() => res({}), 500))
-              }
-            }
-          }
-        }
-      >
+  .add('Field with different rules', () => {
+    return <Form layout="horizontal" style={{ maxWidth: '400px' }}>
+      <FormProvider data={''}>
         <Field
-          path="foo"
-          render={(ref) => {
-            const message = getMessage(ref)
-
+          path="/"
+          schema={{ default: '', presence: true }}
+          render={({ field, state, inputRef }) => {
             return (
               <Form.Item
-                label="Value"
-                validateStatus={getValidationStatus(ref)}
-                help={message || 'Should appear after 500ms'}
-                required={ref.isShouldNotBeBlank}
+                label="Value #1 (presence)"
+                validateStatus={getValidationStatus(state)}
+                help={field.messageDescription}
+                required={state.isRequired}
               >
                 <Input
-                  value={ref.getValue()}
-                  onFocus={() => ref.markAsTouched()}
-                  onChange={(e) => ref.markAsDirty().markAsChanged().setValue(e.target.value)}
-                  onBlur={() => ref.validate()}
+                  ref={inputRef}
+                  value={field.value}
+                  onFocus={() => field.touched()}
+                  onChange={(e) => field.value = e.target.value}
+                  onBlur={() => field.validate()}
                 />
               </Form.Item>
             )
           }}
         />
-      </ModelProvider>
+        <Field
+          path="/"
+          schema={{ default: '', if: { presence: true }, then: { format: 'email' } }}
+          render={({ field, state, inputRef }) => {
+            return (
+              <Form.Item
+                label="Value #2 (email)"
+                validateStatus={getValidationStatus(state)}
+                help={field.messageDescription}
+                required={state.isRequired}
+              >
+                <Input
+                  ref={inputRef}
+                  value={field.value}
+                  onFocus={() => field.touched()}
+                  onChange={(e) => field.value = e.target.value}
+                  onBlur={() => field.validate()}
+                />
+              </Form.Item>
+            )
+          }}
+        />
+        <SubmitBtn />
+      </FormProvider>
     </Form>
   })
-  .add('Safe Field - UI driven', () => {
-    return <Form style={{ maxWidth: '400px' }}>
-      <ModelProvider data={{}}>
+  .add('Pending Field', () => {
+    return <Form layout="horizontal" style={{ maxWidth: '400px' }}>
+      <FormProvider data={''}>
         <Field
-          path="foo"
+          path="/"
           schema={{
             default: '',
             presence: true,
-            validate: () => new Promise((res) => setTimeout(() => res({}), 500))
-          }}
-          render={(ref) => {
-            const message = getMessage(ref)
+            validate: (ref) => {
+              const value = ref.value
 
+              return new Promise((res) => setTimeout(res, 1000, value !== 'admin'))
+            }
+          }}
+          render={({ field, state, inputRef }) => {
             return (
               <Form.Item
-                label="Value"
-                validateStatus={getValidationStatus(ref)}
-                help={message || 'Should appear after 500ms'}
-                required={ref.isShouldNotBeBlank}
+                label="User name"
+                validateStatus={getValidationStatus(state)}
+                help={field.messageDescription || 'Must not be "admin"'}
+                required={state.isRequired}
+                hasFeedback
               >
                 <Input
-                  value={ref.getValue()}
-                  onFocus={() => ref.markAsTouched()}
-                  onChange={(e) => ref.markAsDirty().markAsChanged().setValue(e.target.value)}
-                  onBlur={() => ref.validate()}
+                  ref={inputRef}
+                  value={field.value}
+                  onFocus={() => field.touched()}
+                  onChange={(e) => field.value = e.target.value}
+                  onBlur={() => field.validate()}
                 />
               </Form.Item>
             )
           }}
         />
-      </ModelProvider>
+        <SubmitBtn />
+      </FormProvider>
     </Form>
   })
-  .add('Static schema - conditional form test', () => {
-
-    return <StaticSchemaForm />
-  })
-  .add('Dynamic schema - conditional form test', () => {
-
-    return <DynamicSchemaForm />
-  })
-
-function StaticSchemaForm () {
-  const formRef = useRef<ModelProviderRef>()
-
-  return (
-    <Form style={{ maxWidth: '400px' }}>
-      <ModelProvider ref={formRef} data={initialData} schema={schema}>
-        <Subscribe
-          render={(model: Model) => {
-            const ref = model.ref()
-            const errors = ref.errors.map((err, index) => (
-              <p key={`err-${index}`}>
-                {err.path || '..'}: {err.message && err.message.description}
-              </p>
-            ))
-
-            return errors.length && ref.isValidated
-              ? <Alert type="error" message={errors} />
-              : (ref.isValidated ? <Alert type="success" message="Success" /> : null)
-          }}
-        />
-
+  .add('ChangeSchema - isRequired', () => {
+    return <Form layout="horizontal" style={{ maxWidth: '400px' }}>
+      <FormProvider data={{}}>
         <Field
-          path="condition"
-          render={(ref) => {
-            const message = getMessage(ref)
-
+          path="required"
+          schema={{ default: 'no', type: 'string' }}
+          render={({ field, state, inputRef }) => {
             return (
               <Form.Item
-                label="Condition"
-                validateStatus={getValidationStatus(ref)}
-                help={message}
-                required={ref.isShouldNotBeBlank}
+                label="Email required?"
+                validateStatus={getValidationStatus(state)}
+                help={field.messageDescription}
+                required={state.isRequired}
               >
                 <Select
-                  value={ref.getValue()}
-                  onChange={(value) => {
-                    ref.setValue(value)
-                    ref.validate()
-                  }}
+                  ref={inputRef}
+                  value={field.value}
+                  onFocus={() => field.touched()}
+                  onChange={(value) => field.value = value}
+                  onBlur={() => field.validate()}
                 >
-                  <Select.Option value="empty">empty</Select.Option>
-                  <Select.Option value="foo">foo</Select.Option>
-                  <Select.Option value="bar">bar</Select.Option>
+                  <Select.Option value="noo">Noo</Select.Option>
+                  <Select.Option value="no">No</Select.Option>
+                  <Select.Option value="yes">Yes</Select.Option>
                 </Select>
               </Form.Item>
             )
           }}
         />
-
-        <Field
-          path="foo"
-          render={(ref) => {
-            const message = getMessage(ref)
-
-            return (
-              <Form.Item
-                label="Foo"
-                validateStatus={getValidationStatus(ref)}
-                help={message}
-                required={ref.isShouldNotBeBlank}
-              >
-                <Input
-                  value={ref.getValue()}
-                  onChange={(e) => ref.setValue(e.target.value)}
-                />
-              </Form.Item>
-            )
-          }}
-          safe
-        />
-
-        <Field
-          path="bar"
-          render={(ref) => {
-            const message = getMessage(ref)
-
-            return (
-              <Form.Item
-                label="Bar"
-                validateStatus={getValidationStatus(ref)}
-                help={message}
-                required={ref.isShouldNotBeBlank}
-              >
-                <Input
-                  value={ref.getValue()}
-                  onChange={(e) => ref.setValue(e.target.value)}
-                />
-              </Form.Item>
-            )
-          }}
-          safe
-        />
-
-        <button
-          onClick={() => {
-            formRef.current && formRef.current.submit()
-          }}
-        >
-          Submit
-        </button>
-      </ModelProvider>
+        <Watch props={['required']} render={(required) => (
+          <Field
+            path="email"
+            schema={required === 'yes'
+              ? {
+                default: '',
+                type: 'string',
+                format: 'email',
+                presence: true
+              }
+              : { default: '', format: 'email', type: 'string' }
+            }
+            render={({ field, state, inputRef }) => {
+              return (
+                <Form.Item
+                  label="Email"
+                  validateStatus={getValidationStatus(state)}
+                  help={field.messageDescription}
+                  required={state.isRequired}
+                >
+                  <Input
+                    ref={inputRef}
+                    value={field.value}
+                    onFocus={() => field.touched()}
+                    onChange={(e) => field.value = e.target.value}
+                    onBlur={() => field.validate()}
+                    readOnly={state.isReadonly}
+                  />
+                </Form.Item>
+              )
+            }}
+          />
+        )} />
+        <SubmitBtn />
+      </FormProvider>
     </Form>
-  )
-}
-
-function DynamicSchemaForm () {
-  const formRef = useRef<ModelProviderRef>()
-
-  return (
-    <Form style={{ maxWidth: '400px' }}>
-      <ModelProvider ref={formRef} data={initialData}>
-        <Subscribe
-          render={(model: Model) => {
-            const ref = model.ref()
-            const errors = ref.errors.map((err, index) => (
-              <p key={`err-${index}`}>
-                {err.path || '..'}: {err.message && err.message.description}
-              </p>
-            ))
-
-            return errors.length && ref.isValidated
-              ? <Alert type="error" message={errors} />
-              : (ref.isValidated ? <Alert type="success" message="Success" /> : null)
+  })
+  .add('ChangeSchema - isReadonly', () => {
+    return <Form layout="horizontal" style={{ maxWidth: '400px' }}>
+      <FormProvider data={{}}>
+        <Field
+          path="readonly"
+          schema={{ default: 'no', type: 'string' }}
+          render={({ field, state, inputRef }) => {
+            return (
+              <Form.Item
+                label="Field readonly?"
+                validateStatus={getValidationStatus(state)}
+                help={field.messageDescription}
+                required={state.isRequired}
+              >
+                <Select
+                  ref={inputRef}
+                  value={field.value}
+                  onFocus={() => field.touched()}
+                  onChange={(value) => field.value = value}
+                  onBlur={() => field.validate()}
+                >
+                  <Select.Option value="noo">Noo</Select.Option>
+                  <Select.Option value="no">No</Select.Option>
+                  <Select.Option value="yes">Yes</Select.Option>
+                </Select>
+              </Form.Item>
+            )
           }}
         />
-
+        <Watch props={['readonly']} render={(readonly) => (
+          <Field
+            path="field"
+            schema={readonly === 'yes' ? {
+              default: 'abc',
+              type: 'string',
+              readonly: true
+            } : { default: '', type: 'string' }}
+            render={({ field, state, inputRef }) => {
+              return (
+                <Form.Item
+                  label="Field"
+                  validateStatus={getValidationStatus(state)}
+                  help={field.messageDescription}
+                  required={state.isRequired}
+                >
+                  <Input
+                    ref={inputRef}
+                    value={field.value}
+                    onFocus={() => field.touched()}
+                    onChange={(e) => field.value = e.target.value}
+                    onBlur={() => !state.isReadonly && field.validate()}
+                    readOnly={state.isReadonly}
+                    placeholder="Type here"
+                  />
+                </Form.Item>
+              )
+            }}
+          />
+        )} />
+        <SubmitBtn />
+      </FormProvider>
+    </Form>
+  })
+  .add('Simple Form', () => {
+    return (
+      <div className="App">
+      <FormProvider data={{}}>
         <Field
-          path="condition"
           schema={{
-            type: 'string',
-            default: 'empty',
+            default: '',
             presence: true
           }}
-          render={(ref, register) => {
-            const message = getMessage(ref)
-
-            return (
-              <Form.Item
-                label="Condition"
-                validateStatus={getValidationStatus(ref)}
-                help={message}
-                required={ref.isShouldNotBeBlank}
-              >
-                <Select
-                  ref={register}
-                  value={ref.getValue()}
-                  onChange={(value) => {
-                    ref.setValue(value)
-                    ref.prepare()
-                  }}
-                >
-                  <Select.Option value="empty">empty</Select.Option>
-                  <Select.Option value="foo">foo</Select.Option>
-                  <Select.Option value="bar">bar</Select.Option>
-                </Select>
-              </Form.Item>
-            )
+          path="name"
+          render={({ field, state }) => (
+            <div>
+              <input
+                value={field.value}
+                onChange={(e) => (field.dirty().value = e.target.value)}
+                onBlur={() => field.validate()}
+                placeholder="Email"
+              />
+              {state.isValidated && !state.isValid && field.messageDescription}
+            </div>
+          )}
+        />
+        <Field
+          schema={{
+            default: '',
+            presence: true
           }}
+          path="username"
+          render={({ field, state }) => (
+            <div>
+              <input
+                value={field.value}
+                onChange={(e) => (field.dirty().value = e.target.value)}
+                onBlur={() => field.validate()}
+                placeholder="Username"
+              />
+              {state.isValidated && !state.isValid && field.messageDescription}
+            </div>
+          )}
         />
-
-        <Subscribe
-          to={['condition']}
-          render={(conditionRef) => (
-            conditionRef.value === 'foo' && <Field
-              path="foo"
-              schema={{ type: 'string', default: '', presence: true }}
-              render={(ref, register) => {
-                const message = getMessage(ref)
-
-                return (
-                  <Form.Item
-                    label="Foo"
-                    validateStatus={getValidationStatus(ref)}
-                    help={message}
-                    required={ref.isShouldNotBeBlank}
-                  >
-                    <Input
-                      ref={register}
-                      value={ref.getValue()}
-                      onChange={(e) => ref.setValue(e.target.value)}
+        <SubmitBtn />
+      </FormProvider>
+    </div>
+    )
+  })
+  .add('Dynamic Fields', () => {
+    return (
+      <FormProvider data={[]}>
+        <Form>
+          <Field path={'/'} schema={{ type: 'array' }} render={({ field }) => (
+            <>
+              {field.value.map((item, index) => (
+                <Scope key={`k${item._id}`} path={`${index}`}>
+                  <Space style={{ display: 'flex', marginBottom: 8 }} align="baseline">
+                    <Field
+                      path="name"
+                      schema={{ default: '', presence: true }}
+                      render={({ field, state, inputRef }) => (
+                        <Form.Item
+                          validateStatus={getValidationStatus(state)}
+                          help={field.messageDescription}
+                          required={state.isRequired}
+                        >
+                          <Input
+                            ref={inputRef}
+                            value={field.value}
+                            onFocus={() => field.touched()}
+                            onChange={(e) => field.value = e.target.value}
+                            onBlur={() => field.validate()}
+                            placeholder="Name"
+                          />
+                        </Form.Item>
+                      )}
                     />
-                  </Form.Item>
-                )
-              }}
-            />
-          )}
-        />
+                    <Button
+                      onClick={() => {
+                        const newValue = [...field.value]
+                        newValue.splice(index, 1)
 
-        <Subscribe
-          to={['condition']}
-          render={(conditionRef) => (
-            conditionRef.value === 'bar' && <Field
-              path="bar"
-              schema={{ type: 'string', default: '', presence: true }}
-              render={(ref, register) => {
-                const message = getMessage(ref)
+                        field.value = newValue
+                      }}
+                    >Remove</Button>
+                  </Space>
+                </Scope>
+              ))}
 
-                return (
-                  <Form.Item
-                    label="Bar"
-                    validateStatus={getValidationStatus(ref)}
-                    help={message}
-                    required={ref.isShouldNotBeBlank}
-                  >
-                    <Input
-                      ref={register}
-                      value={ref.getValue()}
-                      onChange={(e) => ref.setValue(e.target.value)}
-                    />
-                  </Form.Item>
-                )
-              }}
-            />
-          )}
-        />
-
-        <Submit
-          render={(handleSubmit) => (
-            <button
-              onClick={handleSubmit}
-            >
-              Submit
-            </button>
-          )}
-        />
-
-      </ModelProvider>
-    </Form>
-  )
-}
+              <Form.Item>
+                <Button type="dashed" onClick={() => field.value = [...field.value, { _id: _id++ }]}>
+                  Add field
+                </Button>
+              </Form.Item>
+            </>
+          )} />
+        </Form>
+        <SubmitBtn />
+      </FormProvider>
+    )
+  })
