@@ -1,15 +1,16 @@
 import React, { useRef } from 'react'
-import { Form as AntdForm, Button, Space, Form, Input } from 'antd'
+import { Form as AntdForm, Button, Space, Form, Input, Alert } from 'antd'
 import { storiesOf } from '@storybook/react'
 import FieldArray from './FieldArray'
 import { FormProvider } from '../FormProvider'
 import { Field } from '../Field'
+import { Form as FormApi } from '../Form'
 import { Scope } from '../Scope'
 import { getValidationStatus, SubmitBtn } from '../../stories/helpers'
 import { FieldArrayInfo } from '../../hooks/useFieldArray'
 
 storiesOf('FieldArray', module)
-  .add('Dynamic Fields', () => {
+  .add('Api test', () => {
     const fieldsRef = useRef<FieldArrayInfo>(null)
     return (
       <FormProvider data={[]}>
@@ -124,6 +125,88 @@ storiesOf('FieldArray', module)
             </>
           )} />
         </Form>
+        <SubmitBtn />
+      </FormProvider>
+    )
+  })
+  .add('Dynamic form', () => {
+    return (
+      <FormProvider data={[]}>
+        <Form>
+          <h3>The form must have at least 2 items</h3>
+
+          <br />
+
+          <Field
+            path="/"
+            schema={{ minItems: 2 }}
+            render={({ field, state }) => {
+              const invalid = state.isValidated && !state.isValid
+              return invalid ?
+                <AntdForm.Item>
+                  <Alert type="error" message={field.messageDescription} />
+                </AntdForm.Item>
+                : null
+            }}
+          />
+
+          <FieldArray
+            path={'/'}
+            render={({ items, fields }) => (
+              <>
+                {items.map(({ key, path }, index) => (
+                  <Scope key={key} path={path}>
+                    <Space style={{ display: 'flex', marginBottom: 8 }} align="baseline">
+                      <Field
+                        path="name"
+                        schema={{ default: '', presence: true, minLength: 2 }}
+                        render={({ field, state, inputRef }) => (
+                          <Form.Item
+                            validateStatus={getValidationStatus(state)}
+                            help={field.messageDescription}
+                            required={state.isRequired}
+                          >
+                            <Input
+                              ref={inputRef}
+                              value={field.value}
+                              onFocus={() => field.touched()}
+                              onChange={(e) => field.value = e.target.value}
+                              onBlur={() => field.validate()}
+                              placeholder="Name"
+                              autoFocus
+                            />
+                          </Form.Item>
+                        )}
+                      />
+
+                      <FormApi
+                        render={({ form }) => {
+                          return <Button
+                            onClick={() => { fields.remove(index); return form.syncFields('/') }}
+                          >
+                            Remove
+                          </Button>
+                        }}
+                      />
+                    </Space>
+                  </Scope>
+                ))}
+
+                <FormApi
+                  render={({ form }) => {
+                    return <Button
+                      type="dashed"
+                      onClick={() => { fields.append({}); return form.syncFields('/') }}
+                    >
+                      Add field and validate
+                    </Button>
+                  }}
+                />
+              </>
+            )}
+          />
+        </Form>
+        <br />
         <SubmitBtn />
       </FormProvider>
     )

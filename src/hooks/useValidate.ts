@@ -15,6 +15,6 @@ export default function useValidate (): (path: types.Path | types.Path[]) => Pro
     const _path = (Array.isArray(path) ? path : [path])
       .map((item) => utils.resolvePath(item, scopeContext?.scope ?? '/'))
 
-    return formContext.validate(_path)
+    return formContext.validateFields(_path)
   }, [formContext, scopeContext?.scope])
 }

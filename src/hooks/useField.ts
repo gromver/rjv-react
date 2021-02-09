@@ -201,6 +201,16 @@ export default function useField (path: types.Path, schema: types.ISchema): Fiel
 
         return res
       },
+      async sync (): Promise<void> {
+        const res = await validatorRef.current.validateRef(dataRef.current)
+
+        fieldsRef.current.setState(field, {
+          isValid: res.valid,
+          message: extractMessageFromResult(res, dataRef.current)
+        })
+
+        emitterRef.current.emit(dataRef.current.path, new events.FieldValidatedEvent())
+      },
       dirty (): FieldApi {
         const curState = fieldsRef.current.getState(field)
 

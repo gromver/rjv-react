@@ -1,6 +1,6 @@
 {
   "name": "rjv-react",
-  "version": "5.0.0-beta.2",
+  "version": "5.0.0-beta.3",
   "description": "React components for Rjv (Reactive JSON Validator)",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
@@ -98,7 +98,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.4.3",
-    "@storybook/react": "^6.1.4",
+    "@storybook/react": "^6.1.17",
     "@types/es6-promise": "^0.0.33",
     "@types/invariant": "^2.2.29",
     "@types/jest": "^24.0.11",

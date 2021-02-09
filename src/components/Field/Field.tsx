@@ -9,7 +9,7 @@ import { types } from 'rjv'
 import useField, { FieldInfo } from '../../hooks/useField'
 
 type FieldProps = {
-  render: (fieldInfo: FieldInfo) => React.ReactElement
+  render: (fieldInfo: FieldInfo) => React.ReactElement | null
   path: types.Path
   schema: types.ISchema
 }

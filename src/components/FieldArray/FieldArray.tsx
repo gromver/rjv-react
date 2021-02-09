@@ -13,7 +13,7 @@ import { FieldArrayItem, FieldArrayApi } from '../../types'
 import useFieldArray, { FieldArrayInfo } from '../../hooks/useFieldArray'
 
 type FieldArrayProps = {
-  render: (fieldArrayInfo: { items: FieldArrayItem[], fields: FieldArrayApi }) => React.ReactElement
+  render: (fieldArrayInfo: { items: FieldArrayItem[], fields: FieldArrayApi }) => React.ReactElement | null
   path: types.Path
 }
 

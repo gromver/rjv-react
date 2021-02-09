@@ -29,8 +29,8 @@ export default function FormStateUpdater ({ debounce = 300 }: Props) {
 
   const triggerUpdate = useMemo(() => {
     return debounce > 0
-      ? _debounce(formContext.calcValidationState, debounce, { leading: true })
-      : formContext.calcValidationState
+      ? _debounce(formContext.sync, debounce, { leading: true })
+      : formContext.sync
   }, [debounce, formContext])
 
   const handleUpdate = useCallback((path: string, event: events.BaseEvent) => {

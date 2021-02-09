@@ -12,8 +12,9 @@ export default function useFormApi (): FormApi {
   return useMemo(
     () => ({
       submit: formContext.submit,
-      validate: formContext.validate,
-      sync: formContext.calcValidationState
+      validateFields: formContext.validateFields,
+      syncFields: formContext.syncFields,
+      sync: formContext.sync
     }),
     [formContext]
   )

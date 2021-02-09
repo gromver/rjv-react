@@ -91,11 +91,11 @@ storiesOf('Form', module)
           <RjvForm
             render={({ form }) => (
               <>
-                <button onClick={() => form.validate('a')}>Validate /a</button>
+                <button onClick={() => form.validateFields('a')}>Validate /a</button>
                 &nbsp;
-                <button onClick={() => form.validate('/b')}>Validate /b</button>
+                <button onClick={() => form.validateFields('/b')}>Validate /b</button>
                 &nbsp;
-                <button onClick={() => form.validate(['/a', 'b'])}>Validate /a and /b</button>
+                <button onClick={() => form.validateFields(['/a', 'b'])}>Validate /a and /b</button>
               </>
             )}
           />

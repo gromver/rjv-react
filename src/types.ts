@@ -29,6 +29,7 @@ export type FieldApi = {
   value: any
   ref: types.IRef
   validate: () => Promise<types.IValidationResult>
+  sync: () => Promise<void>
   focus: () => void
   dirty: () => FieldApi
   touched: () => FieldApi
@@ -64,9 +65,9 @@ export type SubmitFormFn = (
   onError?: (firstErrorField: FirstErrorField) => void | Promise<void>
 ) => void
 
-export type CalcValidationStateFn = () => Promise<void>
+export type SyncFormFn = () => Promise<void>
 
-export type ValidateFieldsFn = (path: types.Path | types.Path[]) => Promise<void>
+export type TriggerFieldsFn = (path: types.Path | types.Path[]) => Promise<void>
 
 export type FormState = {
   isValid: boolean
@@ -79,8 +80,9 @@ export type FormState = {
 
 export type FormApi = {
   submit: SubmitFormFn
-  validate: ValidateFieldsFn
-  sync: CalcValidationStateFn
+  sync: SyncFormFn
+  validateFields: TriggerFieldsFn
+  syncFields: TriggerFieldsFn
 }
 
 // Options

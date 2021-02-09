@@ -318,7 +318,6 @@ Name | Type | Default | Description
 --- | :---: | :---: | ---
 `children`* | `ReactNode` | undefined | content
 `data` | `any` | undefined | the initial form data
-`ref` | `React.RefObject<FormApi>` | undefined | returns an object containing the API to work with the form. Also this api can be obtained using the [useForm](#useform--formapi) hook.
 
 ### CatchErrors
 Provides validation errors context. This component collects errors from all fields enclosed within.
@@ -360,18 +359,19 @@ type FormInfo = {
 
 #### FormApi
 ```typescript
-type FormInfo = {
+type FormApi = {
    // submits form
    submit: (
      onSuccess?: (data: any) => void | Promise<void>,
      onError?: (firstErrorField: FirstErrorField) => void | Promise<void>
    ) => void
+   // validates form data and sets isValid state of the form
+   sync: () => void
    // validates specified field / fields
-   validate: (path: types.Path | types.Path[]) => Promise<void>
-   // returns data ref to the property
-   getDataRef: (path?: types.Path) => types.IRef
-   // returns a list of errors catched by the closest CatchErrors component
-   getErrors: () => ValidationErrors
+   validateFields: (path: types.Path | types.Path[]) => Promise<void>
+   // same as validateFields,
+   // but not affects isValidating and isValidated states of the field
+   syncFields: (path: types.Path | types.Path[]) => Promise<void>
 }
 ```
 
