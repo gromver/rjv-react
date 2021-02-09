@@ -28,7 +28,7 @@ function SimpleForm () {
           schema={{
             type: 'string', default: '', minLength: 5, presence: true
           }}
-          render={({ field, state }) => {
+          render={({ field, state, inputRef }) => {
             return (
               <Form.Item
                 label="name"
@@ -37,6 +37,7 @@ function SimpleForm () {
                 required={state.isRequired}
               >
                 <Input
+                  ref={inputRef}
                   value={field.value}
                   onChange={(e) => field.value = e.target.value}
                   onBlur={() => field.validate()}
@@ -49,7 +50,7 @@ function SimpleForm () {
         <Field
           path="email"
           schema={{ type: 'string', presence: true, format: 'email' }}
-          render={({ field, state }) => {
+          render={({ field, state, inputRef }) => {
             return (
               <Form.Item
                 label="email"
@@ -58,6 +59,7 @@ function SimpleForm () {
                 required={state.isRequired}
               >
                 <Input
+                  ref={inputRef}
                   value={field.value}
                   onChange={(e) => field.value = e.target.value}
                 />
@@ -71,7 +73,7 @@ function SimpleForm () {
           schema={{
             type: 'string', default: '', minLength: 5, presence: true, format: 'email'
           }}
-          render={({ field, state }) => {
+          render={({ field, state, inputRef }) => {
             return (
               <Form.Item
                 label="test/3/nested"
@@ -80,6 +82,7 @@ function SimpleForm () {
                 required={state.isRequired}
               >
                 <Input
+                  ref={inputRef}
                   value={field.value}
                   onChange={(e) => field.value = e.target.value}
                 />
@@ -93,7 +96,7 @@ function SimpleForm () {
           schema={{
             type: 'string', default: '', minLength: 2, presence: true
           }}
-          render={({ field, state }) => {
+          render={({ field, state, inputRef }) => {
             return (
               <Form.Item
                 label="additionalField"
@@ -102,6 +105,7 @@ function SimpleForm () {
                 required={state.isRequired}
               >
                 <Input
+                  ref={inputRef}
                   value={field.value}
                   onChange={(e) => field.value = e.target.value}
                 />

@@ -105,87 +105,121 @@ function SignUpForm() {
 ### Higher-Order Fields (HOF)
 As the `rjv-react` library works in any environment (web/native) and with any 3d party UI
 components framework, it would be better to create a set of higher-order field components to simplify form development.
-For example, we can create a couple of the higher order components like `Form` and `InputField` for a web application.
+For example, we can create a couple of the higher order components like `Form` and `TextField` for the [Material UI](https://material-ui.com) library.
 
 `components/Form.js`
 ```typescript jsx
-import React from 'react';
-import { FormProvider, useFormApi } from 'rjv-react';
+import React, { useCallback } from "react";
+import { FormProvider, useFormApi } from "rjv-react";
 
 type FormProps = {
-  data: any
-  onSuccess: (data) => void | Promise<void>
-  children: React.ReactNode
-  focusFirstError?: boolean
+  // initial form data
+  data: any;
+  // note that onSuccess function could be async
+  onSuccess: (data: any) => void | Promise<void>;
+  children: React.ReactNode;
+  // focus first error field after the form submitting
+  focusFirstError?: boolean;
+};
+
+function Form(props: FormProps) {
+  const { data, onSuccess, focusFirstError = true, ...restProps } = props;
+  const { submit } = useFormApi();
+
+  const handleSubmit = useCallback(
+    (e) => {
+      e.preventDefault();
+
+      submit(onSuccess, (firstErrorField) => {
+        if (focusFirstError) {
+          firstErrorField.focus();
+        }
+      });
+    },
+    [submit, onSuccess, focusFirstError]
+  );
+
+  return <form {...restProps} onSubmit={handleSubmit} noValidate />;
 }
 
-export default function Form (props) {
-  const { data, onSuccess, focusFirstError = true, ...restProps} = props
-  const { submit } = useFormApi()
-
-  const handleSubmit = useCallback(() => {
-     submit(
-       onSuccess,
-       (firstErrorField) => {
-          if (focusFirstError) {
-             firstErrorField.focus()
-          }
-       }
-     )
-  }, [submit, onSucces])
-
-   return (
-     <FormProvider data={props.data}>
-        <form {...restProps} onSubmit={handleSubmit} />
-     </FormProvider>
-   )
+export default function FormWithProvider(props: FormProps) {
+  return (
+    <FormProvider data={props.data}>
+      <Form {...props} />
+    </FormProvider>
+  );
 }
 ``` 
 
-`components/InputField.js`
+`components/TextField.js`
 ```typescript jsx
-import React from 'react';
-import { types } from 'rjv';
-import { useField } from 'rjv-react';
+import React from "react";
+import { types } from "rjv";
+import { useField } from "rjv-react";
+import {
+  TextField as MuiTextField,
+  TextFieldProps as MuiTextFieldProps
+} from "@material-ui/core";
 
-type InputFieldProps = {
+export interface TextFieldProps
+  extends Omit<
+    MuiTextFieldProps,
+    "name" | "value" | "onFocus" | "onChange" | "onBlur"
+    > {
+  // path to the data property
   path: string;
-  label: React.ReactNode;
+  // validation schema
   schema: types.ISchema;
-  placeholder?: string;
-  inputProps?: {} // other input control props
+  // specify when the field should be validated
+  validateTrigger?: "onBlur" | "onChange" | "none";
+  // remove error when the field's value is being changed
+  invalidateOnChange?: boolean;
 }
 
-export default function InputField (props) {
-  const { path, label, schema, placeholder, inputProps } = props
-
-  const { field, state, inputRef } = useField(path, schema)
-
-  const fieldClassName = ['field-row'];
-  if (state.isTouched) fieldClassName.push('touched');
-  if (state.isDirty) fieldClassName.push('dirty');
+export default function TextField(props: TextFieldProps) {
+  const {
+    path,
+    schema,
+    helperText,
+    required,
+    error,
+    children,
+    validateTrigger = "onBlur",
+    invalidateOnChange = true,
+    ...restProps
+  } = props;
+  const { field, state, inputRef } = useField(path, schema);
+  const hasError = error ?? (state.isValidated && !state.isValid);
+  const errorDescription = hasError ? field.messageDescription : undefined;
 
   return (
-    <div className={fieldClassName.join(' ')}>
-      <label className="field-label">
-        {label}
-      </label>
-      <div className="field-control">
-        <Input
-          {...inputProps}
-          ref={inputRef}  // bind input control to a "name" property
-          value={field.value} // display actual value
-          onFocus={() => field.touched()} // change UI state
-          onChange={(e) => field.dirty().value = e.target.value}  // change value and UI state
-          onBlur={() => state.isDirty && field.validate()}  // validate value when "onBlur" event occurs
-          disabled={state.isReadOnly} // disable input if property marked as readonly
-          placeholder={placeholder}
-        />
-      </div>
-      {/* show error if needed */}
-      {state.isValidated && !state.isValid
-      && <div className="field-error">{field.messageDescription}</div>}
-    </div>
+    <MuiTextField
+      {...restProps}
+      inputRef={inputRef}
+      onFocus={() => field.touched()}
+      onChange={(e) => {
+        field.dirty().value = e.target.value;
+
+        if (
+          invalidateOnChange &&
+          validateTrigger !== "onChange" &&
+          state.isValidated
+        ) {
+          field.invalidated();
+        }
+
+        if (validateTrigger === "onChange") field.validate();
+      }}
+      onBlur={() => {
+        if (validateTrigger === "onBlur") field.validate();
+      }}
+      value={field.value}
+      required={required ?? state.isRequired}
+      error={hasError}
+      helperText={errorDescription ?? helperText}
+    >
+      {children}
+    </MuiTextField>
   );
 }
 ``` 
@@ -193,39 +227,54 @@ Now the "Sign Up" form might look like:
 
 `components/SignUpForm.js`
 ```typescript jsx
-import React, { useState } from 'react';
-import Form from './Form.js'
-import InputField from './InputField.js'
+import React, { useState } from "react";
+import { Button } from "@material-ui/core";
+import Form from "./Form";
+import TextField from "./TextField";
 
 export default function SignUpForm() {
   const [initialData] = useState({})
 
-  return <Form data={initialData} onSuccess={(data) => console.log(data)}>
-    <InputField
-      path="login"
-      label="Login"
-      schema={{ default: '', presence: true, format: 'email' }}
-    />
-    <InputField
-      path="password"
-      label="Password"
-      schema={{ default: '', presence: true }}
-      inputProps={{ type: 'password' }}
-    />
-     <InputField
-       path="confirmPassword"
-       label="Confirm password"
-       schema={{
-         default: '',
-         const: (propRef) => propRef.ref('/password').value
-       }}
-       inputProps={{ type: 'password' }}
-     />
-
-     <button type="submit" onClick={handleSubmit}>Sign In</button>
-  </Form>
+  return (
+    <Form data={initialData} onSuccess={(d) => console.log("Form data:", d)}>
+      <div>
+        <TextField
+          style={fieldStyles}
+          path={"email"}
+          schema={{ default: "", presence: true, format: "email" }}
+          label="Email"
+        />
+      </div>
+      <br />
+      <div>
+        <TextField
+          style={fieldStyles}
+          path={"password"}
+          schema={{ default: "", presence: true, minLength: 6 }}
+          label="Password"
+        />
+      </div>
+      <br />
+      <div>
+        <TextField
+          style={fieldStyles}
+          path={"confirmPassword"}
+          schema={{
+            default: "",
+            const: (propRef) => propRef.ref("/password").value,
+            error: "Confirm your password"
+          }}
+          label="Confirm password"
+        />
+      </div>
+      <br />
+      <Button type="submit">Submit</Button>
+    </Form>
+  )
 }
 ```
+
+[Checkout](https://codesandbox.io/s/material-ui-sign-up-form-rhrvd) this example in CodeSandBox
 
 ## Components
 
@@ -251,8 +300,8 @@ Properties:
 Name | Type | Default | Description
 --- | :---: | :---: | ---
 `children`* | `ReactNode` | undefined | content
-`coerceTypes` | boolean| false | enable coerce types feature
-`removeAdditional` | boolean | false | enable remove additional properties feature
+`coerceTypes` | `boolean` | false | enable coerce types feature
+`removeAdditional` | `boolean` | false | enable remove additional properties feature
 `errors` | `{ [keywordName: string]: string }` | {} | custom error messages
 `warnings` | `{ [keywordName: string]: string }` | {} | custom warning messages
 `keywords` | `IKeyword[]` | [] | additional validation keywords
@@ -498,7 +547,7 @@ Name | Type | Default | Description
 `focusFirstError` | boolean | true | if "true" tries to focus first invalid input control after the form submission
 
 ### Watch
-Re-renders content when desired events of the certain field are acquired
+Re-renders content when the certain fields are changed
 
 Properties:
 
@@ -506,7 +555,6 @@ Name | Type | Default | Description
 --- | :---: | :---: | ---
 `render`* | `(...values: any[]) => ReactNode` | undefined | a function rendering some UI content when changes occur. The render function gets a list of data values for each observed property. > Note: values of props with wildcards `*` or `**` cannot be resolved, they will be undefined
 `props` | `Path[]` | [] | a list of properties to watch, each property path can be relative or absolute and contain wildcards `*` or `**`
-`debounce` | `number` | 0 ms | debounce re-render,
 
 ### Property
 Subscribes to a property changes and passes the property value and setter function to the render function.

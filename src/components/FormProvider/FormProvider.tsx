@@ -220,11 +220,12 @@ export default function FormProvider ({ data, children }: FormProviderProps) {
 
   const submit = useCallback<SubmitFormFn>(async (onSuccess, onError) => {
     let firstErrorField: IField | undefined
+    const fieldsArr = Array.from(fields.keys())
+
     setFormState({ ...formStateRef.current, isSubmitting: true })
 
-    await new Promise((r) => setTimeout(r)).then(() => Promise.all(
-      Array
-        .from(fields.keys())
+    const results = await new Promise((r) => setTimeout(r)).then(() => Promise.all(
+      fieldsArr
         .map((field) => {
           return field.validate()
             .then((res) => {
@@ -239,11 +240,15 @@ export default function FormProvider ({ data, children }: FormProviderProps) {
                 message: extractMessageFromResult(res, field.ref())
               } as FieldState)
 
-              if (!firstErrorField && !res.valid) {
-                firstErrorField = field
-              }
+              return res
             })
         })))
+
+    const invalidResult = results.find((res) => !res.valid)
+    if (invalidResult) {
+      const i = results.indexOf(invalidResult)
+      firstErrorField = fieldsArr[i]
+    }
 
     // update view
     updaterRef.current?.updateForm()
