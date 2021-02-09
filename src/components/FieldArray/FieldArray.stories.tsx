@@ -1,5 +1,5 @@
 import React, { useRef } from 'react'
-import { Button, Space, Form, Input } from 'antd'
+import { Form as AntdForm, Button, Space, Form, Input } from 'antd'
 import { storiesOf } from '@storybook/react'
 import FieldArray from './FieldArray'
 import { FormProvider } from '../FormProvider'
@@ -102,6 +102,25 @@ storiesOf('FieldArray', module)
                   Clear
                 </Button>
               </Form.Item>
+
+              <Field
+                path="/"
+                schema={{ minItems: 1 }}
+                render={({ field, state }) => {
+                  const invalid = state.isValidated && !state.isValid
+                  return <AntdForm.Item
+                    validateStatus={invalid ? 'error' : 'success'}
+                    help={invalid && field.messageDescription}
+                  >
+                    <Button
+                      type="dashed"
+                      onClick={() => { fields.append({}); return field.validate() }}
+                    >
+                      Add field and validate
+                    </Button>
+                  </AntdForm.Item>
+                }}
+              />
             </>
           )} />
         </Form>
