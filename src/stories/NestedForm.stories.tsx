@@ -1,5 +1,5 @@
-import React from 'react'
-import { Form, Input, Button, Card } from 'antd'
+import React, { useState } from 'react'
+import { Form as AntdForm, Input, Button, Card } from 'antd'
 import { storiesOf } from '@storybook/react'
 import { getValidationStatus, SubmitBtn, ShowErrors } from './helpers'
 import {
@@ -7,7 +7,9 @@ import {
   Watch,
   Field,
   Scope,
-  Submit
+  Submit,
+  Form,
+  FormStateUpdater
 } from '../index'
 import { FieldApi } from '../types'
 import { useDataRef } from '../hooks'
@@ -35,7 +37,7 @@ function renderNode (path: string, value: any) {
         path="name"
         render={({ field, state, inputRef }) => {
           return (
-            <Form.Item
+            <AntdForm.Item
               label="Name"
               validateStatus={getValidationStatus(state)}
               help={field.messageDescription}
@@ -47,7 +49,7 @@ function renderNode (path: string, value: any) {
                 onChange={(e) => field.value = e.target.value}
                 onBlur={() => field.validate()}
               />
-            </Form.Item>
+            </AntdForm.Item>
           )
         }}
         schema={{ type: 'string', default: '', presence: true, minLength: 2 }}
@@ -77,8 +79,9 @@ function renderNode (path: string, value: any) {
 }
 
 function CreateNodeForm ({ nodesField }: { nodesField: FieldApi }) {
-  return <FormProvider data={{}}>
-    <Form layout="inline">
+  const [data, setData] = useState({})
+  return <FormProvider data={data}>
+    <AntdForm layout="inline">
       <Field
         path="new"
         schema={{
@@ -86,35 +89,37 @@ function CreateNodeForm ({ nodesField }: { nodesField: FieldApi }) {
         }}
         render={({ field, state, inputRef }) => {
           return (
-            <Form.Item
+            <AntdForm.Item
               label="New node name"
-              validateStatus={getValidationStatus(state)}
-              help={field.messageDescription}
-              required={state.isRequired}
             >
               <Input
                 ref={inputRef}
                 value={field.value}
                 onChange={(e) => field.value = e.target.value}
-                onBlur={() => field.validate()}
               />
-            </Form.Item>
+            </AntdForm.Item>
           )
         }}
       />
 
-      <Submit
-        onSuccess={(data) => {
-          const nodes = nodesField.value || []
+      <FormStateUpdater debounce={0} />
 
-          nodesField.value = [
-            ...nodes,
-            { __id: ++nodeId, name: data.new }
-          ]
-        }}
-        render={(handleSubmit) => <Button onClick={handleSubmit}>Add</Button>}
-      />
-    </Form>
+      <Form render={({ state }) => (
+        <Submit
+          onSuccess={(data) => {
+            const nodes = nodesField.value || []
+
+            nodesField.value = [
+              ...nodes,
+              { __id: ++nodeId, name: data.new }
+            ]
+
+            setData({})
+          }}
+          render={(handleSubmit) => <Button onClick={handleSubmit} disabled={!state.isValid}>Add</Button>}
+        />
+      )} />
+    </AntdForm>
   </FormProvider>
 }
 
