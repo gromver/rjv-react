@@ -12,14 +12,16 @@ import FormContext from '../../contexts/FormContext'
 
 type Props = {
   debounce?: number
+  dependencies?: any[]
 }
 
 /**
  * FormStateUpdater
  * @param debounce
+ * @param dependencies
  * @constructor
  */
-export default function FormStateUpdater ({ debounce = 300 }: Props) {
+export default function FormStateUpdater ({ debounce = 300, dependencies = [] }: Props) {
   const formContext = useContext(FormContext)
   const fieldContext = useContext(FieldContext)
 
@@ -47,7 +49,7 @@ export default function FormStateUpdater ({ debounce = 300 }: Props) {
     return () => {
       fieldContext.emitter.offAny(handleUpdate)
     }
-  }, [fieldContext.emitter, handleUpdate, triggerUpdate])
+  }, [fieldContext.emitter, handleUpdate, triggerUpdate, ...dependencies])
 
   return null
 }

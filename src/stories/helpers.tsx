@@ -1,5 +1,6 @@
 import React, { useCallback, useContext } from 'react'
 import { Alert, Button } from 'antd'
+import { ButtonProps } from 'antd/es/button'
 import FormContext from '../contexts/FormContext'
 import FormStateContext from '../contexts/FormStateContext'
 import { useErrors } from '../hooks'
@@ -53,7 +54,7 @@ export function ShowErrors () {
  * and tries to focus invalid field, if data is not valid
  * @constructor
  */
-export function SubmitBtn () {
+export function SubmitBtn ({ children, ...props }: ButtonProps) {
   const formContext = useContext(FormContext)
   const formStateContext = useContext(FormStateContext)
 
@@ -70,5 +71,7 @@ export function SubmitBtn () {
     }
   }, [formContext])
 
-  return <Button onClick={handleSubmit} loading={formStateContext?.isSubmitting}>Submit</Button>
+  return <Button onClick={handleSubmit} loading={formStateContext?.isSubmitting} {...props}>
+    {children || 'Submit'}
+  </Button>
 }
