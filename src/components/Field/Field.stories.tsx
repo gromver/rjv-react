@@ -162,15 +162,12 @@ storiesOf('Field', module)
         <Watch props={['required']} render={(required) => (
           <Field
             path="email"
-            schema={required === 'yes'
-              ? {
-                default: '',
-                type: 'string',
-                format: 'email',
-                presence: true
-              }
-              : { default: '', format: 'email', type: 'string' }
-            }
+            schema={{
+              default: '',
+              format: 'email',
+              presence: required === 'yes'
+            }}
+            dependencies={[required]}
             render={({ field, state, inputRef }) => {
               return (
                 <Form.Item
@@ -228,11 +225,12 @@ storiesOf('Field', module)
         <Watch props={['readonly']} render={(readonly) => (
           <Field
             path="field"
-            schema={readonly === 'yes' ? {
+            schema={{
               default: 'abc',
               type: 'string',
-              readonly: true
-            } : { default: '', type: 'string' }}
+              readonly: readonly === 'yes'
+            }}
+            dependencies={[readonly]}
             render={({ field, state, inputRef }) => {
               return (
                 <Form.Item

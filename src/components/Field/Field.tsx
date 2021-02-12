@@ -12,10 +12,11 @@ type FieldProps = {
   render: (fieldInfo: FieldInfo) => React.ReactElement | null
   path: types.Path
   schema: types.ISchema
+  dependencies?: any[]
 }
 
-export default function Field ({render, path, schema}: FieldProps) {
-  const fieldInfo = useField(path, schema)
+export default function Field ({ render, path, schema, dependencies }: FieldProps) {
+  const fieldInfo = useField(path, schema, dependencies)
 
   return render(fieldInfo)
 }

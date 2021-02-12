@@ -10,7 +10,6 @@ import {
 import { types, Validator, ValidationMessage, Ref } from 'rjv'
 import _isPlainObject from 'lodash/isPlainObject'
 import _isEqual from 'lodash/isEqual'
-import _isEqualWith from 'lodash/isEqualWith'
 import _clone from 'lodash/clone'
 import { EventEmitter2, Listener } from 'eventemitter2'
 import { events } from '../components/EmitterProvider'
@@ -38,12 +37,6 @@ function extractStateFromSchema (schema: types.ISchema): Partial<FieldState> {
   return { isRequired, isReadonly }
 }
 
-export function schemaEqualCustomizer (s1, s2) {
-  if (typeof s1 === 'function' && typeof s2 === 'function') {
-    return s1.toString() === s2.toString()
-  }
-}
-
 const DONT_UPDATE_ON_EVENTS = [events.RegisterFieldEvent.TYPE, events.UnregisterFieldEvent.TYPE]
 
 export type FieldInfo = {
@@ -52,7 +45,7 @@ export type FieldInfo = {
   inputRef: RefObject<any>
 }
 
-export default function useField (path: types.Path, schema: types.ISchema): FieldInfo {
+export default function useField (path: types.Path, schema: types.ISchema, dependencies: any[] = []): FieldInfo {
   const [, update] = useState({})
   const fieldContext = useContext(FieldContext)
   const dataContext = useContext(DataContext)
@@ -79,12 +72,8 @@ export default function useField (path: types.Path, schema: types.ISchema): Fiel
   const validatorRef = useRef<Validator>(null as any)
 
   const _schema = useMemo(() => {
-    if (!_isEqualWith(schemaRef.current, schema, schemaEqualCustomizer)) {
-      return schemaRef.current = schema
-    }
-
-    return schemaRef.current
-  }, [schema])
+    return schemaRef.current = schema
+  }, dependencies)
 
   const _path = usePath(path)
 
