@@ -283,6 +283,7 @@ export default function SignUpForm() {
  - [CatchErrors](#catcherrors)
  - [ErrorMessages](#errormessages)
  - [Form](#form)
+ - [FormStateUpdater](#formstateupdater)
  - [Field](#field)
  - [FieldArray](#fieldarray)
  - [Scope](#scope)
@@ -400,6 +401,17 @@ type FormState = {
 }
 ```
 
+### FormStateUpdater
+Recalculates the `isValid` state of the whole form when data changes.
+> Should be used only once per form.
+
+Properties:
+
+Name | Type | Default | Description
+--- | :---: | :---: | ---
+`debounce` | `number` | 300 ms | debounce updates, 0 - without debounce
+`dependecies` | `any[]` | [] | any external values (react state / store / etc) that affect validation rules of the form
+
 ### Field
 The `Field` component is responsible for rendering the specific data property.
 It takes the render function of the field control and invokes it each time the value or validation/UI state of the data property changed.
@@ -416,6 +428,7 @@ Name | Type | Default | Description
 `path`* | `string`| undefined | specifies data property
 `schema`* | `Object<JSON Schema>` | undefined | schema is used to validate field
 `render`* | `(fieldInfo: FieldInfo) => ReactNode` | undefined | a function rendering the UI of the field. See [FieldInfo](#fieldinfo).
+`dependecies` | `any[]` | [] | any values that affect validation schema or are used in the `validate` or `resolveSchema` keywords, when dependencies are changed the field applies a new validation schema and recalculates the `isValid` state
 
 #### FieldInfo
 ```typescript
@@ -582,7 +595,7 @@ Name | Type | Default | Description
  - [useForm](#useform--forminfo)
  - [useFormApi](#useformapi--formapi)
  - [useFormState](#useformstate--formstate)
- - [useField](#usefieldpath-string-schema-ischema--fieldinfo)
+ - [useField](#usefieldpath-string-schema-ischema-dependencies-any--fieldinfo)
  - [useFieldArray](#usefieldarraypath-string--fieldarrayinfo)
  - [useProperty](#usepropertypath-string--any-value-any--void)
  - [useErrors](#useerrors--validationerrors)
@@ -593,6 +606,7 @@ Name | Type | Default | Description
 
 ### `useForm() => FormInfo`
 This hook combines `useFormApi` and `useFormState` hooks together and returns a form [info](#forminfo) object.
+> This hook is used by [Form](#form) component.
 
 ### `useFormApi() => FormApi`
 Returns a form [api](#formapi) object.
@@ -600,17 +614,20 @@ Returns a form [api](#formapi) object.
 ### `useFormState() => FormState`
 Returns a form [state](#formstate) object.
 
-### `useField(path: string, schema: ISchema) => FieldInfo`
+### `useField(path: string, schema: ISchema, dependencies?: any[]) => FieldInfo`
 Creates a field with provided schema and returns a field [info](#fieldinfo) object.
+> This hook is used by [Field](#field) component.
 
 ### `useFieldArray(path: string) => FieldArrayInfo`
 Returns a field array [info](#fieldarrayinfo) object.
+> This hook is used by [FieldArray](#fieldarray) component.
 
 ### `useProperty(path: string) => [any, (value: any) => void]`
 Subscribes to the property changes. Behaves like the `useState` hook.
 
 ### `useErrors() => ValidationErrors`
 Returns a list of errors caught by [CatchErrors](#catcherrors) component
+> This hook is used by [ErrorMessages](#errormessages) component.
 
 #### ValidationErrors
 ```typescript
@@ -619,6 +636,7 @@ type ValidationErrors = { path: string, message: string }[]
 
 ### `useWatch(...path: string[]) => any[]`
 Returns an array of values for each observed property. The property path can contain wildcards, but the value of such properties cannot be resolved and will be undefined.
+> This hook is used by [Watch](#watch) component.
 
 ### `usePath(path: string) => string`
 If the given path is relative, returns the resolved path against the closest scope, otherwise returns the path as is.

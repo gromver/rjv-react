@@ -35,7 +35,7 @@ export default function useFieldArray (path: types.Path): FieldArrayInfo {
   )
 
   if (ref.value === undefined) {
-    dataContext.dataStorage.set(utils.pathToArray(_path), [])
+    dataContext.dataStorage.set(utils.pathToRoute(_path), [])
   }
 
   if (!Array.isArray(ref.value)) {

@@ -1,6 +1,6 @@
 {
   "name": "rjv-react",
-  "version": "5.0.0-beta.3",
+  "version": "5.0.0-beta.4",
   "description": "React components for Rjv (Reactive JSON Validator)",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
@@ -94,7 +94,7 @@
   "peerDependencies": {
     "react": "^16.8.0",
     "react-dom": "^16.8.0",
-    "rjv": "^5.0.0-alpha.7"
+    "rjv": "^5.0.0-alpha.9"
   },
   "devDependencies": {
     "@babel/core": "^7.4.3",
@@ -126,7 +126,7 @@
     "react-dom": "^16.13.1",
     "react-intl": "^5.10.4",
     "react-test-renderer": "^16.8.6",
-    "rjv": "^5.0.0-alpha.7",
+    "rjv": "^5.0.0-alpha.9",
     "shx": "^0.3.2",
     "standard-version": "^8.0.2",
     "ts-jest": "^26.4.4",
