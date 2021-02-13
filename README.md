@@ -303,6 +303,7 @@ Name | Type | Default | Description
 `children`* | `ReactNode` | undefined | content
 `coerceTypes` | `boolean` | false | enable coerce types feature
 `removeAdditional` | `boolean` | false | enable remove additional properties feature
+`validateFirst` | `boolean` | true | stop validating schema keywords on the first error acquired
 `errors` | `{ [keywordName: string]: string }` | {} | custom error messages
 `warnings` | `{ [keywordName: string]: string }` | {} | custom warning messages
 `keywords` | `IKeyword[]` | [] | additional validation keywords

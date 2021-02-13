@@ -8,7 +8,7 @@ import { useValidate } from '../hooks'
 const initialData = {}
 
 storiesOf('Form', module)
-  .add('Validate fields - using ref', () => {
+  .add('Validate fields - Form', () => {
     return (
       <Form style={{ maxWidth: '400px' }}>
         <FormProvider data={initialData}>
@@ -105,7 +105,7 @@ storiesOf('Form', module)
       </Form>
     )
   })
-  .add('Validate fields - using hooks', () => {
+  .add('Validate fields - useForm', () => {
     return (
       <Form style={{ maxWidth: '400px' }}>
         <FormProvider data={initialData}>
