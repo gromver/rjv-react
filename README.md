@@ -92,7 +92,7 @@ function SignUpForm() {
 
     <Submit
       onSuccess={(data) => console.log(data)}
-      render={(handleSubmit) => <button onClick={handleSubmit}>Sign In</button>}
+      render={({ handleSubmit }) => <button onClick={handleSubmit}>Sign In</button>}
     />
 
     <ErrorMessages
@@ -320,6 +320,7 @@ Name | Type | Default | Description
 --- | :---: | :---: | ---
 `children`* | `ReactNode` | undefined | content
 `data` | `any` | undefined | the initial form data
+`ref` | `React.RefObject<FormApi>` | undefined | returns an object containing the form [API](#formapi)
 
 ### CatchErrors
 Provides validation errors context. This component collects errors from all fields enclosed within.
@@ -430,6 +431,7 @@ Name | Type | Default | Description
 `schema`* | `Object<JSON Schema>` | undefined | schema is used to validate field
 `render`* | `(fieldInfo: FieldInfo) => ReactNode` | undefined | a function rendering the UI of the field. See [FieldInfo](#fieldinfo).
 `dependecies` | `any[]` | [] | any values that affect validation schema or are used in the `validate` or `resolveSchema` keywords, when dependencies are changed the field applies a new validation schema and recalculates the `isValid` state
+`ref` | `React.RefObject<FieldApi>` | undefined | returns an object containing the field [API](#fieldapi)
 
 #### FieldInfo
 ```typescript
@@ -554,11 +556,22 @@ Properties:
 
 Name | Type | Default | Description
 --- | :---: | :---: | ---
-`render`* | `(handleSubmitFn) => ReactNode` | undefined | a function rendering the UI of the field, it gets a `handleSubmitFn` function which should be called to submit a form.
+`render`* | `(submitInfo: SubmitInfo) => ReactNode` | undefined | a function rendering the UI of the submit button, it gets a `SubmitInfo` object containing a `handleSubmit` function which should be called to submit a form.
 `onSubmit` | `(data: any) => void` | undefined | a callback function to be called when the form submission process begins
 `onSuccess` | `(data: any) => void` | undefined | a callback function to be called after `onSubmit` if the form data is valid
 `onError` | `(firstErrorField: FieldApi) => void` | undefined | a callback function to be called after `onSubmit` if the form data is invalid. See [FieldApi](#fieldapi)
 `focusFirstError` | boolean | true | if "true" tries to focus first invalid input control after the form submission
+
+#### SubmitInfo
+```typescript
+type SubmitInfo = {
+  handleSubmit: () => void
+  form: FormApi
+  state: FormState
+}
+```
+See [FormApi](#formapi), [FormState](#formstate)
+
 
 ### Watch
 Re-renders content when the certain fields are changed

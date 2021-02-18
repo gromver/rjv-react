@@ -1,6 +1,6 @@
 {
   "name": "rjv-react",
-  "version": "5.0.0-beta.5",
+  "version": "5.0.0-beta.6",
   "description": "React components for Rjv (Reactive JSON Validator)",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
