@@ -10,19 +10,24 @@ import React, {
 } from 'react'
 import { types } from 'rjv'
 import { FieldArrayItem, FieldArrayApi } from '../../types'
-import useFieldArray, { FieldArrayInfo } from '../../hooks/useFieldArray'
+import useFieldArray from '../../hooks/useFieldArray'
+
+type FieldArrayInfo = {
+  items: FieldArrayItem[]
+  fields: FieldArrayApi
+}
 
 type FieldArrayProps = {
-  render: (fieldArrayInfo: { items: FieldArrayItem[], fields: FieldArrayApi }) => React.ReactElement | null
+  render: (fieldArrayInfo: FieldArrayInfo) => React.ReactElement | null
   path: types.Path
 }
 
-function FieldArray ({ render, path }: FieldArrayProps, elRef: React.Ref<FieldArrayInfo>) {
+function FieldArray ({ render, path }: FieldArrayProps, elRef: React.Ref<FieldArrayApi>) {
   const fieldArrayInfo = useFieldArray(path)
 
-  useImperativeHandle(elRef, () => fieldArrayInfo)
+  useImperativeHandle(elRef, () => fieldArrayInfo.fields)
 
   return render(fieldArrayInfo)
 }
 
-export default forwardRef<FieldArrayInfo, FieldArrayProps>(FieldArray)
+export default forwardRef<FieldArrayApi, FieldArrayProps>(FieldArray)

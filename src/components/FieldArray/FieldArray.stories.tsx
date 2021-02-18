@@ -1,20 +1,21 @@
 import React, { useRef } from 'react'
-import { Form as AntdForm, Button, Space, Form, Input, Alert } from 'antd'
+import { Form as AntdForm, Button, Space, Input, Alert } from 'antd'
 import { storiesOf } from '@storybook/react'
 import FieldArray from './FieldArray'
 import { FormProvider } from '../FormProvider'
 import { Field } from '../Field'
-import { Form as FormApi } from '../Form'
+import { Form } from '../Form'
 import { Scope } from '../Scope'
 import { getValidationStatus, SubmitBtn } from '../../stories/helpers'
 import { FieldArrayInfo } from '../../hooks/useFieldArray'
+import { FieldArrayApi, FormApi } from '../../types'
 
 storiesOf('FieldArray', module)
   .add('Api test', () => {
-    const fieldsRef = useRef<FieldArrayInfo>(null)
+    const fieldsRef = useRef<FieldArrayApi>(null)
     return (
       <FormProvider data={[]}>
-        <Form>
+        <AntdForm>
           <FieldArray ref={fieldsRef} path={'/'} render={({ items, fields }) => (
             <>
               {items.map(({ key, path }, index) => (
@@ -24,7 +25,7 @@ storiesOf('FieldArray', module)
                       path="name"
                       schema={{ default: '', presence: true, minLength: 2 }}
                       render={({ field, state, inputRef }) => (
-                        <Form.Item
+                        <AntdForm.Item
                           validateStatus={getValidationStatus(state)}
                           help={field.messageDescription}
                           required={state.isRequired}
@@ -38,7 +39,7 @@ storiesOf('FieldArray', module)
                             placeholder="Name"
                             autoFocus
                           />
-                        </Form.Item>
+                        </AntdForm.Item>
                       )}
                     />
                     <Button
@@ -50,7 +51,7 @@ storiesOf('FieldArray', module)
 
               <h4>Using Api</h4>
 
-              <Form.Item>
+              <AntdForm.Item>
                 <Button type="dashed" onClick={() => fields.prepend({})}>
                   Prepend field
                 </Button>
@@ -74,35 +75,35 @@ storiesOf('FieldArray', module)
                 <Button type="dashed" onClick={() => fields.clear()}>
                   Clear
                 </Button>
-              </Form.Item>
+              </AntdForm.Item>
 
               <h4>Using Ref</h4>
 
-              <Form.Item>
-                <Button type="dashed" onClick={() => fieldsRef.current?.fields.prepend({})}>
+              <AntdForm.Item>
+                <Button type="dashed" onClick={() => fieldsRef.current?.prepend({})}>
                   Prepend field
                 </Button>
                 &nbsp;
-                <Button type="dashed" onClick={() => fieldsRef.current?.fields.append({})}>
+                <Button type="dashed" onClick={() => fieldsRef.current?.append({})}>
                   Append field
                 </Button>
                 &nbsp;
-                <Button type="dashed" onClick={() => fieldsRef.current?.fields.insert(1, {})}>
+                <Button type="dashed" onClick={() => fieldsRef.current?.insert(1, {})}>
                   Insert field at index = 1
                 </Button>
                 &nbsp;
-                <Button type="dashed" onClick={() => fieldsRef.current?.fields.swap(0, 2)}>
+                <Button type="dashed" onClick={() => fieldsRef.current?.swap(0, 2)}>
                   Swap 1st and 3th fields
                 </Button>
                 &nbsp;
-                <Button type="dashed" onClick={() => fieldsRef.current?.fields.move(0, 2)}>
+                <Button type="dashed" onClick={() => fieldsRef.current?.move(0, 2)}>
                   Move 1st field to 3th
                 </Button>
                 &nbsp;
-                <Button type="dashed" onClick={() => fieldsRef.current?.fields.clear()}>
+                <Button type="dashed" onClick={() => fieldsRef.current?.clear()}>
                   Clear
                 </Button>
-              </Form.Item>
+              </AntdForm.Item>
 
               <Field
                 path="/"
@@ -124,33 +125,24 @@ storiesOf('FieldArray', module)
               />
             </>
           )} />
-        </Form>
+        </AntdForm>
         <SubmitBtn />
       </FormProvider>
     )
   })
   .add('Dynamic form', () => {
+    const formRef = useRef<FormApi>(null)
+    const fieldsRef = useRef<FieldArrayApi>(null)
+
     return (
-      <FormProvider data={[]}>
-        <Form>
+      <FormProvider ref={formRef} data={[]}>
+        <AntdForm>
           <h3>The form must have at least 2 items</h3>
 
           <br />
 
-          <Field
-            path="/"
-            schema={{ minItems: 2 }}
-            render={({ field, state }) => {
-              const invalid = state.isValidated && !state.isValid
-              return invalid ?
-                <AntdForm.Item>
-                  <Alert type="error" message={field.messageDescription} />
-                </AntdForm.Item>
-                : null
-            }}
-          />
-
           <FieldArray
+            ref={fieldsRef}
             path={'/'}
             render={({ items, fields }) => (
               <>
@@ -161,7 +153,7 @@ storiesOf('FieldArray', module)
                         path="name"
                         schema={{ default: '', presence: true, minLength: 2 }}
                         render={({ field, state, inputRef }) => (
-                          <Form.Item
+                          <AntdForm.Item
                             validateStatus={getValidationStatus(state)}
                             help={field.messageDescription}
                             required={state.isRequired}
@@ -175,11 +167,11 @@ storiesOf('FieldArray', module)
                               placeholder="Name"
                               autoFocus
                             />
-                          </Form.Item>
+                          </AntdForm.Item>
                         )}
                       />
 
-                      <FormApi
+                      <Form
                         render={({ form }) => {
                           return <Button
                             onClick={() => { fields.remove(index); return form.syncFields('/') }}
@@ -192,7 +184,7 @@ storiesOf('FieldArray', module)
                   </Scope>
                 ))}
 
-                <FormApi
+                <Form
                   render={({ form }) => {
                     return <Button
                       type="dashed"
@@ -205,8 +197,30 @@ storiesOf('FieldArray', module)
               </>
             )}
           />
-        </Form>
+          &nbsp;
+          <Button
+            type="dashed"
+            onClick={() => { fieldsRef.current?.append({}); return formRef.current?.syncFields('/') }}
+          >
+            Add field and validate (using refs)
+          </Button>
+        </AntdForm>
+
         <br />
+
+        <Field
+          path="/"
+          schema={{ minItems: 2 }}
+          render={({ field, state }) => {
+            const invalid = state.isValidated && !state.isValid
+            return invalid ?
+              <AntdForm.Item>
+                <Alert type="error" message={field.messageDescription} />
+              </AntdForm.Item>
+              : null
+          }}
+        />
+
         <SubmitBtn />
       </FormProvider>
     )

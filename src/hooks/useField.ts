@@ -157,8 +157,11 @@ export default function useField (path: types.Path, schema: types.ISchema, depen
       get value (): any {
         return dataRef.current.value
       },
-      get ref (): types.IRef {
+      get dataRef (): types.IRef {
         return dataRef.current
+      },
+      get inputRef (): RefObject<any> {
+        return inputRef.current
       },
       get messageDescription (): string | undefined {
         const state = fieldsRef.current.getState(field)

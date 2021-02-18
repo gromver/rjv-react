@@ -25,7 +25,7 @@ import {
   SubmitFormFn,
   TriggerFieldsFn,
   SyncFormFn,
-  FormState
+  FormState, FormApi
 } from '../../types'
 import { DEFAULT_OPTIONS } from './constants'
 import { Scope } from '../Scope'
@@ -99,7 +99,7 @@ type FormProviderProps = {
   data?: any
 }
 
-export default function FormProvider ({ data, children }: FormProviderProps) {
+function FormProvider ({ data, children }: FormProviderProps, ref) {
   const dataRef = useRef<any>(data)
   const updaterRef = useRef<FormUpdaterRef>(null)
   const emitterRef = useRef<EventEmitter2>()
@@ -400,6 +400,8 @@ export default function FormProvider ({ data, children }: FormProviderProps) {
     }
   }, [emitter])
 
+  useImperativeHandle(ref, () => formContext, [formContext])
+
   return <DataContext.Provider value={dataContext}>
     <FormContext.Provider value={formContext}>
       <FieldContext.Provider value={fieldsContext}>
@@ -420,3 +422,5 @@ export default function FormProvider ({ data, children }: FormProviderProps) {
     </FormContext.Provider>
   </DataContext.Provider>
 }
+
+export default forwardRef<FormApi, FormProviderProps>(FormProvider)

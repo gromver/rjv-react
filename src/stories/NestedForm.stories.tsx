@@ -8,7 +8,6 @@ import {
   Field,
   Scope,
   Submit,
-  Form,
   FormStateUpdater
 } from '../index'
 import { FieldApi } from '../types'
@@ -67,7 +66,7 @@ function renderNode (path: string, value: any) {
 
           return <>
             {nodesValues
-              ? nodesValues.map((item, index) => renderNode(`${field.ref.path}/${index}`, nodesValues[index]))
+              ? nodesValues.map((item, index) => renderNode(`${field.dataRef.path}/${index}`, nodesValues[index]))
               : null}
 
             <CreateNodeForm nodesField={field} />
@@ -104,21 +103,19 @@ function CreateNodeForm ({ nodesField }: { nodesField: FieldApi }) {
 
       <FormStateUpdater debounce={0} />
 
-      <Form render={({ state }) => (
-        <Submit
-          onSuccess={(data) => {
-            const nodes = nodesField.value || []
+      <Submit
+        onSuccess={(data) => {
+          const nodes = nodesField.value || []
 
-            nodesField.value = [
-              ...nodes,
-              { __id: ++nodeId, name: data.new }
-            ]
+          nodesField.value = [
+            ...nodes,
+            { __id: ++nodeId, name: data.new }
+          ]
 
-            setData({})
-          }}
-          render={(handleSubmit) => <Button onClick={handleSubmit} disabled={!state.isValid}>Add</Button>}
-        />
-      )} />
+          setData({})
+        }}
+        render={({ handleSubmit, state }) => <Button onClick={handleSubmit} disabled={!state.isValid}>Add</Button>}
+      />
     </AntdForm>
   </FormProvider>
 }

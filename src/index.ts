@@ -13,4 +13,11 @@ export * from './components/FormStateUpdater'
 export * from './components/VisibleWhen'
 export * from './components/Watch'
 export * from './hooks'
-export * from './types'
+export {
+  FormApi,
+  FieldApi,
+  FieldArrayApi,
+  FormState,
+  FieldState,
+  DescriptionResolverFn
+} from './types'

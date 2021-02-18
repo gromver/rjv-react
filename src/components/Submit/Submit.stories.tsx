@@ -51,8 +51,8 @@ storiesOf('Submit', module)
           onSubmit={(data) => console.log('onSubmit', data)}
           onSuccess={(data) => console.log('onSuccess', data)}
           onError={(firstError) => console.log('onError', firstError)}
-          render={(handleSubmit, formState) => (
-            <button onClick={handleSubmit} disabled={formState.isSubmitting}>submit</button>
+          render={({ handleSubmit, state }) => (
+            <button onClick={handleSubmit} disabled={state.isSubmitting}>submit</button>
           )}
         />
 
@@ -62,8 +62,8 @@ storiesOf('Submit', module)
           onSubmit={(data) => console.log('onSubmit', data)}
           onSuccess={(data) => console.log('onSuccess', data)}
           onError={(firstError) => console.log('onError', firstError)}
-          render={(handleSubmit, formState) => (
-            <Button onClick={handleSubmit} loading={formState.isSubmitting}>Ant submit</Button>
+          render={({ handleSubmit, state }) => (
+            <Button onClick={handleSubmit} loading={state.isSubmitting}>Ant submit</Button>
           )}
         />
 
@@ -76,8 +76,8 @@ storiesOf('Submit', module)
           onSubmit={(data) => console.log('onSubmit', data)}
           onSuccess={(data) => console.log('onSuccess', data)}
           onError={(firstError) => console.log('onError', firstError)}
-          render={(handleSubmit, formState) => (
-            <button onClick={handleSubmit} disabled={formState.isSubmitting}>submit</button>
+          render={({ handleSubmit, state }) => (
+            <button onClick={handleSubmit} disabled={state.isSubmitting}>submit</button>
           )}
           focusFirstError={false}
         />
@@ -88,8 +88,8 @@ storiesOf('Submit', module)
           onSubmit={(data) => console.log('onSubmit', data)}
           onSuccess={(data) => console.log('onSuccess', data)}
           onError={(firstError) => console.log('onError', firstError)}
-          render={(handleSubmit, formState) => (
-            <Button onClick={handleSubmit} loading={formState.isSubmitting}>Ant submit</Button>
+          render={({ handleSubmit, state }) => (
+            <Button onClick={handleSubmit} loading={state.isSubmitting}>Ant submit</Button>
           )}
           focusFirstError={false}
         />
@@ -116,8 +116,8 @@ storiesOf('Submit', module)
             }, 1000)
           })}
           onError={(firstError) => console.log('onError', firstError)}
-          render={(handleSubmit, formState) => (
-            <Button onClick={handleSubmit} loading={formState.isSubmitting}>Submit</Button>
+          render={({ handleSubmit, state }) => (
+            <Button onClick={handleSubmit} loading={state.isSubmitting}>Submit</Button>
           )}
         />
       </Form>
@@ -145,8 +145,8 @@ storiesOf('Submit', module)
           onSubmit={(data) => console.log('onSubmit', data, counter)}
           onSuccess={(data) => console.log('onSuccess', data, counter)}
           onError={(firstError) => console.log('onError', firstError, counter)}
-          render={(handleSubmit, formState) => (
-            <Button onClick={handleSubmit} loading={formState.isSubmitting}>Submit</Button>
+          render={({ handleSubmit, state }) => (
+            <Button onClick={handleSubmit} loading={state.isSubmitting}>Submit</Button>
           )}
         />
       </Form>
@@ -161,17 +161,17 @@ storiesOf('Submit', module)
       <Form style={{ width: 400 }}>
         <RequiredField />
 
-        <FormStateUpdater />
+        <FormStateUpdater debounce={0} />
 
         <Submit
           onSubmit={(data) => console.log('onSubmit', data)}
           onSuccess={(data) => console.log('onSuccess', data)}
           onError={(firstError) => console.log('onError', firstError)}
-          render={(handleSubmit, formState) => (
+          render={({ handleSubmit, state }) => (
             <Button
               onClick={handleSubmit}
-              loading={formState.isSubmitting}
-              disabled={!formState.isValid}
+              loading={state.isSubmitting}
+              disabled={!state.isValid}
             >
               Submit
             </Button>

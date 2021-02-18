@@ -67,8 +67,8 @@ storiesOf('Form', module)
 
             <Submit
               onSuccess={(data) => console.log('SUBMIT RESULT', data)}
-              render={(handleSubmit, formState) => (
-                <Button onClick={handleSubmit} disabled={!formState.isValid}>Submit</Button>
+              render={({ handleSubmit, state }) => (
+                <Button onClick={handleSubmit} disabled={!state.isValid}>Submit</Button>
               )}
             />
           </Col>

@@ -1,4 +1,4 @@
-import { ReactElement } from 'react'
+import { ReactElement, RefObject } from 'react'
 import { types, ValidationMessage } from 'rjv'
 import { BaseEvent } from './components/EmitterProvider/events'
 
@@ -27,7 +27,8 @@ export type FieldState = {
 
 export type FieldApi = {
   value: any
-  ref: types.IRef
+  dataRef: types.IRef
+  inputRef: RefObject<any>
   validate: () => Promise<types.IValidationResult>
   sync: () => Promise<void>
   focus: () => void
@@ -52,7 +53,7 @@ export type FieldArrayApi = {
 export type FieldArrayItem = { key: string, path: types.Path }
 
 // Form
-export type ValidationErrors = {path: string, message: string}[]
+export type ValidationErrors = { path: string, message: string }[]
 
 export type FirstErrorField = {
   path: types.Path,

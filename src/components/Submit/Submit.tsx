@@ -6,14 +6,20 @@
 
 import React, { useCallback } from 'react'
 import { useDataRef, useForm } from '../../hooks'
-import { FirstErrorField, FormState } from '../../types'
+import { FirstErrorField, FormApi, FormState } from '../../types'
+
+type SubmitInfo = {
+  handleSubmit: () => void
+  form: FormApi
+  state: FormState
+}
 
 type Props = {
   onSubmit?: (data: any) => void
   onSuccess?: (data: any) => void | Promise<void>
   onError?: (firstErrorField: FirstErrorField) => void
   focusFirstError?: boolean
-  render: (handleSubmit: () => void, formState: FormState) => React.ReactElement | null
+  render: (submitInfo: SubmitInfo) => React.ReactElement | null
 }
 
 export default function Submit (props: Props) {
@@ -40,5 +46,5 @@ export default function Submit (props: Props) {
 
   }, [form, onSubmit, onSuccess, onError, focusFirstError])
 
-  return render(handleSubmit, state)
+  return render({ handleSubmit, form, state })
 }
