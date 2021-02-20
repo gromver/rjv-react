@@ -19,5 +19,6 @@ export {
   FieldArrayApi,
   FormState,
   FieldState,
+  FirstErrorField,
   DescriptionResolverFn
 } from './types'
