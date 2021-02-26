@@ -2,6 +2,7 @@
 
 React components for creating forms powered by [Rjv](https://github.com/gromver/rjv) (Reactive JSON Validator)
 
+ - works with any type of data
  - uses the JSON Schema to validate data
  - customizable validation messages
  - supports message localization
@@ -10,8 +11,11 @@ React components for creating forms powered by [Rjv](https://github.com/gromver/
 
 #### Contents
  - [Install](#install)
- - [Motivation](#motivation)
+ - [Overview](#overview)
  - [Guide](#guide)
+ - [3rd Party Bindings](#3rd-party-bindings)
+ - [Examples](#examples)
+ - [API](#api)
  - [Components](#components)
  - [Hooks](#hooks)
 
@@ -20,92 +24,151 @@ React components for creating forms powered by [Rjv](https://github.com/gromver/
 yarn add rjv rjv-react
 ```
 
-## Motivation
-This library is an attempt to port JSON Schemas to create simple or complex forms in React JS applications.
-The [rjv](https://github.com/gromver/rjv) library is used as the JSON validator,
-it provides simplified standard JSON schema [keywords](https://github.com/gromver/rjv#keywords) adopted for the front-end needs,
+## Overview
+This library is a set of components for creating simple or complex forms in React JS applications.
+It uses the [Rjv](https://github.com/gromver/rjv) JSON validator,
+which provides simplified standard JSON schema [keywords](https://github.com/gromver/rjv#keywords) adopted for the front-end needs,
 as well as some additional keywords like `validate` or `resolveSchema` that allow you to create validation rules at runtime.
 
 ## Guide
- - [Raw sign up form](#raw-sign-up-form)
+ - [Sign up form](#sign-up-form)
  - [Higher-Order Fields (HOF)](#higher-order-fields-hof)
 
-### Raw sign up form
-For example, let's create a user registration form from scratch.
-Each form begins with the `FormProvider` component which creates form and provides the form data.
+### Sign up form
+This example shows how to create a user registration form using the [Material UI](https://material-ui.com) component library.
+> The `rjv-react` can be used with any component libraries, the `Material UI` library is selected for example only.
+
 ```typescript jsx
-import React, { useState } from 'react';
-import { FormProvider, Field, Submit, ErrorMessages } from 'rjv-react';
+import React, { useState } from "react";
+import { Button, TextField } from "@material-ui/core";
+import { FormProvider, Field, Submit, Watch } from "rjv-react";
 
-function SignUpForm() {
-  const [initialData] = useState({})
+export default function SignUpForm() {
+  const [initialData] = useState({});
 
-  return <FormProvider data={initialData}>
-    <Field
-      path="email"
-      schema={{
-        default: '', presence: true, format: 'email'
-      }}
-      render={({ state, field, inputRef }) => {
-        return <input
-          ref={inputRef}
-          placeholder="Login"
-          value={ref.value}
-          onChange={(e) => ref.value = e.target.value}
-          onBlur={() => ref.validate()}
+  return (
+    <div className="sign-up-form">
+      <h3>Sign Up Form</h3>
+
+      {/* create form and provide initial data */}
+      <FormProvider data={initialData}>
+        {/* create a field and attach validation rules for the "email" property */}
+        <Field
+          path={"email"}
+          schema={{ default: "", presence: true, format: "email" }}
+          render={({ field, state, inputRef }) => {
+            const hasError = state.isValidated && !state.isValid;
+            const errorDescription = hasError
+              ? field.messageDescription
+              : undefined;
+
+            return (
+              <TextField
+                inputRef={inputRef}
+                label="Email"
+                onChange={(e) => {
+                  field.value = e.target.value;
+                }}
+                onBlur={() => field.validate()}
+                value={field.value}
+                required={state.isRequired}
+                helperText={errorDescription}
+                error={hasError}
+              />
+            );
+          }}
         />
-      }}
-    />
-    <Field
-      path="password"
-      schema={{
-        default: '', presence: true
-      }}
-      render={({ state, field, inputRef }) => {
-        return <input
-          ref={inputRef}
-          placeholder="Password"
-          type="password"
-          value={ref.value}
-          onChange={(e) => ref.value = e.target.value}
-          onBlur={() => ref.validate()}
+
+        {/* create a field and attach validation rules for the "password" property */}
+        <Field
+          path={"password"}
+          schema={{ default: "", presence: true, minLength: 6 }}
+          render={({ field, state, inputRef }) => {
+            const hasError = state.isValidated && !state.isValid;
+            const errorDescription = hasError
+              ? field.messageDescription
+              : undefined;
+
+            return (
+              <TextField
+                inputRef={inputRef}
+                label="Password"
+                onChange={(e) => {
+                  field.value = e.target.value;
+                }}
+                onBlur={() => field.validate()}
+                value={field.value}
+                required={state.isRequired}
+                helperText={errorDescription}
+                error={hasError}
+                type="password"
+              />
+            );
+          }}
         />
-      }}
-    />
-     <Field
-       path="confirmPassword"
-       schema={{
-          default: '',
-          const: (propRef) => propRef.ref('/password').value
-       }}
-       render={({ state, field, inputRef }) => {
-          return <input
-            ref={inputRef}
-            placeholder="Confirm password"
-            type="password"
-            value={ref.value}
-            onChange={(e) => ref.value = e.target.value}
-            onBlur={() => ref.validate()}
-          />
-       }}
-     />
 
-    <Submit
-      onSuccess={(data) => console.log(data)}
-      render={({ handleSubmit }) => <button onClick={handleSubmit}>Sign In</button>}
-    />
+        {/* watch for changes in the "password" field */}
+        <Watch
+          props={["password"]}
+          render={(password: string) => {
+            // create a field and attach validation rules for the "confirmPassword" property
+            return (
+              <Field
+                path={"confirmPassword"}
+                schema={{
+                  default: "",
+                  presence: !!password,
+                  const: password,
+                  error: "Confirm your password"
+                }}
+                // notice that the validation rules above depends on the "password" field value
+                dependencies={[password]}
+                render={({ field, state, inputRef }) => {
+                  const hasError = state.isValidated && !state.isValid;
+                  const errorDescription = hasError
+                    ? field.messageDescription
+                    : undefined;
 
-    <ErrorMessages
-      render={(messages) => messages.map(item => <div key={}>{item.path} - {item.message}</div>)}
-    />
-  </FormProvider>
+                  return (
+                    <TextField
+                      inputRef={inputRef}
+                      label="Confirm password"
+                      onChange={(e) => {
+                        field.value = e.target.value;
+                      }}
+                      onBlur={() => field.validate()}
+                      value={field.value}
+                      required={state.isRequired}
+                      helperText={errorDescription}
+                      error={hasError}
+                      type="password"
+                    />
+                  );
+                }}
+              />
+            )
+          }}
+        />
+
+        {/* Submit form */}
+        <Submit
+          onSuccess={(data) => console.log("Form data:", data)}
+          render={({ handleSubmit }) => (
+            <Button onClick={handleSubmit}>Submit</Button>
+          )}
+        />
+      </FormProvider>
+    </div>
+  );
 }
 ```
+
+[Checkout](https://codesandbox.io/s/material-ui-sign-up-form-raw-lvscg) this example in CodeSandBox
 
 ### Higher-Order Fields (HOF)
 As the `rjv-react` library works in any environment (web/native) and with any 3d party UI
 components framework, it would be better to create a set of higher-order field components to simplify form development.
-For example, we can create a couple of the higher order components like `Form` and `TextField` for the [Material UI](https://material-ui.com) library.
+For example, we can create a couple of [higher order components](https://reactjs.org/docs/higher-order-components.html) such as `Form` and `TextField` that combines the `rjv-react` and `Material UI` components together.
 
 `components/Form.js`
 ```typescript jsx
@@ -229,6 +292,7 @@ Now the "Sign Up" form might look like:
 ```typescript jsx
 import React, { useState } from "react";
 import { Button } from "@material-ui/core";
+import { Watch } from "rjv-react";
 import Form from "./Form";
 import TextField from "./TextField";
 
@@ -236,38 +300,39 @@ export default function SignUpForm() {
   const [initialData] = useState({})
 
   return (
-    <Form data={initialData} onSuccess={(d) => console.log("Form data:", d)}>
-      <div>
-        <TextField
-          style={fieldStyles}
-          path={"email"}
-          schema={{ default: "", presence: true, format: "email" }}
-          label="Email"
-        />
-      </div>
-      <br />
-      <div>
-        <TextField
-          style={fieldStyles}
-          path={"password"}
-          schema={{ default: "", presence: true, minLength: 6 }}
-          label="Password"
-        />
-      </div>
-      <br />
-      <div>
-        <TextField
-          style={fieldStyles}
-          path={"confirmPassword"}
-          schema={{
-            default: "",
-            const: (propRef) => propRef.ref("/password").value,
-            error: "Confirm your password"
-          }}
-          label="Confirm password"
-        />
-      </div>
-      <br />
+    <Form data={initialData} onSuccess={(data) => console.log("Form data:", data)}>
+      <TextField
+        style={fieldStyles}
+        path={"email"}
+        schema={{ default: "", presence: true, format: "email" }}
+        label="Email"
+      />
+
+      <TextField
+        path={"password"}
+        schema={{ default: "", presence: true, minLength: 6 }}
+        label="Password"
+        type="password"
+      />
+      <Watch
+        props={["password"]}
+        render={(password: string) => (
+          <TextField
+            style={fieldStyles}
+            path={"confirmPassword"}
+            schema={{
+              default: "",
+              presence: !!password,
+              const: password,
+              error: "Confirm your password"
+            }}
+            dependencies={[password]}
+            label="Confirm password"
+            type="password"
+          />
+        )}
+      />
+
       <Button type="submit">Submit</Button>
     </Form>
   )
@@ -275,6 +340,34 @@ export default function SignUpForm() {
 ```
 
 [Checkout](https://codesandbox.io/s/material-ui-sign-up-form-rhrvd) this example in CodeSandBox
+
+## 3rd Party Bindings
+ - [Ant Design](https://github.com/gromver/rjv-react-antd)
+
+## Examples
+ - [Conditional form](https://codesandbox.io/s/antd-conditional-form-olmcu)
+ - [Dynamic items form](https://codesandbox.io/s/antd-dynamic-items-form-jbs23)
+ - [Nested form](https://codesandbox.io/s/antd-nested-form-0d3sp)
+ - [Multi-step form](https://codesandbox.io/s/antd-multi-step-form-1gysb)
+ - [Reset form data and state](https://codesandbox.io/s/antd-reset-form-n8odo)
+ - [Inline validation](https://codesandbox.io/s/antd-inline-validation-form-k20f7)
+ - [Customize error messages](https://codesandbox.io/s/antd-custom-errors-form-4lgoj)
+ - [Multi-language form](https://codesandbox.io/s/antd-multi-language-form-4q1pu)
+
+## API
+
+ - [FormProvider](#formprovider) - create a form.
+ - [Field](#field) / [useField](#usefieldpath-string-schema-ischema-dependencies-any--fieldinfo) - create a field with some validation rules and get access to the [state](#fieldstate) and [API](#fieldapi) objects of the field.
+ - [FieldArray](#fieldarray) / [useFieldArray](#usefieldarraypath-string--fieldarrayinfo) - render the list and get the [API](#fieldarrayapi) to work with it.
+ - [Form](#form) / [useForm](#useform--forminfo) - get access to the [state](#formstate) and [API](#formapi) objects of the form.
+ - [FormStateUpdater](#formstateupdater) - update the `isValid` state of the form when data changes
+ - [OptionsProvider](#optionsprovider) - setup default form options like error messages, intl, validation options
+ - [Watch](#watch) / [useWatch](#usewatchpath-string--any) - watch for property / properties change
+ - [Property](#property) / [useProperty](#usepropertypath-string--any-value-any--void) - watch for the particular property change and get the API to change that value
+ - [Scope](#scope) - change the scope against which the relative paths are resolved
+ - [VisibleWhen](#visiblewhen) - show some content when the provided schema is valid
+ - [Submit](#submit) - submit form and get access to the state and api objects of the form 
+ - [ErrorMessages](#errormessages) / [useErrors](#useerrors--validationerrors) - get error messages
 
 ## Components
 
@@ -312,7 +405,12 @@ Name | Type | Default | Description
 See [ValidationMessage](https://github.com/gromver/rjv#validationmessage)
 
 ### FormProvider
-Creates form and provides a form data.
+Creates a form and provides initial form data.
+There are some tips to notice:
+ - The initial data can be of any type, so it doesn't necessarily have to be objects.
+ - When your initial data is changed, the state of the form is reset, so you have to memoize your initial data objects or arrays to control the form resetting.
+ - `FormProvider` doesn't affect the provided data, it uses the cloned instance.
+ - `FormProvider` can be nested.
 
 Properties:
 
@@ -427,11 +525,22 @@ Properties:
 
 Name | Type | Default | Description
 --- | :---: | :---: | ---
-`path`* | `string`| undefined | specifies data property
-`schema`* | `Object<JSON Schema>` | undefined | schema is used to validate field
+`path`* | `string`| undefined | [path](#path) to the data property
+`schema`* | `Object<JSON Schema>` | undefined | JSON schema is used to validate data property
 `render`* | `(fieldInfo: FieldInfo) => ReactNode` | undefined | a function rendering the UI of the field. See [FieldInfo](#fieldinfo).
 `dependecies` | `any[]` | [] | any values that affect validation schema or are used in the `validate` or `resolveSchema` keywords, when dependencies are changed the field applies a new validation schema and recalculates the `isValid` state
 `ref` | `React.RefObject<FieldApi>` | undefined | returns an object containing the field [API](#fieldapi)
+
+#### Path
+The `rjv-react` uses a path to point to a specific data property.
+Path is a simple string working like a file system path, 
+it can be absolute - `/a/b/c` or relative - `../b/c`, `b/c`.
+The numeric parts of the path are treated as an array index, the rest as an object key.
+By default, all relative paths are resolved against the root path `/`.
+The [Scope](#scope) component can be used to change the resolving path.
+```typescript
+type Path = string
+```
 
 #### FieldInfo
 ```typescript
@@ -487,11 +596,14 @@ type FieldState = {
 ```
 See [ValidationMessage](https://github.com/gromver/rjv#validationmessage)
 
+> Note that you can create multiple fields for the same data property, and these fields will act independently
+
 ### FieldArray
 A useful component to deal with an array of fields. It provides an api for adding / removing fields
 and also manages the generation of unique keys for each field.
 
-> This component works with arrays of any types - strings, numbers, objects, arrays.
+> This component works with arrays of any types - strings, numbers, booleans, objects, arrays.
+> As a consequence of the above, this component doesn't need to store generated unique keys in the form data.
 
 Properties:
 
@@ -541,7 +653,7 @@ type FieldArrayApi = {
 
 ### Scope
 Sets the data scope of the form - all relative paths will be resolved against the nearest scope up the component tree.
-> By default `FormProvider` component sets the scope to the root `/` path.
+> By default `FormProvider` component sets the root `/` scope.
 
 Properties:
 
@@ -550,7 +662,7 @@ Name | Type | Default | Description
 `path`* | string | undefined | specifies scope
 
 ### Submit
-Component based form submitting.
+The component based form submitting.
 
 Properties:
 
@@ -584,7 +696,7 @@ Name | Type | Default | Description
 `props` | `Path[]` | [] | a list of properties to watch, each property path can be relative or absolute and contain wildcards `*` or `**`
 
 ### Property
-Subscribes to a property changes and passes the property value and setter function to the render function.
+Subscribes to a property changes and passes the property value and value setter function to the render function.
 
 Properties:
 
@@ -599,11 +711,11 @@ Properties:
 
 Name | Type | Default | Description
 --- | :---: | :---: | ---
-`schema`* | `Object<JSON Schema>` | undefined | schema used to check data
-`useVisibilityStyle`* | `boolean` | false | use css visibility style and do not unmount children components
-`visibleStyles`* | `CSSProperties` | undefined | css styles for the visible content
-`hiddenStyles`* | `CSSProperties` | undefined | css styles for the hidden content
-`path` | `string`| '/' | absolute or relative path to data
+`schema`* | `Object<JSON Schema>` | undefined | schema used to check data property
+`path` | `string`| '/' | absolute or relative path to data property
+`useVisibilityStyle` | `boolean` | false | use css visibility style and do not unmount children components
+`visibleStyles` | `CSSProperties` | undefined | css styles for the visible content
+`hiddenStyles` | `CSSProperties` | undefined | css styles for the hidden content
 
 ## Hooks
  - [useForm](#useform--forminfo)
