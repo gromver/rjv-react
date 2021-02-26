@@ -1,10 +1,11 @@
 import { createContext } from 'react'
-import { SubmitFormFn, CalcValidationStateFn, ValidateFieldsFn } from '../types'
+import { SubmitFormFn, SyncFormFn, TriggerFieldsFn } from '../types'
 
 export type FormContextValue = {
   submit: SubmitFormFn
-  validate: ValidateFieldsFn
-  calcValidationState: CalcValidationStateFn
+  sync: SyncFormFn
+  validateFields: TriggerFieldsFn
+  syncFields: TriggerFieldsFn
 }
 
 export default createContext<FormContextValue | undefined>(undefined)

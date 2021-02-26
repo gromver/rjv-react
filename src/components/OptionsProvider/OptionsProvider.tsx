@@ -11,7 +11,8 @@ import { DescriptionResolverFn } from '../../types'
 
 export const DEFAULT_VALIDATOR_OPTIONS: Partial<types.IValidatorOptions> = {
   coerceTypes: false,
-  removeAdditional: false
+  removeAdditional: false,
+  validateFirst: true
 }
 
 export const DEFAULT_DESCRIPTION_RESOLVER: DescriptionResolverFn = (message) => message.toString()
@@ -19,6 +20,7 @@ export const DEFAULT_DESCRIPTION_RESOLVER: DescriptionResolverFn = (message) => 
 type OptionsProviderProps = {
   coerceTypes?: boolean;
   removeAdditional?: boolean;
+  validateFirst?: boolean;
   errors?: {
     [keywordName: string]: string;
   };
@@ -38,7 +40,12 @@ export default function OptionsProvider (props: OptionsProviderProps) {
       return { ...DEFAULT_VALIDATOR_OPTIONS, ...restProps }
     },
     [
-      restProps.coerceTypes, restProps.removeAdditional, restProps.errors, restProps.warnings, restProps.keywords
+      restProps.coerceTypes,
+      restProps.removeAdditional,
+      restProps.validateFirst,
+      restProps.errors,
+      restProps.warnings,
+      restProps.keywords
     ]
   )
 

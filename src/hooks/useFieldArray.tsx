@@ -2,7 +2,6 @@ import {
   useContext,
   useMemo,
   useState,
-  useEffect,
   useRef
 } from 'react'
 import { utils, types } from 'rjv'
@@ -21,7 +20,6 @@ export type FieldArrayInfo = {
 
 export default function useFieldArray (path: types.Path): FieldArrayInfo {
   const idRef = useRef(1)
-  const reconcileRef = useRef(false)
   const dataContext = useContext(DataContext)
   const emitterContext = useContext(EmitterContext)
 
@@ -37,7 +35,7 @@ export default function useFieldArray (path: types.Path): FieldArrayInfo {
   )
 
   if (ref.value === undefined) {
-    dataContext.dataStorage.set(utils.pathToArray(_path), [])
+    dataContext.dataStorage.set(utils.pathToRoute(_path), [])
   }
 
   if (!Array.isArray(ref.value)) {
@@ -54,12 +52,16 @@ export default function useFieldArray (path: types.Path): FieldArrayInfo {
 
       ref.value = [...curValues, value]
 
+      emitterContext.emitter.emit(_path, new events.ReconcileFieldsEvent())
+
       setItems([...items, { key: `id_${idRef.current++}`, path: addPropToPath(_path, items.length) }])
     },
     prepend: (value) => {
       const curValues = ref.value
 
       ref.value = [value, ...curValues]
+
+      emitterContext.emitter.emit(_path, new events.ReconcileFieldsEvent())
 
       setItems([
         { key: `id_${idRef.current++}`, path: addPropToPath(_path, 0) },
@@ -83,12 +85,16 @@ export default function useFieldArray (path: types.Path): FieldArrayInfo {
           newItems[i].path = addPropToPath(_path, i)
         }
 
+        emitterContext.emitter.emit(_path, new events.ReconcileFieldsEvent())
+
         setItems(newItems)
       }
     },
     clear: () => {
       ref.value = []
       setItems([])
+
+      emitterContext.emitter.emit(_path, new events.ReconcileFieldsEvent())
     },
     insert: (index, value) => {
       if (isArrayHasIndex(items, index)) {
@@ -102,6 +108,8 @@ export default function useFieldArray (path: types.Path): FieldArrayInfo {
         for (let i = index + 1; i < newItems.length; i++) {
           newItems[i].path = addPropToPath(_path, i)
         }
+
+        emitterContext.emitter.emit(_path, new events.ReconcileFieldsEvent())
 
         setItems(newItems)
       }
@@ -123,7 +131,7 @@ export default function useFieldArray (path: types.Path): FieldArrayInfo {
         newItems[indexA] = itemB
         newItems[indexB] = itemA
 
-        reconcileRef.current = true
+        emitterContext.emitter.emit(_path, new events.ReconcileFieldsEvent())
 
         setItems(newItems)
       }
@@ -141,20 +149,12 @@ export default function useFieldArray (path: types.Path): FieldArrayInfo {
           newItems[i].path = addPropToPath(_path, i)
         }
 
-        reconcileRef.current = true
+        emitterContext.emitter.emit(_path, new events.ReconcileFieldsEvent())
 
         setItems(newItems)
       }
     }
   }), [_path, items])
-
-  useEffect(() => {
-    if (reconcileRef.current) {
-      reconcileRef.current = false
-
-      emitterContext.emitter.emit(_path, new events.ReconcileFieldsEvent())
-    }
-  }, [_path, items, emitterContext.emitter])
 
   return { items, fields: fieldArrayApi }
 }

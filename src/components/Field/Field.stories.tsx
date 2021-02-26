@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useRef } from 'react'
 import { Button, Space, Form, Input, Select } from 'antd'
 import { storiesOf } from '@storybook/react'
 
@@ -7,6 +7,7 @@ import Field from './Field'
 import { Scope } from '../Scope'
 import { Watch } from '../Watch'
 import { getValidationStatus, SubmitBtn } from '../../stories/helpers'
+import { FieldApi } from '../../types'
 
 let _id = 1
 
@@ -38,6 +39,46 @@ storiesOf('Field', module)
           }}
         />
         <SubmitBtn />
+      </FormProvider>
+    </Form>
+  })
+  .add('Test ref', () => {
+    const fieldRef = useRef<FieldApi>(null)
+
+    return <Form style={{ maxWidth: '400px' }}>
+      <FormProvider data={undefined}>
+        <Field
+          ref={fieldRef}
+          path="/"
+          schema={{ default: 'wrong email', format: 'email' }}
+          render={({ field, state, inputRef }) => {
+            return (
+              <Form.Item
+                label="Value"
+                validateStatus={getValidationStatus(state)}
+                help={field.messageDescription}
+                required={state.isRequired}
+                hasFeedback
+              >
+                <Input
+                  ref={inputRef}
+                  value={field.value}
+                  onChange={(e) => field.value = e.target.value}
+                />
+              </Form.Item>
+            )
+          }}
+        />
+        <Button
+          onClick={() => {
+            if (fieldRef.current) {
+              fieldRef.current.focus()
+              return fieldRef.current.validate()
+            }
+          }}
+        >
+          Validate field
+        </Button>
       </FormProvider>
     </Form>
   })
@@ -162,15 +203,12 @@ storiesOf('Field', module)
         <Watch props={['required']} render={(required) => (
           <Field
             path="email"
-            schema={required === 'yes'
-              ? {
-                default: '',
-                type: 'string',
-                format: 'email',
-                presence: true
-              }
-              : { default: '', format: 'email', type: 'string' }
-            }
+            schema={{
+              default: '',
+              format: 'email',
+              presence: required === 'yes'
+            }}
+            dependencies={[required]}
             render={({ field, state, inputRef }) => {
               return (
                 <Form.Item
@@ -228,11 +266,12 @@ storiesOf('Field', module)
         <Watch props={['readonly']} render={(readonly) => (
           <Field
             path="field"
-            schema={readonly === 'yes' ? {
+            schema={{
               default: 'abc',
               type: 'string',
-              readonly: true
-            } : { default: '', type: 'string' }}
+              readonly: readonly === 'yes'
+            }}
+            dependencies={[readonly]}
             render={({ field, state, inputRef }) => {
               return (
                 <Form.Item

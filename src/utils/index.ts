@@ -90,7 +90,7 @@ export function getPropsToObserveFromSchema (schema: types.ISchema, from: types.
  * @param schema
  */
 export function buildSchema (path: types.Path, schema: types.ISchema): types.ISchema {
-  const slugs = utils.pathToArray(path)
+  const slugs = utils.pathToRoute(path)
 
   const resSchema: types.ISchema = {}
   let leaf: types.ISchema = resSchema

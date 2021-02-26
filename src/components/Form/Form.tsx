@@ -8,7 +8,7 @@ import React from 'react'
 import useForm, { FormInfo } from '../../hooks/useForm'
 
 type FormProps = {
-  render: (form: FormInfo) => React.ReactElement
+  render: (form: FormInfo) => React.ReactElement | null
 }
 
 export default function Form ({ render }: FormProps) {

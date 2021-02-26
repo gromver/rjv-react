@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useLayoutEffect, useCallback } from 'react'
+import { types } from 'rjv'
 import { storiesOf } from '@storybook/react'
 import { FormProvider, Field, Form as RjvForm, ErrorMessages } from '../index'
 import { Button, Form, Input } from 'antd'
@@ -12,7 +13,7 @@ function Logger () { console.log('render form'); return null }
 
 const initialData = {}
 
-const emailSchema = {
+const emailSchema: types.ISchema = {
   default: '',
   // validate: () => {
   //   return new Promise((r) => {

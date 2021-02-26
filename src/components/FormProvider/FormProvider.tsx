@@ -23,8 +23,9 @@ import {
   IField,
   FieldState,
   SubmitFormFn,
-  ValidateFieldsFn,
-  FormState, CalcValidationStateFn
+  TriggerFieldsFn,
+  SyncFormFn,
+  FormState, FormApi
 } from '../../types'
 import { DEFAULT_OPTIONS } from './constants'
 import { Scope } from '../Scope'
@@ -98,20 +99,26 @@ type FormProviderProps = {
   data?: any
 }
 
-export default function FormProvider ({ data, children }: FormProviderProps) {
+function FormProvider ({ data, children }: FormProviderProps, ref) {
   const dataRef = useRef<any>(data)
   const updaterRef = useRef<FormUpdaterRef>(null)
   const emitterRef = useRef<EventEmitter2>()
-  const nextFieldsRef = useRef<Map<IField, FieldState>>(new Map())
+  const formReadyRef = useRef(false)
   const optionsRef = useRef<OptionsContextValue>()
   const normalizeFormStateRef = useRef<() => void>()
 
-  const [fields, setFields] = useState<Map<IField, FieldState>>(() => new Map())
   const [emitter, setEmitter] = useState(() => createEmitter())
+
+  const [fields, setFields] = useState<Map<IField, FieldState>>(() => new Map())
+  const curFieldsRef = useRef<Map<IField, FieldState>>(fields)
+  const nextFieldsRef = useRef<Map<IField, FieldState>>(new Map())
+
   const [dataContext, setDataContext] = useState<DataContextValue>(() => ({
     dataStorage: new Storage(_cloneDeep(data)),
     initialDataStorage: new Storage(_cloneDeep(data))
   }))
+  const dataContextRef = useRef<DataContextValue>(dataContext)
+
   const [formState, setFormState] = useState<FormState>(INITIAL_FORM_STATE)
   const formStateRef = useRef<FormState>(formState)
 
@@ -149,12 +156,15 @@ export default function FormProvider ({ data, children }: FormProviderProps) {
           // have to change emitter and reconcile fields again
           emitter.removeAllListeners()
 
+          formReadyRef.current = false
           setEmitter(createEmitter())
         }
       })
 
       // apply reconciled fields map
       setFields(nextFieldsRef.current)
+      curFieldsRef.current = nextFieldsRef.current
+      formReadyRef.current = true
     }
   }, [emitter, registerFieldHandler])
 
@@ -166,10 +176,13 @@ export default function FormProvider ({ data, children }: FormProviderProps) {
         fields.set(field, createDefaultStateFromSchema(field.schema()))
       })
 
-      setDataContext({
+      const dataContext = {
         dataStorage: new Storage(_cloneDeep(data)),
         initialDataStorage: new Storage(_cloneDeep(data))
-      })
+      }
+
+      setDataContext(dataContext)
+      dataContextRef.current = dataContext
 
       setFormState(INITIAL_FORM_STATE)
 
@@ -184,18 +197,18 @@ export default function FormProvider ({ data, children }: FormProviderProps) {
   }, [optionsContext])
 
   const getFieldState = useCallback((field: IField) => {
-    return fields.get(field) || createDefaultStateFromSchema(field.schema())
-  }, [fields])
+    return curFieldsRef.current.get(field) || createDefaultStateFromSchema(field.schema())
+  }, [])
 
   const setFieldState = useCallback((field: IField, state: Partial<FieldState>) => {
     const curState = getFieldState(field)
 
-    fields.set(field, { ...curState, ...state })
-  }, [fields])
+    curFieldsRef.current.set(field, { ...curState, ...state })
+  }, [])
 
   const getFields = useCallback((path: types.Path): IField[] => {
-    return Array.from(fields.keys()).filter((item) => item.ref().path === path)
-  }, [fields])
+    return Array.from(curFieldsRef.current.keys()).filter((item) => item.ref().path === path)
+  }, [])
 
   normalizeFormStateRef.current = useCallback(() => {
     const fieldStates = Array.from(fields.values())
@@ -218,32 +231,53 @@ export default function FormProvider ({ data, children }: FormProviderProps) {
     setState: setFieldState
   }), [fields, emitter])
 
+  const ensureFormReady = useCallback(() => {
+    return new Promise((res) => {
+      function isReady () {
+        if (formReadyRef.current) {
+          res()
+        } else {
+          requestAnimationFrame(isReady)
+        }
+      }
+
+      isReady()
+    })
+  }, [])
+
   const submit = useCallback<SubmitFormFn>(async (onSuccess, onError) => {
+    await ensureFormReady()
+
     let firstErrorField: IField | undefined
+    const fieldsArr = Array.from(curFieldsRef.current.keys())
+
     setFormState({ ...formStateRef.current, isSubmitting: true })
 
-    await new Promise((r) => setTimeout(r)).then(() => Promise.all(
-      Array
-        .from(fields.keys())
+    const results = await new Promise((r) => setTimeout(r)).then(() => Promise.all(
+      fieldsArr
         .map((field) => {
           return field.validate()
             .then((res) => {
-              const curState = fields.get(field)
+              const curState = getFieldState(field)
 
-              fields.set(field, {
+              setFieldState(field, {
                 ...curState,
                 isValid: res.valid,
                 isTouched: true,
                 isValidated: true,
                 isValidating: false,
                 message: extractMessageFromResult(res, field.ref())
-              } as FieldState)
+              })
 
-              if (!firstErrorField && !res.valid) {
-                firstErrorField = field
-              }
+              return res
             })
         })))
+
+    const invalidResult = results.find((res) => !res.valid)
+    if (invalidResult) {
+      const i = results.indexOf(invalidResult)
+      firstErrorField = fieldsArr[i]
+    }
 
     // update view
     updaterRef.current?.updateForm()
@@ -255,7 +289,7 @@ export default function FormProvider ({ data, children }: FormProviderProps) {
         inputEl: firstErrorField.inputEl()
       })
     } else {
-      onSuccess && await onSuccess(dataContext.dataStorage.get([]))
+      onSuccess && await onSuccess(dataContextRef.current.dataStorage.get([]))
     }
 
     setFormState({
@@ -264,15 +298,41 @@ export default function FormProvider ({ data, children }: FormProviderProps) {
       isSubmitting: false,
       submitted: formStateRef.current.submitted + 1
     })
-  }, [fields, dataContext])
+  }, [])
 
-  const validate = useCallback<ValidateFieldsFn>(async (path) => {
+  const sync = useCallback<SyncFormFn>(async () => {
+    await ensureFormReady()
+
+    const fieldsArr = Array.from(curFieldsRef.current.keys())
+    let isValid = !!fieldsArr.length
+
+    await Promise.all(
+      fieldsArr.map((field) => {
+        return field.validate()
+          .then((res) => {
+            if (!res.valid) {
+              isValid = false
+            }
+          })
+      }))
+
+    if (formStateRef.current.isValid !== isValid) {
+      setFormState({
+        ...formStateRef.current,
+        isValid
+      })
+    }
+  }, [])
+
+  const validateFields = useCallback<TriggerFieldsFn>(async (path) => {
+    await ensureFormReady()
+
     const _path = (Array.isArray(path) ? path : [path])
       .map((item) => utils.resolvePath(item, '/'))
 
     await Promise.all(
       Array
-        .from(fields.keys())
+        .from(curFieldsRef.current.keys())
         .filter((field) => _path.includes(field.ref().path))
         .map((field) => {
           const fieldPath = field.ref().path
@@ -295,35 +355,38 @@ export default function FormProvider ({ data, children }: FormProviderProps) {
             field.emit(fieldPath, new events.FieldValidatedEvent())
           })
         }))
-  }, [fields])
+  }, [])
 
-  const calcValidationState = useCallback<CalcValidationStateFn>(async () => {
-    const fieldsArr = Array.from(fields.keys())
-    let isValid = !!fieldsArr.length
+  const syncFields = useCallback<TriggerFieldsFn>(async (path) => {
+    await ensureFormReady()
+
+    const _path = (Array.isArray(path) ? path : [path])
+      .map((item) => utils.resolvePath(item, '/'))
 
     await Promise.all(
-      fieldsArr.map((field) => {
-        return field.validate()
-          .then((res) => {
-            if (!res.valid) {
-              isValid = false
-            }
-          })
-      }))
+      Array
+        .from(curFieldsRef.current.keys())
+        .filter((field) => _path.includes(field.ref().path))
+        .map((field) => {
+          const fieldPath = field.ref().path
 
-    if (formStateRef.current.isValid !== isValid) {
-      setFormState({
-        ...formStateRef.current,
-        isValid
-      })
-    }
-  }, [fields])
+          return field.validate().then((res) => {
+            setFieldState(field, {
+              isValid: res.valid,
+              message: extractMessageFromResult(res, field.ref())
+            })
+
+            field.emit(fieldPath, new events.FieldValidatedEvent())
+          })
+        }))
+  }, [])
 
   const formContext = useMemo<FormContextValue>(() => ({
     submit,
-    validate,
-    calcValidationState
-  }), [submit, validate, calcValidationState])
+    sync,
+    validateFields,
+    syncFields
+  }), [submit, validateFields, syncFields, sync])
 
   useEffect(() => {
     emitter.onAny((path, event: events.BaseEvent) => {
@@ -336,6 +399,8 @@ export default function FormProvider ({ data, children }: FormProviderProps) {
       emitter.removeAllListeners()
     }
   }, [emitter])
+
+  useImperativeHandle(ref, () => formContext, [formContext])
 
   return <DataContext.Provider value={dataContext}>
     <FormContext.Provider value={formContext}>
@@ -357,3 +422,5 @@ export default function FormProvider ({ data, children }: FormProviderProps) {
     </FormContext.Provider>
   </DataContext.Provider>
 }
+
+export default forwardRef<FormApi, FormProviderProps>(FormProvider)

@@ -8,7 +8,7 @@ import { useValidate } from '../hooks'
 const initialData = {}
 
 storiesOf('Form', module)
-  .add('Validate fields - using ref', () => {
+  .add('Validate fields - Form', () => {
     return (
       <Form style={{ maxWidth: '400px' }}>
         <FormProvider data={initialData}>
@@ -91,11 +91,11 @@ storiesOf('Form', module)
           <RjvForm
             render={({ form }) => (
               <>
-                <button onClick={() => form.validate('a')}>Validate /a</button>
+                <button onClick={() => form.validateFields('a')}>Validate /a</button>
                 &nbsp;
-                <button onClick={() => form.validate('/b')}>Validate /b</button>
+                <button onClick={() => form.validateFields('/b')}>Validate /b</button>
                 &nbsp;
-                <button onClick={() => form.validate(['/a', 'b'])}>Validate /a and /b</button>
+                <button onClick={() => form.validateFields(['/a', 'b'])}>Validate /a and /b</button>
               </>
             )}
           />
@@ -105,7 +105,7 @@ storiesOf('Form', module)
       </Form>
     )
   })
-  .add('Validate fields - using hooks', () => {
+  .add('Validate fields - useForm', () => {
     return (
       <Form style={{ maxWidth: '400px' }}>
         <FormProvider data={initialData}>

@@ -1,4 +1,4 @@
-import { ReactElement } from 'react'
+import { ReactElement, RefObject } from 'react'
 import { types, ValidationMessage } from 'rjv'
 import { BaseEvent } from './components/EmitterProvider/events'
 
@@ -27,8 +27,10 @@ export type FieldState = {
 
 export type FieldApi = {
   value: any
-  ref: types.IRef
+  dataRef: types.IRef
+  inputRef: RefObject<any>
   validate: () => Promise<types.IValidationResult>
+  sync: () => Promise<void>
   focus: () => void
   dirty: () => FieldApi
   touched: () => FieldApi
@@ -51,7 +53,7 @@ export type FieldArrayApi = {
 export type FieldArrayItem = { key: string, path: types.Path }
 
 // Form
-export type ValidationErrors = {path: string, message: string}[]
+export type ValidationErrors = { path: string, message: string }[]
 
 export type FirstErrorField = {
   path: types.Path,
@@ -64,9 +66,9 @@ export type SubmitFormFn = (
   onError?: (firstErrorField: FirstErrorField) => void | Promise<void>
 ) => void
 
-export type CalcValidationStateFn = () => Promise<void>
+export type SyncFormFn = () => Promise<void>
 
-export type ValidateFieldsFn = (path: types.Path | types.Path[]) => Promise<void>
+export type TriggerFieldsFn = (path: types.Path | types.Path[]) => Promise<void>
 
 export type FormState = {
   isValid: boolean
@@ -79,8 +81,9 @@ export type FormState = {
 
 export type FormApi = {
   submit: SubmitFormFn
-  validate: ValidateFieldsFn
-  sync: CalcValidationStateFn
+  sync: SyncFormFn
+  validateFields: TriggerFieldsFn
+  syncFields: TriggerFieldsFn
 }
 
 // Options

@@ -12,14 +12,16 @@ import FormContext from '../../contexts/FormContext'
 
 type Props = {
   debounce?: number
+  dependencies?: any[]
 }
 
 /**
  * FormStateUpdater
  * @param debounce
+ * @param dependencies
  * @constructor
  */
-export default function FormStateUpdater ({ debounce = 300 }: Props) {
+export default function FormStateUpdater ({ debounce = 300, dependencies = [] }: Props) {
   const formContext = useContext(FormContext)
   const fieldContext = useContext(FieldContext)
 
@@ -29,8 +31,8 @@ export default function FormStateUpdater ({ debounce = 300 }: Props) {
 
   const triggerUpdate = useMemo(() => {
     return debounce > 0
-      ? _debounce(formContext.calcValidationState, debounce, { leading: true })
-      : formContext.calcValidationState
+      ? _debounce(formContext.sync, debounce, { leading: true })
+      : formContext.sync
   }, [debounce, formContext])
 
   const handleUpdate = useCallback((path: string, event: events.BaseEvent) => {
@@ -47,7 +49,7 @@ export default function FormStateUpdater ({ debounce = 300 }: Props) {
     return () => {
       fieldContext.emitter.offAny(handleUpdate)
     }
-  }, [fieldContext.emitter, handleUpdate, triggerUpdate])
+  }, [fieldContext.emitter, handleUpdate, triggerUpdate, ...dependencies])
 
   return null
 }

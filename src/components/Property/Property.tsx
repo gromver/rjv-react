@@ -9,7 +9,7 @@ import useProperty from '../../hooks/useProperty'
 import { types } from 'rjv'
 
 type PropertyProps = {
-  render: (value: any, setValue: (value: any) => void) => React.ReactElement
+  render: (value: any, setValue: (value: any) => void) => React.ReactElement | null
   path: types.Path
 }
 
